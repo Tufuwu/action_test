@@ -1,37 +1,35 @@
-import setuptools
-from investing_algorithm_framework import get_version
+from setuptools import setup
 
-VERSION = get_version()
-
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
-setuptools.setup(
-    name="investing_algorithm_framework",
-    version=get_version(),
-    license="BSL-1.1",
-    author="coding kitties",
-    description="A framework for creating an investment algorithm",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/coding-kitties/investing-algorithm-framework.git",
-    download_url='https://github.com/coding-kitties/investing-algorithm-framework/archive/v0.1.1.tar.gz',
-    packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
-    keywords=['INVESTING', 'BOT', 'ALGORITHM', 'FRAMEWORK'],
+setup(
+    name="luddite",
+    version="1.0.1",
+    author="Wim Glenn",
+    author_email="hey@wimglenn.com",
+    url="https://github.com/jumptrading/luddite",
+    py_modules=["luddite"],
+    description="Checks for out-of-date package versions",
+    long_description=open("README.rst").read(),
     classifiers=[
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
         "Intended Audience :: Developers",
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        "Topic :: Software Development",
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Utilities",
     ],
-    install_requires=required,
-    python_requires='>=3',
-    include_package_data=True,
+    entry_points={"console_scripts": ["luddite=luddite:main"]},
+    install_requires=[
+        "setuptools >= 18.0",
+        'colorama; platform_system == "Windows"',
+        'futures; python_version < "3.2"',
+    ],
+    extras_require={
+        # https://hynek.me/articles/conditional-python-dependencies/
+        "dev": [
+            "pytest>=3.6.3",
+            "pytest-cov",
+            "pytest-mock",
+            "pytest-socket",
+            "coveralls",
+        ],
+    },
 )
