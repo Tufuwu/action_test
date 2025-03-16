@@ -1,3 +1,0 @@
-# Install geoalchemy2 package
--e .
--r requirements-doc.txt
