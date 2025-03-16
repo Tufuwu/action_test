@@ -1,51 +1,81 @@
-# pylint: disable=missing-docstring
+import io
 
-# Copyright (c) 2019 Alexander Todorov <atodorov@MrSenko.com>
+from setuptools import find_packages, setup
 
-# Licensed under the GPL 3.0: https://www.gnu.org/licenses/gpl-3.0.txt
+version = '1.9.0.dev0'
 
-from setuptools import setup, find_packages
+# Please update tox.ini when modifying dependency version requirements
+install_requires = [
+    # load_pem_private/public_key (>=0.6)
+    # rsa_recover_prime_factors (>=0.8)
+    'cryptography>=0.8',
+    # Connection.set_tlsext_host_name (>=0.13)
+    'PyOpenSSL>=0.13',
+    # For pkg_resources. >=1.0 so pip resolves it to a version cryptography
+    # will tolerate; see #2599:
+    'setuptools>=1.0',
+]
+
+testing_requires = [
+    'coverage>=4.0',
+    'flake8',
+    'mypy',
+    'pytest-cov',
+    'pytest-flake8>=0.5',
+    'pytest>=2.8.0',
+]
+
+dev_extras = [
+    'pytest',
+    'tox',
+]
+
+docs_extras = [
+    'Sphinx>=1.0',  # autodoc_member_order = 'bysource', autodoc_default_flags
+    'sphinx_rtd_theme',
+]
 
 
-def get_long_description():
-    with open('README.rst', 'r') as file:
-        return file.read()
-
-
-def get_install_requires(path):
-    requires = []
-
-    with open(path, 'r') as file:
-        for line in file:
-            if line.startswith('-r '):
-                continue
-            requires.append(line.strip())
-        return requires
+with io.open('README.rst', encoding='UTF-8') as f:
+    long_description = f.read()
 
 
 setup(
-    name='kiwitcms-tenants',
-    version='1.6.0',
-    description='Multi-tenant support for Kiwi TCMS',
-    long_description=get_long_description(),
-    author='Kiwi TCMS',
-    author_email='info@kiwitcms.org',
-    url='https://github.com/kiwitcms/tenants/',
-    license='GPLv3+',
-    install_requires=get_install_requires('requirements.txt'),
-    include_package_data=True,
-    packages=find_packages(exclude=['test_project*', '*.tests']),
-    zip_safe=False,
-    entry_points={"kiwitcms.plugins": ["kiwitcms_tenants = tcms_tenants"]},
+    name='josepy',
+    version=version,
+    description='JOSE protocol implementation in Python',
+    long_description=long_description,
+    url='https://github.com/certbot/josepy',
+    author="Certbot Project",
+    author_email='client-dev@letsencrypt.org',
+    license='Apache License 2.0',
+    python_requires='>=3.6',
     classifiers=[
-        'Framework :: Django',
-        'Development Status :: 5 - Production/Stable',
-        'Topic :: Software Development :: Quality Assurance',
-        'Topic :: Software Development :: Testing',
-        'Environment :: Web Environment',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Security',
     ],
+
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
+    include_package_data=True,
+    install_requires=install_requires,
+    extras_require={
+        'dev': dev_extras,
+        'docs': docs_extras,
+        'tests': testing_requires,
+    },
+    entry_points={
+        'console_scripts': [
+            'jws = josepy.jws:CLI.run',
+        ],
+    },
 )
