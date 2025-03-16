@@ -1,52 +1,73 @@
-.DS_Store
-.idea
-*.mo
-*.egg-info
-*.egg
-*.EGG
-*.EGG-INFO
-build
-develop-eggs
-downloads
-doc/sg_execution_times.rst
-doc-build
-eggs
-fake-eggs
-parts
-dist
-doc/build
-doc/source/generated
-.installed.cfg
-.mr.developer.cfg
-.hg
-.bzr
-.svn
-eelbrain/**/*.c
-eelbrain/**/*.h
-eelbrain/**/*.cpp
-__pycache__
-*.pyd
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
 *.so
-*.pyc
-*.pyo
-*.tmp*
-profile/*.profile
-profile/*.pickled
-*cfg.pickled
 
-doc/_build
-doc/generated
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
 .coverage
-coverage/
-*.fif
-.pytest_cache/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+# Sphinx documentation
+doc/_build/
+doc/modules/generated/
+
+# PyBuilder
+target/
+
+.idea*
+.ipynb_checkpoints/
+*.swp
+
+# Skip sphinx-gallery build directory
 doc/auto_examples
-*.ipynb
-.ipynb_checkpoints
-.eggs
 
-*.html
+.pytest_cache
+.vscode
+doc/backreferences
+doc/apiref/
 
-doc/scripts/cache-search.json
-
-test_data/
+# Avoid poetry lockfiles
+poetry.lock
