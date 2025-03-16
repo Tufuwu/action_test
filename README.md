@@ -1,58 +1,126 @@
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/nextstrain/ncov)](https://github.com/nextstrain/ncov/releases)
-[![See recent changes](https://img.shields.io/badge/changelog-See%20recent%20changes-blue)](https://docs.nextstrain.org/projects/ncov/en/latest/reference/change_log.html)
+# simple-pid
 
-# About
+[![Tests](https://github.com/m-lundberg/simple-pid/actions/workflows/run-tests.yml/badge.svg)](https://github.com/m-lundberg/simple-pid/actions?query=workflow%3Atests)
+[![PyPI](https://img.shields.io/pypi/v/simple-pid.svg)](https://pypi.org/project/simple-pid/)
+[![Read the Docs](https://img.shields.io/readthedocs/simple-pid.svg)](https://simple-pid.readthedocs.io/)
+[![License](https://img.shields.io/github/license/m-lundberg/simple-pid.svg)](https://github.com/m-lundberg/simple-pid/blob/master/LICENSE.md)
+[![Downloads](https://pepy.tech/badge/simple-pid)](https://pepy.tech/project/simple-pid)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-This repository analyzes viral genomes using [Nextstrain](https://nextstrain.org) to understand how SARS-CoV-2, the virus that is responsible for the COVID-19 pandemic, evolves and spreads.
+A simple and easy to use PID controller in Python. If you want a PID controller without external dependencies that just works, this is for you! The PID was designed to be robust with help from [Brett Beauregards guide](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/).
 
-We maintain a number of publicly-available builds, visible at [nextstrain.org/ncov](https://nextstrain.org/ncov).
+Usage is very simple:
 
-[See our change log for details about backwards-incompatible or breaking changes to the workflow](https://docs.nextstrain.org/projects/ncov/en/latest/reference/change_log.html).
+```python
+from simple_pid import PID
+pid = PID(1, 0.1, 0.05, setpoint=1)
 
-Visit [the workflow documentation](https://docs.nextstrain.org/projects/ncov) for tutorials and reference material.
+# Assume we have a system we want to control in controlled_system
+v = controlled_system.update(0)
 
-## Download formatted datasets
+while True:
+    # Compute new output from the PID according to the systems current value
+    control = pid(v)
+    
+    # Feed the PID output to the system and get its current value
+    v = controlled_system.update(control)
+```
 
-The hCoV-19 / SARS-CoV-2 genomes were generously shared via GISAID. We gratefully acknowledge the Authors, Originating and Submitting laboratories of the genetic sequence and metadata made available through GISAID on which this research is based.
+Complete API documentation can be found [here](https://simple-pid.readthedocs.io/en/latest/simple_pid.html#module-simple_pid.PID).
 
-In order to download the GISAID data to run the analysis yourself, please see [this guide](https://docs.nextstrain.org/projects/ncov/en/latest/analysis/data-prep.html).
-> Please note that `data/metadata.tsv` is no longer included as part of this repo. However, we provide continually-updated, pre-formatted metadata & fasta files for download through GISAID.
+## Installation
+To install, run:
+```
+pip install simple-pid
+```
 
-## Read previous Situation Reports
+## Usage
+The `PID` class implements `__call__()`, which means that to compute a new output value, you simply call the object like this:
+```python
+output = pid(current_value)
+```
 
-We issued weekly Situation Reports for the first ~5 months of the pandemic. You can find the Reports and their translations [here](https://nextstrain.org/ncov-sit-reps).
+### The basics
+The PID works best when it is updated at regular intervals. To achieve this, set `sample_time` to the amount of time there should be between each update and then call the PID every time in the program loop. A new output will only be calculated when `sample_time` seconds has passed:
+```python
+pid.sample_time = 0.01  # Update every 0.01 seconds
 
-## FAQs
+while True:
+    output = pid(current_value)
+```
 
-- Can't find your sequences in Nextstrain? Check [here](./docs/data_faq.md) for common reasons why your sequences may not be appearing.
-You can also use [clades.nextstrain.org](https://clades.nextstrain.org/) to perform some basic quality control on your sequences. If they are flagged by this tool, they will likely be excluded by our pipeline.
-- For information about how clades are defined, and the currently named clades, please see [here](./docs/naming_clades.md). To assign clades to your own sequences, you can use our clade assignment tool at [clades.nextstrain.org](https://clades.nextstrain.org/).
+To set the setpoint, ie. the value that the PID is trying to achieve, simply set it like this:
+```python
+pid.setpoint = 10
+```
 
-## Bioinformatics notes
+The tunings can be changed any time when the PID is running. They can either be set individually or all at once:
+```python
+pid.Ki = 1.0
+pid.tunings = (1.0, 0.2, 0.4)
+```
 
-Site numbering and genome structure uses [Wuhan-Hu-1/2019](https://www.ncbi.nlm.nih.gov/nuccore/MN908947) as reference. The phylogeny is rooted relative to early samples from Wuhan. Temporal resolution assumes a nucleotide substitution rate of [8 &times; 10^-4 subs per site per year](http://virological.org/t/phylodynamic-analysis-176-genomes-6-mar-2020/356). There were SNPs present in the nCoV samples in the first and last few bases of the alignment that were masked as likely sequencing artifacts.
+To use the PID in [reverse mode](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-direction/), meaning that an increase in the input leads to a decrease in the output (like when cooling for example), you can set the tunings to negative values:
 
-# Contributing
+```python
+pid.tunings = (-1.0, -0.1, 0)
+```
 
-We welcome contributions from the community! Please note that we strictly adhere to the [Contributor Covenant Code of Conduct](https://github.com/nextstrain/.github/blob/master/CODE_OF_CONDUCT.md).
+Note that all the tunings should have the same sign.
 
-### Contributing to software or documentation
+In order to get output values in a certain range, and also to avoid [integral windup](https://en.wikipedia.org/wiki/Integral_windup) (since the integral term will never be allowed to grow outside of these limits), the output can be limited to a range:
+```python
+pid.output_limits = (0, 10)    # Output value will be between 0 and 10
+pid.output_limits = (0, None)  # Output will always be above 0, but with no upper bound
+```
 
-Please see our [Contributor Guide](https://github.com/nextstrain/.github/blob/master/CONTRIBUTING.md) to get started!
+### Other features
+#### Auto mode
+To disable the PID so that no new values are computed, set auto mode to False:
+```python
+pid.auto_mode = False  # No new values will be computed when pid is called
+pid.auto_mode = True   # pid is enabled again
+```
+When disabling the PID and controlling a system manually, it might be useful to tell the PID controller where to start from when giving back control to it. This can be done by enabling auto mode like this:
+```python
+pid.set_auto_mode(True, last_output=8.0)
+```
+This will set the I-term to the value given to `last_output`, meaning that if the system that is being controlled was stable at that output value the PID will keep the system stable if started from that point, without any big bumps in the output when turning the PID back on.
 
-### Contributing data
+#### Observing separate components
+When tuning the PID, it can be useful to see how each of the components contribute to the output. They can be seen like this:
+```python
+p, i, d = pid.components  # The separate terms are now in p, i, d
+```
 
-**Please note that we automatically pick up any SARS-CoV-2 data that is submitted to GISAID.**
+#### Proportional on measurement
+To eliminate overshoot in certain types of systems, you can calculate the [proportional term directly on the measurement](http://brettbeauregard.com/blog/2017/06/introducing-proportional-on-measurement/) instead of the error. This can be enabled like this:
+```python
+pid.proportional_on_measurement = True
+```
 
-If you're a lab and you'd like to get started sequencing, please see:
-* [Protocols from the ARTIC network](https://www.protocols.io/groups/artic/publications)
-* [Funding opportunities for sequencing efforts](https://twitter.com/firefoxx66/status/1242147905768751106)
-* Or, if these don't meet your needs, [get in touch](mailto:hello@nextstrain.org)
+#### Error mapping
+To transform the error value to another domain before doing any computations on it, you can supply an `error_map` callback function to the PID. The callback function should take one argument which is the error from the setpoint. This can be used e.g. to get a degree value error in a yaw angle control with values between [-pi, pi):
+```python
+import math
 
----
+def pi_clip(angle):
+    if angle > 0:
+        if angle > math.pi:
+            return angle - 2*math.pi
+    else:
+        if angle < -math.pi:
+            return angle + 2*math.pi
+    return angle
 
-# Get in touch
+pid.error_map = pi_clip
+```
 
-To report a bug, error, or feature request, please [open an issue](https://github.com/nextstrain/ncov/issues).
+## Tests
+Use the following to run tests:
+```
+tox
+```
 
-For questions, head over to the [discussion board](https://discussion.nextstrain.org/); we're happy to help!
+## License
+Licensed under the [MIT License](https://github.com/m-lundberg/simple-pid/blob/master/LICENSE.md).
