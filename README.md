@@ -1,67 +1,63 @@
-     ____          _           _                 _
-    |  _ \   __ _ | |_   __ _ | |      __ _   __| |
-    | | | | / _` || __| / _` || |     / _` | / _` |
-    | |_| || (_| || |_ | (_| || |___ | (_| || (_| |
-    |____/  \__,_| \__| \__,_||_____| \__,_| \__,_|
-                                       Neuroimaging
-
-[![Travis tests status](https://ci.appveyor.com/api/projects/status/github/datalad/datalad-neuroimaging?branch=master&svg=true)](https://ci.appveyor.com/project/mih/datalad-neuroimaging/branch/master) [![codecov.io](https://codecov.io/github/datalad/datalad-neuroimaging/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-neuroimaging?branch=master) [![Documentation](https://readthedocs.org/projects/datalad-neuroimaging/badge/?version=latest)](http://datalad-neuroimaging.rtfd.org) [![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/841) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![GitHub release](https://img.shields.io/github/release/datalad/datalad-neuroimaging.svg)](https://GitHub.com/datalad/datalad-neuroimaging/releases/) [![PyPI version fury.io](https://badge.fury.io/py/datalad-neuroimaging.svg)](https://pypi.python.org/pypi/datalad-neuroimaging/) [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/datalad/datalad-neuroimaging.svg)](http://isitmaintained.com/project/datalad/datalad-neuroimaging "Average time to resolve an issue") [![Percentage of issues still open](http://isitmaintained.com/badge/open/datalad/datalad-neuroimaging.svg)](http://isitmaintained.com/project/datalad/datalad-neuroimaging "Percentage of issues still open")
-
-This extension enhances DataLad (http://datalad.org) for working with
-neuroimaging data and workflows. Please see the [extension
-documentation](http://datalad-neuroimaging.rtfd.org)
-for a description on additional commands and functionality.
-
-For general information on how to use or contribute to DataLad (and this
-extension), please see the [DataLad website](http://datalad.org) or the
-[main GitHub project page](http://datalad.org).
+![PyTeal logo](https://github.com/algorand/pyteal/blob/master/docs/pyteal.png?raw=true)
 
 
-## Installation
+# PyTeal: Algorand Smart Contracts in Python
 
-Before you install this package, please make sure that you [install a recent
-version of git-annex](https://git-annex.branchable.com/install).  Afterwards,
-install the latest version of `datalad-neuroimaging` from
-[PyPi](https://pypi.org/project/datalad-neuroimaging). It is recommended to use
-a dedicated [virtualenv](https://virtualenv.pypa.io):
+[![Build Status](https://travis-ci.com/algorand/pyteal.svg?branch=master)](https://travis-ci.com/algorand/pyteal)
+[![PyPI version](https://badge.fury.io/py/pyteal.svg)](https://badge.fury.io/py/pyteal)
+[![Documentation Status](https://readthedocs.org/projects/pyteal/badge/?version=latest)](https://pyteal.readthedocs.io/en/latest/?badge=latest)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-    # create and enter a new virtual environment (optional)
-    virtualenv --system-site-packages --python=python3 ~/env/dataladni
-    . ~/env/dataladni/bin/activate
+PyTeal is a Python language binding for [Algorand Smart Contracts (ASC1s)](https://developer.algorand.org/docs/features/asc1/). 
 
-    # install from PyPi
-    pip install datalad_neuroimaging
+Algorand Smart Contracts are implemented using a new language that is stack-based, 
+called [Transaction Execution Approval Language (TEAL)](https://developer.algorand.org/docs/features/asc1/teal/). 
 
-There is also a [Singularity container](http://singularity.lbl.gov) available.
-The latest release version can be obtained by running:
+However, TEAL is essentially an assembly language. With PyTeal, developers can express smart contract logic purely using Python. 
+PyTeal provides high level, functional programming style abstractions over TEAL and does type checking at construction time.
 
-    singularity pull shub://datalad/datalad-neuroimaging
+### Install 
 
-## Support
+PyTeal requires Python version >= 3.6.
 
-The documentation of this project is found here:
-http://docs.datalad.org/projects/neuroimaging
+#### Recommended: Install from PyPi
 
-All bugs, concerns and enhancement requests for this software can be submitted here:
-https://github.com/datalad/datalad-neuroimaging/issues
+Install the latest official release from PyPi:
 
-If you have a problem or would like to ask a question about how to use DataLad,
-please [submit a question to
-NeuroStars.org](https://neurostars.org/tags/datalad) with a ``datalad`` tag.
-NeuroStars.org is a platform similar to StackOverflow but dedicated to
-neuroinformatics.
+* `pip install pyteal`
 
-All previous DataLad questions are available here:
-http://neurostars.org/tags/datalad/
+#### Install Latest Commit
 
-## Acknowledgements
+If needed, it's possible to install directly from the latest commit on master to use unreleased features:
 
-DataLad development is supported by a US-German collaboration in computational
-neuroscience (CRCNS) project "DataGit: converging catalogues, warehouses, and
-deployment logistics into a federated 'data distribution'" (Halchenko/Hanke),
-co-funded by the US National Science Foundation (NSF 1429999) and the German
-Federal Ministry of Education and Research (BMBF 01GQ1411). Additional support
-is provided by the German federal state of Saxony-Anhalt and the European
-Regional Development Fund (ERDF), Project: Center for Behavioral Brain
-Sciences, Imaging Platform.  This work is further facilitated by the ReproNim
-project (NIH 1P41EB019936-01A1).
+> **WARNING:** Unreleased code is experimental and may not be backwards compatible or function properly. Use extreme caution when installing PyTeal this way.
+
+* `pip install git+https://github.com/algorand/pyteal`
+
+### Documentation
+
+[PyTeal Docs](https://pyteal.readthedocs.io/)
+
+### Development Setup
+
+Setup venv (one time):
+ * `python3 -m venv venv`
+
+Active venv:
+ * `. venv/bin/activate` (if your shell is bash/zsh)
+ * `. venv/bin/activate.fish` (if your shell is fish)
+
+Pip install PyTeal in editable state
+ * `pip install -e .`
+
+Install dependencies:
+* `pip install -r requirements.txt`
+ 
+Type checking using mypy:
+* `mypy pyteal`
+
+Run tests:
+* `pytest`
+
+Format code:
+* `black .`
