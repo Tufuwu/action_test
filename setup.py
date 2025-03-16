@@ -1,55 +1,62 @@
-from setuptools import setup, find_packages
+# This file is part of Supysonic.
+# Supysonic is a Python implementation of the Subsonic server API.
+#
+# Copyright (C) 2013-2019 Alban 'spl0k' Féron
+#                    2017 Óscar García Amor
+#
+# Distributed under terms of the GNU AGPLv3 license.
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
+import supysonic as project
+
+from setuptools import setup
+from setuptools import find_packages
+
+reqs = [
+    "flask>=0.11",
+    "pony>=0.7.6",
+    "Pillow",
+    "requests>=1.0.0",
+    "mediafile",
+    "watchdog>=0.8.0",
+    "zipstream",
+]
 
 setup(
-    name='scanpy-scripts',
-    version='0.3.1',
-    author='nh3',
-    author_email='nh3@users.noreply.github.com',
-    description='Scripts for using scanpy from the command line',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/ebi-gene-expression-group/scanpy-scripts',
-    packages=find_packages(),
-    scripts=[
-        'scanpy-scripts-tests.bats',
-    ],
-    entry_points=dict(
-        console_scripts=[
-            'scanpy-cli=scanpy_scripts.cli:cli',
-            'scanpy-read-10x=scanpy_scripts.cmds:READ_CMD',
-            'scanpy-filter-cells=scanpy_scripts.cmds:FILTER_CMD',
-            'scanpy-filter-genes=scanpy_scripts.cmds:FILTER_CMD',
-            'scanpy-normalise-data=scanpy_scripts.cmds:NORM_CMD',
-            'scanpy-find-variable-genes=scanpy_scripts.cmds:HVG_CMD',
-            'scanpy-scale-data=scanpy_scripts.cmds:SCALE_CMD',
-            'scanpy-regress=scanpy_scripts.cmds:REGRESS_CMD',
-            'scanpy-run-pca=scanpy_scripts.cmds:PCA_CMD',
-            'scanpy-neighbors=scanpy_scripts.cmds:NEIGHBOR_CMD',
-            'scanpy-run-tsne=scanpy_scripts.cmds:TSNE_CMD',
-            'scanpy-run-umap=scanpy_scripts.cmds:UMAP_CMD',
-            'scanpy-find-cluster=scanpy_scripts.cli:cluster',
-            'scanpy-find-markers=scanpy_scripts.cmds:DIFFEXP_CMD',
+    name=project.NAME,
+    version=project.VERSION,
+    description=project.DESCRIPTION,
+    keywords=project.KEYWORDS,
+    long_description=project.LONG_DESCRIPTION,
+    author=project.AUTHOR_NAME,
+    author_email=project.AUTHOR_EMAIL,
+    url=project.URL,
+    license=project.LICENSE,
+    packages=find_packages(exclude=["tests*"]),
+    install_requires=reqs,
+    entry_points={
+        "console_scripts": [
+            "supysonic-cli=supysonic.cli:main",
+            "supysonic-daemon=supysonic.daemon:main",
         ]
-    ),
-    install_requires=[
-        'packaging',
-        'anndata',
-        'scipy',
-        'matplotlib',
-        'pandas',
-        'h5py<3.0.0',
-        'scanpy>=1.6.0',
-        'louvain',
-        'leidenalg',
-        'loompy>=2.0.0,<3.0.0',
-        'MulticoreTSNE',
-        'Click',
-        'umap-learn<0.4.0',
-        'harmonypy>=0.0.5',
-        'bbknn>=1.3.12',
-        'mnnpy>=0.1.9.5'
+    },
+    zip_safe=False,
+    include_package_data=True,
+    test_suite="tests.suite",
+    tests_require=["lxml"],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Environment :: Web Environment",
+        "Framework :: Flask",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: GNU Affero General Public License v3",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Multimedia :: Sound/Audio",
     ],
 )
