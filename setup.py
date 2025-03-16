@@ -1,89 +1,55 @@
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
+from setuptools import find_packages, setup
 
-import os
-import sys
-from setuptools import setup
+with open("README.rst") as f:
+    long_description = f.read()
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-v = sys.version_info
-if v[:2] < (3, 5):
-    error = "ERROR: Jupyter Enterprise Gateway requires Python version 3.5 or above."
-    print(error, file=sys.stderr)
-    sys.exit(1)
-
-version_ns = {}
-with open(os.path.join(here, 'enterprise_gateway', '_version.py')) as f:
-    exec(f.read(), {}, version_ns)
-
-setup_args = dict(
-    name='jupyter_enterprise_gateway',
-    author='Jupyter Development Team',
-    author_email='jupyter@googlegroups.com',
-    url='http://github.com/jupyter-incubator/enterprise_gateway',
-    description='A web server for spawning and communicating with remote Jupyter kernels',
-    long_description='''\
-A lightweight, multi-tenant, scalable and secure gateway that enables
-Jupyter Notebooks to share resources across distributed clusters such as
-Apache Spark, Kubernetes and others..
-''',
-    version=version_ns['__version__'],
-    license='BSD',
-    platforms="Linux, Mac OS X, Windows",
-    keywords=['Interactive', 'Interpreter', 'Kernel', 'Web', 'Cloud'],
-    packages=[
-        'enterprise_gateway',
-        'enterprise_gateway.base',
-        'enterprise_gateway.client',
-        'enterprise_gateway.services',
-        'enterprise_gateway.services.api',
-        'enterprise_gateway.services.kernels',
-        'enterprise_gateway.services.kernelspecs',
-        'enterprise_gateway.services.processproxies',
-        'enterprise_gateway.services.sessions'
-    ],
-    scripts=[
-        'scripts/jupyter-enterprisegateway'
-    ],
-    install_requires=[
-        'docker>=3.5.0',
-        'future',
-        'jinja2>=2.10',
-        'jupyter_client>=6.1',
-        'jupyter_core>=4.6.0',
-        'kubernetes>=4.0.0',
-        'notebook>=6.1.0',
-        'paramiko>=2.1.2',
-        'pexpect>=4.2.0',
-        'pycryptodomex>=3.9.7',
-        'pyzmq>=17.0.0',
-        'requests>=2.7,<3.0',
-        'tornado>=4.2.0',
-        'traitlets>=4.3.3',
-        'yarn-api-client>=1.0',
-    ],
-    python_requires='>=3.5',
-    classifiers=[
-        'Intended Audience :: Developers',
-        'Intended Audience :: System Administrators',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3'
-    ],
+setup(
+    name="PyFeeds",
+    version="2020.5.16",
+    description="DIY Atom feeds in times of social media and paywalls",
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
+    author="Florian Preinstorfer, Lukas Anzinger",
+    author_email="florian@nblock.org, lukas@lukasanzinger.at",
+    url="https://github.com/PyFeeds/PyFeeds",
+    packages=find_packages(exclude=["tests"]),
     include_package_data=True,
+    install_requires=[
+        "Click>=6.6",
+        "Scrapy>=2.2",
+        "bleach>=1.4.3",
+        "dateparser>=0.5.1",
+        "feedparser",
+        "lxml>=3.5.0",
+        "python-dateutil>=2.7.3",
+        "pyxdg>=0.26",
+        "readability-lxml>=0.7",
+        "scrapy-inline-requests",
+        "itemloaders",  # explicit dependency of Scrapy > 2.2.1
+    ],
+    extras_require={
+        "docs": ["sphinx", "sphinx_rtd_theme"],
+        "style": [
+            "black",
+            "doc8",
+            "flake8",
+            "isort>=5",
+            "pygments",
+            "restructuredtext_lint",
+        ],
+        "test": ["pytest"],
+    },
+    entry_points={"console_scripts": ["feeds=feeds.cli:main"]},
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "Framework :: Scrapy",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: GNU Affero General Public License v3",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Internet :: WWW/HTTP",
+    ],
 )
-
-if 'setuptools' in sys.modules:
-    # setupstools turns entrypoint scripts into executables on windows
-    setup_args['entry_points'] = {
-        'console_scripts': [
-            'jupyter-enterprisegateway = enterprise_gateway:launch_instance'
-        ]
-    }
-    # Don't bother installing the .py scripts if if we're using entrypoints
-    setup_args.pop('scripts', None)
-
-if __name__ == '__main__':
-    setup(**setup_args)
