@@ -1,138 +1,146 @@
-.. _Python Programming Language: http://www.python.org/
-.. _#circuits IRC Channel: http://webchat.freenode.net/?randomnick=1&channels=circuits&uio=d4
-.. _FreeNode IRC Network: http://freenode.net
-.. _Python Standard Library: http://docs.python.org/library/
-.. _MIT License: http://www.opensource.org/licenses/mit-license.php
-.. _Create an Issue: https://github.com/circuits/circuits/issues/new
-.. _Mailing List: http://groups.google.com/group/circuits-users
-.. _Website: http://circuitsframework.com/
-.. _PyPi: http://pypi.python.org/pypi/circuits
-.. _Documentation: http://circuits.readthedocs.org/en/latest/
-.. _Downloads: https://github.com/circuits/circuits/releases
-.. _Ask a Question: http://stackoverflow.com/questions/ask
-.. _Stackoverflow: http://stackoverflow.com/
-.. _Google+ Group: https://plus.google.com/communities/107775112577294599973
+===================
+django-typed-models
+===================
 
-.. image:: https://travis-ci.com/circuits/circuits.svg
-   :target: https://travis-ci.com/circuits/circuits
-   :alt: Build Status
+.. image:: https://travis-ci.org/craigds/django-typed-models.svg?branch=master
+   :target: https://travis-ci.org/craigds/django-typed-models
 
-.. image:: https://codecov.io/gh/circuits/circuits/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/circuits/circuits
-  :alt: Coverage
+.. image:: https://coveralls.io/repos/craigds/django-typed-models/badge.svg?branch=master
+   :target: https://coveralls.io/r/craigds/django-typed-models?branch=master
 
-.. image:: https://badge.waffle.io/circuits/circuits.png?label=ready&title=Ready
-   :target: https://waffle.io/circuits/circuits
-   :alt: Stories Ready
+Intro
+=====
 
-circuits is a **Lightweight** **Event** driven and **Asynchronous**
-**Application Framework** for the `Python Programming Language`_
-with a strong **Component** Architecture.
+``django-typed-models`` provides an extra type of model inheritance for Django. It is similar to single-table inheritance in Ruby on Rails.
 
-circuits also includes a lightweight, high performance and scalable
-HTTP/WSGI compliant web server as well as various I/O and Networking
-components.
+The actual type of each object is stored in the database, and when the object is retrieved it is automatically cast to the correct model class.
 
-- `Website`_
-- `Downloads`_
-- `Documentation`_
-
-Got questions?
-
-- `Ask a Question`_ (Tag it: ``circuits-framework``)
-
-
-Examples
---------
-
-.. include:: examples/index.rst
+Licensed under the New BSD License.
 
 
 Features
---------
+========
 
-- event driven
-- concurrency support
-- component architecture
-- asynchronous I/O components
-- no required external dependencies
-- full featured web framework (circuits.web)
-- coroutine based synchronization primitives
+* Models in querysets have the right class automatically
+* All models subclassing a common base are stored in the same table
+* Object types are stored in a 'type' field in the database
+* No extra queries or joins to retrieve multiple types
+
+
+Usage:
+======
+
+An example says a bunch of words:
+
+.. code-block:: python
+
+    # myapp/models.py
+
+    from django.db import models
+    from typedmodels.models import TypedModel
+
+    class Animal(TypedModel):
+        """
+        Abstract model
+        """
+        name = models.CharField(max_length=255)
+
+        def say_something(self):
+            raise NotImplemented
+
+        def __repr__(self):
+            return u'<%s: %s>' % (self.__class__.__name__, self.name)
+
+    class Canine(Animal):
+        def say_something(self):
+            return "woof"
+
+    class Feline(Animal):
+        mice_eaten = models.IntegerField(
+    	    default = 0
+            )
+
+        def say_something(self):
+            return "meoww"
+
+.. code-block:: python
+
+   # later
+    >>> from myapp.models import Animal, Canine, Feline
+    >>> Feline.objects.create(name="kitteh")
+    >>> Feline.objects.create(name="cheetah")
+    >>> Canine.objects.create(name="fido")
+    >>> print Animal.objects.all()
+    [<Feline: kitteh>, <Feline: cheetah>, <Canine: fido>]
+
+    >>> print Canine.objects.all()
+    [<Canine: fido>]
+
+    >>> print Feline.objects.all()
+    [<Feline: kitteh>, <Feline: cheetah>]
+
+You can actually change the types of objects. Simply run an update query:
+
+.. code-block:: python
+
+    Feline.objects.update(type='myapp.bigcat')
+
+If you want to change the type of an object without refreshing it from the database, you can call ``recast``:
+
+.. code-block:: python
+
+    kitty.recast(BigCat)
+    # or kitty.recast('myapp.bigcat')
+    kitty.save()
+
+
+Listing subclasses
+==================
+
+Occasionally you might need to list the various subclasses of your abstract type.
+
+One current use for this is connecting signals, since currently they don't fire on the base class (see `#1 <https://github.com/craigds/django-typed-models/issues/1>`_ )
+
+.. code-block:: python
+
+    for sender in Animal.get_type_classes():
+        post_save.connect(on_animal_saved, sender=sender)
+
+
+Django admin
+============
+
+If you plan to use typed models with Django admin, consider inheriting from typedmodels.admin.TypedModelAdmin.
+This will hide the type field from subclasses admin by default, and allow to create new instances from the base class admin.
+
+.. code-block:: python
+
+    from django.contrib import admin
+    from typedmodels.admin import TypedModelAdmin
+    from .models import Animal, Canine, Feline
+
+    @admin.register(Animal)
+    class AnimalAdmin(TypedModelAdmin):
+        pass
+
+    @admin.register(Canine)
+    class CanineAdmin(TypedModelAdmin):
+        pass
+
+    @admin.register(Feline)
+    class FelineAdmin(TypedModelAdmin):
+        pass
+
+
+Limitations
+===========
+
+* Since all objects are stored in the same table, all fields defined in subclasses are nullable.
+* Fields defined on subclasses can only be defined on *one* subclass.
 
 
 Requirements
-------------
-
-- circuits has no dependencies beyond the `Python Standard Library`_.
+============
 
 
-Supported Platforms
--------------------
-
-- Linux, FreeBSD, Mac OS X, Windows
-- Python 2.7, 3.4, 3.5, 3.6
-- pypy (the newer the better)
-
-
-Installation
-------------
-
-The simplest and recommended way to install circuits is with pip.
-You may install the latest stable release from PyPI with pip::
-
-    $ pip install circuits
-
-If you do not have pip, you may use easy_install::
-
-    $ easy_install circuits
-
-Alternatively, you may download the source package from the
-`PyPi`_ or the `Downloads`_ extract it and install using::
-
-    $ python setup.py install
-
-
-.. note::
-    You can install the `development version
-    <https://github.com/circuits/circuits/archive/master.zip#egg=circuits-dev>`_
-    via ``pip install circuits==dev``.
-
-
-License
--------
-
-circuits is licensed under the `MIT License`_.
-
-
-Feedback
---------
-
-We welcome any questions or feedback about bugs and suggestions on how to
-improve circuits.
-
-Let us know what you think about circuits. `@pythoncircuits <http://twitter.com/pythoncircuits>`_.
-
-Do you have suggestions for improvement? Then please `Create an Issue`_
-with details of what you would like to see. I'll take a look at it and
-work with you to either incorporate the idea or find a better solution.
-
-
-Community
----------
-
-There are also several places you can reach out to the circuits community:
-
-- `Mailing List`_
-- `Google+ Group`_
-- `#circuits IRC Channel`_ on the `FreeNode IRC Network`_
-- `Ask a Question`_ on `Stackoverflow`_ (Tag it: ``circuits-framework``)
-
-----
-
-Disclaimer
-----------
-
-Whilst I (James Mills) continue to contribute and maintain the circuits project
-I do not represent the interests or business of my employer Facebook Inc. The
-contributions I make are of my own free time and have no bearing or relevance
-to Facebook Inc.
+* Any `supported Django and Python version <https://docs.djangoproject.com/en/dev/faq/install/#what-python-version-can-i-use-with-django/>`_
