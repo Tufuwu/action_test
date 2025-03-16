@@ -1,141 +1,120 @@
-# Copyright (c) 2017-2019 Uber Technologies, Inc.
-# SPDX-License-Identifier: Apache-2.0
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+import inspect
 import os
-import subprocess
 import sys
 
 from setuptools import find_packages, setup
+from setuptools.command.test import test as TestCommand
 
-PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
-VERSION = """
-# This file is auto-generated with the version information during setup.py installation.
-
-__version__ = '{}'
-"""
-
-# Find pyro version.
-for line in open(os.path.join(PROJECT_PATH, 'pyro', '__init__.py')):
-    if line.startswith('version_prefix = '):
-        version = line.strip().split()[2][1:-1]
-
-# Append current commit sha to version
-commit_sha = ''
-try:
-    current_tag = subprocess.check_output(['git', 'tag', '--points-at', 'HEAD'],
-                                          cwd=PROJECT_PATH).decode('ascii').strip()
-    # only add sha if HEAD does not point to the release tag
-    if not current_tag == version:
-        commit_sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
-                                             cwd=PROJECT_PATH).decode('ascii').strip()
-# catch all exception to be safe
-except Exception:
-    pass  # probably not a git repo
-
-# Write version to _version.py
-if commit_sha:
-    version += '+{}'.format(commit_sha)
-with open(os.path.join(PROJECT_PATH, 'pyro', '_version.py'), 'w') as f:
-    f.write(VERSION.format(version))
+__location__ = os.path.join(os.getcwd(), os.path.dirname(inspect.getfile(inspect.currentframe())))
 
 
-# READ README.md for long description on PyPi.
-# This requires uploading via twine, e.g.:
-# $ python setup.py sdist bdist_wheel
-# $ twine upload --repository-url https://test.pypi.org/legacy/ dist/*  # test version
-# $ twine upload dist/*
-try:
-    long_description = open('README.md', encoding='utf-8').read()
-except Exception as e:
-    sys.stderr.write('Failed to read README.md: {}\n'.format(e))
-    sys.stderr.flush()
-    long_description = ''
+def read_version(package):
+    with open(os.path.join(package, '__init__.py'), 'r') as fd:
+        for line in fd:
+            if line.startswith('__version__ = '):
+                return line.split()[-1].strip().strip("'")
 
-# Remove badges since they will always be obsolete.
-# This assumes the first 12 lines contain badge info.
-long_description = '\n'.join([str(line) for line in long_description.split('\n')[12:]])
 
-# examples/tutorials
-EXTRAS_REQUIRE = [
-    'jupyter>=1.0.0',
-    'graphviz>=0.8',
-    'matplotlib>=1.3',
-    'torchvision>=0.9.0',
-    'visdom>=0.1.4',
-    'pandas',
-    'scikit-learn',
-    'seaborn',
-    'wget',
-    'lap',
-    # 'biopython>=1.54',  # Requires Python 3.6
-    # 'scanpy>=1.4',  # Requires HDF5
-    # 'scvi>=0.6',  # Requires loopy and other fragile packages
+version = read_version('connexion')
+
+install_requires = [
+    'clickclick>=1.2',
+    'jsonschema>=2.5.1',
+    'PyYAML>=5.1',
+    'requests>=2.9.1',
+    'inflection>=0.3.1',
+    'openapi-spec-validator>=0.2.4',
+    'werkzeug>=1.0,<2.0',
 ]
 
+swagger_ui_require = 'swagger-ui-bundle>=0.0.2'
+flask_require = 'flask>=1.0.4'
+aiohttp_require = [
+    'aiohttp>=2.3.10',
+    'aiohttp-jinja2>=0.14.0'
+]
+
+tests_require = [
+    'decorator',
+    'pytest',
+    'pytest-cov',
+    'testfixtures',
+    flask_require,
+    swagger_ui_require
+]
+
+tests_require.extend(aiohttp_require)
+tests_require.append('pytest-aiohttp')
+tests_require.append('aiohttp-remotes')
+
+
+class PyTest(TestCommand):
+
+    user_options = [('cov-html=', None, 'Generate junit html report')]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.cov = None
+        self.pytest_args = ['--cov', 'connexion', '--cov-report', 'term-missing',
+                            '--cov-config=py3-coveragerc', '-v']
+        self.cov_html = False
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        if self.cov_html:
+            self.pytest_args.extend(['--cov-report', 'html'])
+        self.pytest_args.extend(['tests'])
+
+    def run_tests(self):
+        import pytest
+
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
+
+
+def readme():
+    try:
+        return open('README.rst', encoding='utf-8').read()
+    except TypeError:
+        return open('README.rst').read()
+
+
 setup(
-    name='pyro-ppl',
+    name='connexion',
+    packages=find_packages(),
     version=version,
-    description='A Python library for probabilistic modeling and inference',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    packages=find_packages(include=['pyro', 'pyro.*']),
-    package_data={"pyro.distributions": ["*.cpp"]},
-    author="Uber AI Labs",
-    url='http://pyro.ai',
-    install_requires=[
-        # if you add any additional libraries, please also
-        # add them to `docs/requirements.txt`
-        # numpy is necessary for some functionality of PyTorch
-        'numpy>=1.7',
-        'opt_einsum>=2.3.2',
-        'pyro-api>=0.1.1',
-        'torch>=1.8.0',
-        'tqdm>=4.36',
-    ],
+    description='Connexion - API first applications with OpenAPI/Swagger and Flask',
+    long_description=readme(),
+    author='Zalando SE',
+    url='https://github.com/zalando/connexion',
+    keywords='openapi oai swagger rest api oauth flask microservice framework',
+    license='Apache License Version 2.0',
+    setup_requires=['flake8'],
+    python_requires=">=3.6",
+    install_requires=install_requires + [flask_require],
+    tests_require=tests_require,
     extras_require={
-        'extras': EXTRAS_REQUIRE,
-        'test': EXTRAS_REQUIRE + [
-            'nbval',
-            'pytest>=5.0',
-            'pytest-cov',
-            'scipy>=1.1',
-        ],
-        'profile': ['prettytable', 'pytest-benchmark', 'snakeviz'],
-        'dev': EXTRAS_REQUIRE + [
-            'flake8',
-            'isort>=5.0',
-            'mypy>=0.812',
-            'nbformat',
-            'nbsphinx>=0.3.2',
-            'nbstripout',
-            'nbval',
-            'ninja',
-            'pypandoc',
-            'pytest>=5.0',
-            'pytest-xdist',
-            'scipy>=1.1',
-            'sphinx',
-            'sphinx_rtd_theme',
-            'yapf',
-        ],
-        'horovod': ['horovod[pytorch]>=0.19'],
-        'funsor': [
-            # This must be a released version when Pyro is released.
-            'funsor[torch] @ git+git://github.com/pyro-ppl/funsor.git@7be0ef9af6a100e52ac98ab13b203a4dec0ae42e',
-        ],
+        'tests': tests_require,
+        'flask': flask_require,
+        'swagger-ui': swagger_ui_require,
+        'aiohttp': aiohttp_require
     },
-    python_requires='>=3.6',
-    keywords='machine learning statistics probabilistic programming bayesian modeling pytorch',
-    license='Apache 2.0',
+    cmdclass={'test': PyTest},
+    test_suite='tests',
     classifiers=[
-        'Intended Audience :: Developers',
-        'Intended Audience :: Education',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: MacOS :: MacOS X',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+        'Topic :: Software Development :: Libraries :: Application Frameworks'
     ],
-    # yapf
+    include_package_data=True,  # needed to include swagger-ui (see MANIFEST.in)
+    entry_points={'console_scripts': ['connexion = connexion.cli:main']}
 )

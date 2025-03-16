@@ -1,2 +1,3 @@
-include LICENSE.md MANIFEST.in
-recursive-include pyro *.cpp
+recursive-include connexion/vendor/swagger-ui *
+include *.txt
+include *.rst
