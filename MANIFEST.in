@@ -1,3 +1,2 @@
-include description.rst
-include requirements.txt
+recursive-include aif360/data/ *
 include LICENSE
