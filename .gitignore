@@ -1,2 +1,10 @@
-/dist/
-/docs/build/
+__pycache__/
+.mypy_cache
+*.egg-info/
+**/*.pyc
+.cache
+examples/data
+.idea
+.coverage
+dist/*
+build/*
