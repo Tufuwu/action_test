@@ -1,13 +1,22 @@
-#!/usr/bin/env python
-"""
-Script to run all tests in the entire project
-"""
+import logging
+import os
+import sys
 
-import unittest
-from sys import exit
+import django
+from django.conf import settings
+from django.test.utils import get_runner
 
-if __name__ == '__main__':
-    test_suite = unittest.defaultTestLoader.discover('.')
-    result = unittest.TextTestRunner(verbosity=3).run(test_suite)
-    exit(0 if result.wasSuccessful() else 1)
+log = logging.getLogger(__name__)
 
+SETTINGS = "mentions.tests.config.test_settings"
+
+
+if __name__ == "__main__":
+    os.environ["DJANGO_SETTINGS_MODULE"] = SETTINGS
+
+    django.setup()
+
+    test_runner = get_runner(settings)()
+    failures = test_runner.run_tests(["mentions.tests"])
+
+    sys.exit(bool(failures))
