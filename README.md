@@ -1,66 +1,58 @@
-# Duo Universal Python SDK
+<div align="center">
 
-This SDK allows a web developer to quickly add Duo's interactive, self-service, two-factor authentication to any Python web login form. Both Python 2 and Python 3 are supported.
+# PyLaia
 
-What's here:
-* `duo_universal` - The Python Duo SDK for interacting with the Duo Universal Prompt
-* `demo` - An example web application with Duo integrated
-* `tests` - Test cases
+**PyLaia is a device agnostic, PyTorch based, deep learning toolkit for handwritten document analysis.**
 
-## Getting Started
-To use the SDK in your existing development environment, install it from pypi (https://pypi.org/project/duo_universal).
-```
-pip install duo_universal
-```
-Once it's installed, see our developer documentation at https://duo.com/docs/duoweb-v4 and `demo/app.py` in this repo for guidance on integrating Duo 2FA into your web application.
+**It is also a successor to [Laia](https://github.com/jpuigcerver/Laia).**
 
-## Contribute
-To contribute, fork this repo and make a pull request with your changes when they're ready. 
+[![Build](https://img.shields.io/github/workflow/status/carmocca/PyLaia/Laia%20CI?&label=Build&logo=GitHub&labelColor=1b1f23)](https://github.com/carmocca/PyLaia/actions?query=workflow%3A%22Laia+CI%22)
+[![Coverage](https://img.shields.io/codecov/c/github/carmocca/PyLaia?&label=Coverage&logo=Codecov&logoColor=ffffff&labelColor=f01f7a)](https://codecov.io/gh/carmocca/PyLaia)
+[![Code quality](https://img.shields.io/codefactor/grade/github/carmocca/PyLaia?&label=CodeFactor&logo=CodeFactor&labelColor=2782f7)](https://www.codefactor.io/repository/github/carmocca/PyLaia)
 
-If you're not already working from a dedicated development environment, it's recommended a virtual environment is used. Assuming a virtual environment named `env`, create and activate the environment:
-```
-# Python 3
-python -m venv env
-source env/bin/activate
+[![Python: 3.6+](https://img.shields.io/badge/Python-3.6%2B-FFD43B.svg?&logo=Python&logoColor=white&labelColor=306998)](https://www.python.org/)
+[![PyTorch: 1.4.0+](https://img.shields.io/badge/PyTorch-1.4.0%2B-8628d5.svg?&logo=PyTorch&logoColor=white&labelColor=%23ee4c2c)](https://pytorch.org/)
+[![pre-commit: enabled](https://img.shields.io/badge/pre--commit-enabled-76877c?&logo=pre-commit&labelColor=1f2d23)](https://github.com/pre-commit/pre-commit)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?)](https://github.com/ambv/black)
 
-# Python 2
-virtualenv env
-source env/bin/activate
-```
+</div>
 
-Build and install the SDK from source:
-```
-pip install -r requirements.txt
-pip install .
+Get started by having a look at our [Wiki](https://github.com/jpuigcerver/PyLaia/wiki)!
+###### Several (mostly undocumented) examples of its use are provided at [PyLaia-examples](https://github.com/carmocca/PyLaia-examples).
+
+## Installation
+
+In order to install PyLaia, follow this recipe:
+
+```bash
+git clone https://github.com/jpuigcerver/PyLaia
+cd PyLaia
+pip install --editable .
+# alternatively, to install extras
+pip install --editable .[dev,test]
 ```
 
-## Tests
-Install the test requirements:
+The following Python scripts will be installed in your system:
+
+- [`pylaia-htr-create-model`](laia/scripts/htr/create_model.py): Create a VGG-like model with BLSTMs on top for handwriting text recognition. The script has different options to costumize the model. The architecture is based on the paper ["Are Multidimensional Recurrent Layers Really Necessary for Handwritten Text Recognition?"](https://ieeexplore.ieee.org/document/8269951) (2017) by J. Puigcerver.
+- [`pylaia-htr-train-ctc`](laia/scripts/htr/train_ctc.py): Train a model using the CTC algorithm and a set of text-line images and their transcripts.
+- [`pylaia-htr-decode-ctc`](laia/scripts/htr/decode_ctc.py): Decode text line images using a trained model and the CTC algorithm. It can also output the char/word segmentation boundaries of the symbols recognized.
+- [`pylaia-htr-netout`](laia/scripts/htr/netout.py): Dump the output of the model for a set of text-line images in order to decode using an external language model.
+
+## Acknowledgments
+
+Work in this toolkit was financially supported by the [Pattern Recognition and Human Language Technology (PRHLT) Research Center](https://www.prhlt.upv.es/wp/)
+
+## BibTeX
+
 ```
-cd tests
-pip install -r requirements.txt
+@misc{puigcerver2018pylaia,
+  author = {Joan Puigcerver and Carlos Mocholí},
+  title = {PyLaia},
+  year = {2018},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/jpuigcerver/PyLaia}},
+  commit = {commit SHA}
+}
 ```
-Then run tests from the `test` directory:
-```
-# Run an individual test file
-python <test_name>.py
-
-# Run all tests with nose
-nose2
-
-# Run all tests with unittest
-python -m unittest
-```
-
-## Lint
-```
-flake8
-```
-
-## Support
-
-Please report any bugs, feature requests, or issues to us directly at support@duosecurity.com.
-
-Thank you for using Duo!
-
-https://duo.com/
