@@ -1,5 +1,10 @@
-.settings/
-*.pyo
+*.swp
 *.pyc
-.project
-.pydevproject
+.idea/
+*.egg-info/
+build/
+dist/
+*.egg
+.python-env/
+.coverage
+.cache
