@@ -1,49 +1,38 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Thanks to Kenneth Reitz, I stole the template for this
 
 import sys
+from setuptools import setup
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+TESTING = any(x in sys.argv for x in ['test', 'pytest'])
+UPLOAD = 'upload_sphinx' in sys.argv
 
-required = []
-packages = ["limbo", "limbo.plugins"]
+if not UPLOAD and sys.version_info < (3, 6):
+    raise RuntimeError("aiostream requires Python 3.6")
 
-try:
-    longdesc = open("README.rst").read()
-except:
-    longdesc = ""
+with open("README.rst", encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
-    name="limbo",
-    version="8.1.0",
-    description="Simple and Clean Slack Chatbot",
-    long_description=longdesc,
-    author="Bill Mill",
-    author_email="bill@billmill.org",
-    url="https://github.com/llimllib/limbo",
-    packages=packages,
-    scripts=["bin/limbo"],
-    package_data={"": ["LICENSE", "limbo/plugins/*.py"]},
-    include_package_data=True,
-    install_requires=required,
-    license="MIT",
-    python_requires=">=3.4",
+    name='aiostream',
+    version='0.4.2.dev0',
+
+    packages=['aiostream', 'aiostream.stream'],
+    setup_requires=['pytest-runner' if TESTING else ''],
+    install_requires=['async_exit_stack;python_version<"3.7"'],
+    tests_require=['pytest', 'pytest-asyncio', 'pytest-cov'],
+
+    description="Generator-based operators for asynchronous iteration",
+    long_description=long_description,
+    url="https://github.com/vxgmichel/aiostream",
+
+    license="GPLv3",
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "Natural Language :: English",
-        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: Implementation :: PyPy",
     ],
-    keywords="slack chatbot chat limbo",
+
+    author="Vincent Michel",
+    author_email="vxgmichel@gmail.com",
 )
