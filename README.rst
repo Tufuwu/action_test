@@ -1,122 +1,311 @@
-pigar
-=====
 
-.. image:: https://img.shields.io/github/workflow/status/damnever/pigar/PyCI?style=flat-square
-    :target: https://github.com/damnever/pigar/actions
-
-.. image:: https://img.shields.io/pypi/v/pigar.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/pigar
+Treasure Data API library for Python
+====================================
 
 
-A tool to generate requirements.txt for your Python project, and more than that.
-
-**NOTE**: `Pipenv <https://packaging.python.org/tutorials/managing-dependencies/#managing-dependencies>`_ or other tools is recommended for improving your development flow.
-
-.. image:: https://raw.githubusercontent.com/damnever/pigar/master/guide.gif
-    :target: https://github.com/damnever/pigar
+.. image:: https://travis-ci.org/treasure-data/td-client-python.svg
+   :target: https://travis-ci.org/treasure-data/td-client-python
+   :alt: Build Status
 
 
-Features
---------
+.. image:: https://ci.appveyor.com/api/projects/status/eol91l1ag50xee9m/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/treasure-data/td-client-python/branch/master
+   :alt: Build status
 
-- When generating requirements for a project, ``pigar`` can consider all kinds of complicated situations. For example, this project has `py2_requirements.txt <https://github.com/damnever/pigar/blob/master/py2_requirements.txt>`_ and `py3_requirements.txt <https://github.com/damnever/pigar/blob/master/py3_requirements.txt>`_ for different Python versions(see the above GIF). ::
 
-    # Generate requirements.txt for current directory.
-    $ pigar
+.. image:: https://coveralls.io/repos/treasure-data/td-client-python/badge.svg
+   :target: https://coveralls.io/r/treasure-data/td-client-python
+   :alt: Coverage Status
 
-    # Generate requirements for given directory in given file.
-    $ pigar -p ../dev-requirements.txt -P ../
 
-  ``pigar`` can list all files which referenced the package, for example: ::
+.. image:: https://badge.fury.io/py/td-client.svg
+   :target: http://badge.fury.io/py/td-client
+   :alt: PyPI version
 
-    # project/foo.py: 2,3
-    # project/bar/baz.py: 2,7,8,9
-    foobar == 3.3.3
 
-  If the requirements file is overwritten, ``pigar`` will show the difference between the old and the new.
+Treasure Data API library for Python
 
-- If you do not know the import name that belongs to a specific package (more generally, does ``Import Error: xxx`` drive you crazy?), such as ``bs4`` which may come from ``beautifulsoup4`` or ``MySQLdb`` which could come from ``MySQL_Python``, try searching for it: ::
-
-    $ pigar -s bs4 MySQLdb
-
-- To check requirements for the latest version, just do: ::
-
-    # Specify a requirements file.
-    $ pigar -c ./requirements.txt
-
-    # Or, you can let pigar search for *requirements.txt in the current directory
-    # level by itself. If not found, pigar will generate requirements.txt
-    # for the current project, then check for the latest versions.
-    $ pigar -c
-
-Installation
+Requirements
 ------------
 
-``pigar`` can run on Python 2.7.+ and 3.2+.
+``td-client`` supports the following versions of Python.
 
-To install it with ``pip``, use: ::
 
-    [sudo] pip install pigar
+* Python 3.5+
+* PyPy
 
-To install it with ``conda``, use: ::
-
-    conda install -c conda-forge pigar
-
-To get the newest code from GitHub: ::
-
-  pip install git+https://github.com/damnever/pigar.git@[master or other branch] --upgrade
-
-Usage
------
-
-::
-
-  usage: pigar [-h] [-v] [-u] [-s NAME [NAME ...]] [-c [PATH]] [-l LOG_LEVEL]
-               [-i DIR [DIR ...]] [-p SAVE_PATH] [-P PROJECT_PATH]
-               [-o COMPARISON_OPERATOR] [--without-referenced-comments]
-
-  Python requirements tool -- pigar, it will do only one thing at each time.
-  Default action is generate requirements.txt in current directory.
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -v, --version         show pigar version information and exit
-    -u, --update          update database, use it when pigar failed you, exit
-                          when action done
-    -s NAME [NAME ...]    search package name by import name, use it if you do
-                          not know import name come from which package, exit
-                          when action done
-    -c [PATH]             check requirements for the latest version. If file
-                          path not given, search *requirements.txt in current
-                          directory, if not found, generate file
-                          requirements.txt, exit when action done
-    -l LOG_LEVEL          show given level log messages, argument can be (ERROR,
-                          WARNING, INFO, DEBUG), case-insensitive
-    -i DIR [DIR ...]      given a list of directory to ignore, relative
-                          directory, *used for* -c and default action
-    -p SAVE_PATH          save requirements in given file path, *used for*
-                          default action
-    -P PROJECT_PATH       project path, which is directory, *used for* default
-                          action
-    -o COMPARISON_OPERATOR
-                          The comparison operator for versions, alternatives:
-                          [==, ~=, >=]
-    --without-referenced-comments
-                          Omit requirements.txt comments showing the file and
-                          line of each import
-
-More
-----
-
-``pigar`` does not use regular expressions in such a violent way. Instead, it uses AST, which is a better method for extracting imported names from arguments of ``exec``/``eval``, doctest of docstring, etc.
-
-Also, ``pigar`` can detect the difference between different Python versions. For example, you can find ``concurrent.futures`` from the Python 3.2 standard library, but you will need install ``futures`` in earlier versions of Python to get ``concurrent.futures``.
-
-Finally, you already saw ``Features``. You can learn more from the source code.
-
-If you have any issues or suggestions, `please submit an issue on GitHub <https://github.com/damnever/pigar/issues>`_.
-
-LICENSE
+Install
 -------
 
-`The BSD 3-Clause License <https://github.com/damnever/pigar/blob/master/LICENSE>`_
+You can install the releases from `PyPI <https://pypi.python.org/>`_.
+
+.. code-block:: sh
+
+   $ pip install td-client
+
+It'd be better to install `certifi <https://pypi.python.org/pypi/certifi>`_ to enable SSL certificate verification.
+
+.. code-block:: sh
+
+   $ pip install certifi
+
+Examples
+--------
+
+Please see also the examples at `Treasure Data Documentation <http://docs.treasuredata.com/articles/rest-api-python-client>`_.
+
+The td-client documentation is hosted at https://tdclient.readthedocs.io/,
+or you can go directly to the
+`API documentation <https://tdclient.readthedocs.io/en/latest/api/index.html>`_.
+
+For information on the parameters that may be used when reading particular
+types of data, see `File import parameters`_.
+
+.. _`file import parameters`:
+   https://tdclient.readthedocs.io/en/latest/api/file_import_paremeters.html
+
+Listing jobs
+^^^^^^^^^^^^
+
+Treasure Data API key will be read from environment variable ``TD_API_KEY``\ , if none is given via ``apikey=`` argument passed to ``tdclient.Client``.
+
+Treasure Data API endpoint ``https://api.treasuredata.com`` is used by default. You can override this with environment variable ``TD_API_SERVER``\ , which in turn can be overridden via ``endpoint=`` argument passed to ``tdclient.Client``. List of available Treasure Data sites and corresponding API endpoints can be found `here <https://support.treasuredata.com/hc/en-us/articles/360001474288-Sites-and-Endpoints>`_.
+
+.. code-block:: python
+
+   import tdclient
+
+   with tdclient.Client() as td:
+       for job in td.jobs():
+           print(job.job_id)
+
+Running jobs
+^^^^^^^^^^^^
+
+Running jobs on Treasure Data.
+
+.. code-block:: python
+
+   import tdclient
+
+   with tdclient.Client() as td:
+       job = td.query("sample_datasets", "SELECT COUNT(1) FROM www_access", type="hive")
+       job.wait()
+       for row in job.result():
+           print(repr(row))
+
+Running jobs via DBAPI2
+^^^^^^^^^^^^^^^^^^^^^^^
+
+td-client-python implements `PEP 0249 <https://www.python.org/dev/peps/pep-0249/>`_ Python Database API v2.0.
+You can use td-client-python with external libraries which supports Database API such like `pandas <http://pandas.pydata.org/>`_.
+
+.. code-block:: python
+
+   import pandas
+   import tdclient
+
+   def on_waiting(cursor):
+       print(cursor.job_status())
+
+   with tdclient.connect(db="sample_datasets", type="presto", wait_callback=on_waiting) as td:
+       data = pandas.read_sql("SELECT symbol, COUNT(1) AS c FROM nasdaq GROUP BY symbol", td)
+       print(repr(data))
+
+We offer another package for pandas named `pytd <https://github.com/treasure-data/pytd>`_ with some advanced features.
+You may prefer it if you need to do complicated things, such like exporting result data to Treasure Data, printing job's
+progress during long execution, etc.
+
+Importing data
+^^^^^^^^^^^^^^
+
+Importing data into Treasure Data in streaming manner, as similar as `fluentd <http://www.fluentd.org/>`_ is doing.
+
+.. code-block:: python
+
+   import sys
+   import tdclient
+
+   with tdclient.Client() as td:
+       for file_name in sys.argv[:1]:
+           td.import_file("mydb", "mytbl", "csv", file_name)
+
+
+.. Warning::
+   Importing data in streaming manner requires certain amount of time to be ready to query since schema update will be
+   executed with delay.
+
+Bulk import
+^^^^^^^^^^^
+
+Importing data into Treasure Data in batch manner.
+
+.. code-block:: python
+
+   import sys
+   import tdclient
+   import uuid
+   import warnings
+
+   if len(sys.argv) <= 1:
+       sys.exit(0)
+
+   with tdclient.Client() as td:
+       session_name = "session-{}".format(uuid.uuid1())
+       bulk_import = td.create_bulk_import(session_name, "mydb", "mytbl")
+       try:
+           for file_name in sys.argv[1:]:
+               part_name = "part-{}".format(file_name)
+               bulk_import.upload_file(part_name, "json", file_name)
+           bulk_import.freeze()
+       except:
+           bulk_import.delete()
+           raise
+       bulk_import.perform(wait=True)
+       if 0 < bulk_import.error_records:
+           warnings.warn("detected {} error records.".format(bulk_import.error_records))
+       if 0 < bulk_import.valid_records:
+           print("imported {} records.".format(bulk_import.valid_records))
+       else:
+           raise(RuntimeError("no records have been imported: {}".format(bulk_import.name)))
+       bulk_import.commit(wait=True)
+       bulk_import.delete()
+
+
+If you want to import data as `msgpack <https://msgpack.org/>`_ format, you can write as follows:
+
+.. code-block:: python
+
+   import io
+   import time
+   import uuid
+   import warnings
+
+   import tdclient
+
+   t1 = int(time.time())
+   l1 = [{"a": 1, "b": 2, "time": t1}, {"a": 3, "b": 9, "time": t1}]
+
+   with tdclient.Client() as td:
+       session_name = "session-{}".format(uuid.uuid1())
+       bulk_import = td.create_bulk_import(session_name, "mydb", "mytbl")
+       try:
+           _bytes = tdclient.util.create_msgpack(l1)
+           bulk_import.upload_file("part", "msgpack", io.BytesIO(_bytes))
+           bulk_import.freeze()
+       except:
+           bulk_import.delete()
+           raise
+       bulk_import.perform(wait=True)
+       # same as the above example
+
+
+Changing how CSV and TSV columns are read
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``td-client`` package will generally make sensible choices on how to read
+the columns in CSV and TSV data, but sometimes the user needs to override the
+default mechanism. This can be done using the optional `file import
+parameters`_ ``dtypes`` and ``converters``.
+
+For instance, consider CSV data that starts with the following records::
+
+  time,col1,col2,col3
+  1575454204,a,0001,a;b;c
+  1575454204,b,0002,d;e;f
+
+If that data is read using the defaults, it will produce values that look
+like:
+
+.. code:: python
+
+  1575454204, "a", 1, "a;b;c"
+  1575454204, "b", 2, "d;e;f"
+  
+that is, an integer, a string, an integer and another string.
+
+If the user wants to keep the leading zeroes in ``col2``, then they can
+specify the column datatype as string. For instance, using
+``bulk_import.upload_file`` to read data from ``input_data``:
+
+.. code:: python
+
+    bulk_import.upload_file(
+        "part", "msgpack", input_data,
+        dtypes={"col2": "str"},
+    )
+
+which would produce:
+
+.. code:: python
+
+  1575454204, "a", "0001", "a;b;c"
+  1575454204, "b", "0002", "d;e;f"
+
+If they also wanted to treat ``col3`` as a sequence of strings, separated by
+semicolons, then they could specify a function to process ``col3``:
+
+.. code:: python
+
+    bulk_import.upload_file(
+        "part", "msgpack", input_data,
+        dtypes={"col2": "str"},
+        converters={"col3", lambda x: x.split(";")},
+    )
+
+which would produce:
+
+.. code:: python
+
+  1575454204, "a", "0001", ["a", "b", "c"]
+  1575454204, "b", "0002", ["d", "e", "f"]
+
+Development
+-----------
+
+Running tests
+^^^^^^^^^^^^^
+
+Run tests.
+
+.. code-block:: sh
+
+   $ python setup.py test
+
+Running tests (tox)
+^^^^^^^^^^^^^^^^^^^
+
+You can run tests against all supported Python versions. I'd recommend you to install `pyenv <https://github.com/yyuu/pyenv>`_ to manage Pythons.
+
+.. code-block:: sh
+
+   $ pyenv shell system
+   $ for version in $(cat .python-version); do [ -d "$(pyenv root)/versions/${version}" ] || pyenv install "${version}"; done
+   $ pyenv shell --unset
+
+Install `tox <https://pypi.python.org/pypi/tox>`_.
+
+.. code-block:: sh
+
+   $ pip install tox
+
+Then, run ``tox``.
+
+.. code-block:: sh
+
+   $ tox
+
+Release
+^^^^^^^
+
+Release to PyPI. Ensure you installed twine.
+
+.. code-block:: sh
+
+   $ python setup.py bdist_wheel sdist
+   $ twine upload dist/*
+
+License
+-------
+
+Apache Software License, Version 2.0

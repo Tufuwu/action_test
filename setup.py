@@ -1,62 +1,74 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-import sys
+import os
 import re
-import codecs
+import sys
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+from setuptools.command.test import test as TestCommand
 
-version = ''
-with open('pigar/version.py', 'r') as f:
-    version = re.search(
-        r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.M
-    ).group(1)
 
-if not version:
-    raise RuntimeError('Cannot find version information')
+def read(fname):
+    with open(os.path.join(os.path.dirname(__file__), fname)) as fp:
+        return fp.read()
 
-with codecs.open('README-PYPI.rst', encoding='utf-8') as f:
-    long_description = f.read()
 
-with codecs.open('CHANGELOGS.rst', encoding='utf-8') as f:
-    change_logs = f.read()
+m = re.search(
+    r"^__version__ *= *\"([^\"]*)\" *$", read("tdclient/version.py"), re.MULTILINE
+)
 
-install_requires = [
-    'colorama>=0.3.9',
-    'requests>=2.20.0',
-]
-if sys.version_info < (3, 2):
-    install_requires.append('futures')
+if m is None:
+    raise (RuntimeError("could not read tdclient/version.py"))
+else:
+    version = m.group(1)
+
+
+class PyTest(TestCommand):
+    user_options = [("pytest-args=", "a", "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = []
+
+    def run_tests(self):
+        import pytest
+
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
+
 
 setup(
-    name='pigar',
+    name="td-client",
     version=version,
-    description=(
-        'A fantastic tool to generate requirements for your'
-        ' Python project, and more than that.'
-    ),
-    long_description=long_description + '\n\n' + change_logs,
-    url='https://github.com/damnever/pigar',
-    author='damnever',
-    author_email='dxc.wolf@gmail.com',
-    license='The BSD 3-Clause License',
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Topic :: Utilities',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-    ],
-    keywords='requirements tool',
+    description="Treasure Data API library for Python",
+    long_description=read("README.rst"),
+    long_description_content_type="text/x-rst; charset=UTF-8;",
+    author="Treasure Data, Inc.",
+    author_email="support@treasure-data.com",
+    url="http://treasuredata.com/",
+    python_requires=">=3.5",
+    install_requires=["msgpack>=0.6.2", "python-dateutil", "urllib3"],
+    tests_require=["coveralls", "mock", "pytest", "pytest-cov", "tox"],
+    extras_require={
+        "dev": ["black==19.3b0", "isort", "flake8"],
+        "docs": ["sphinx", "sphinx_rtd_theme"],
+    },
     packages=find_packages(),
-    install_requires=install_requires,
-    include_package_data=True,
-    entry_points={'console_scripts': [
-        'pigar=pigar.__main__:main',
-    ]},
+    cmdclass={"test": PyTest},
+    license="Apache Software License",
+    platforms="Posix; MacOS X; Windows",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Environment :: Web Environment",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
+        "Topic :: Internet",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+    ],
 )
