@@ -1,19 +1,67 @@
-__pycache__
-.vscode
-.history
+*.py[cod]
+
+# Binaries
+bin
+solcx/temp
+
+# C extensions
+*.so
+
+# Packages
+*.eggs
+*.egg-info
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+venv
+env
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
 .coverage
-.coverage.*
-build/
-brownie/data/*/
-brownie/data/*.json
+.tox
 coverage.xml
-dist/
+nosetests.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Complexity
+output/*.html
+output/*/index.html
+
+# Sphinx
 docs/_build
-venv/
-env/
-*egg-info/
-.tox/
-.mypy_cache/
-.idea/
-.DS_Store
-.hypothesis/
+
+# Blockchain
+**/chains/*/nodes/*
+**/chains/*/nodekey
+**/chains/*/dapp/*
+**/chains/*/chaindata/*
+
+# Known Contracts
+**/known_contracts.json
+
+# py.test cache
+.cache
+
+# npm
+node_modules
+
+# other
+.vscode
+.idea

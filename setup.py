@@ -1,38 +1,31 @@
-#!/usr/bin/python3
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from setuptools import find_packages, setup
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-with open("requirements.txt", "r") as f:
-    requirements = list(map(str.strip, f.read().split("\n")))[:-1]
-
 setup(
-    name="eth-brownie",
-    packages=find_packages(),
-    version="1.7.3",  # don't change this manually, use bumpversion instead
-    license="MIT",
-    description="A Python framework for Ethereum smart contract deployment, testing and interaction.",  # noqa: E501
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author="Ben Hauser",
+    name="py-solc-x",
+    version="0.8.1",
+    description="""Python wrapper around the solc binary with 0.5.x and 0.6.x support""",
+    long_description_markdown_filename="README.md",
+    author="Ben Hauser (forked from py-solc by Piper Merriam)",
     author_email="ben@hauser.id",
-    url="https://github.com/iamdefinitelyahuman/brownie",
-    keywords=["brownie"],
-    install_requires=requirements,
-    entry_points={
-        "console_scripts": ["brownie=brownie._cli.__main__:main"],
-        "pytest11": ["pytest-brownie=brownie.test.plugin"],
-    },
+    url="https://github.com/iamdefinitelyahuman/py-solc-x",
     include_package_data=True,
-    python_requires=">=3.6,<4",
+    py_modules=["solcx"],
+    setup_requires=["setuptools-markdown"],
+    python_requires=">=3.4, <4",
+    install_requires=["semantic_version>=2.8.1,<3", "requests>=2.19.0,<3"],
+    license="MIT",
+    zip_safe=False,
+    keywords="ethereum solidity solc",
+    packages=find_packages(exclude=["tests", "tests.*"]),
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Topic :: Software Development :: Build Tools",
         "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",

@@ -4,8 +4,7 @@ about: Report an error that you've encountered.
 ---
 ### Environment information
 
-* `brownie` Version: x.x.x
-* `ganache-cli` Version: x.x.x
+* `py-solc-x` Version: x.x.x
 * `solc` Version: x.x.x
 * Python Version: x.x.x
 * OS: osx/linux/win
