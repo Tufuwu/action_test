@@ -1,63 +1,58 @@
-"""
-Installation setup for mtgjson5
-"""
-import configparser
-import pathlib
+#!/usr/bin/env python
+""" Setup to allow pip installs of edx-rest-api-client module """
 
-import setuptools
+from setuptools import setup, find_packages
 
-# Establish project directory
-project_root: pathlib.Path = pathlib.Path(__file__).resolve().parent
+from edx_rest_api_client import __version__
 
-# Read config details to determine version-ing
-config_file = project_root.joinpath("mtgjson5/resources/mtgjson.properties")
-config = configparser.ConfigParser()
-if config_file.is_file():
-    config.read(str(config_file))
+with open('README.rst') as readme:
+    long_description = readme.read()
 
-setuptools.setup(
-    name="mtgjson5",
-    version=config.get("MTGJSON", "version", fallback="5.0.0+fallback"),
-    author="Zach Halpern",
-    author_email="zach@mtgjson.com",
-    url="https://mtgjson.com/",
-    description="Magic: the Gathering compiled database generator",
-    long_description=project_root.joinpath("README.md").open(encoding="utf-8").read(),
-    long_description_content_type="text/markdown",
-    license="MIT",
+
+def load_requirements(*requirements_paths):
+    """
+    Load all requirements from the specified requirements files.
+    Returns a list of requirement strings.
+    """
+    requirements = set()
+    for path in requirements_paths:
+        with open(path) as reqs:
+            requirements.update(
+                line.split('#')[0].strip() for line in reqs
+                if is_requirement(line.strip())
+            )
+    return list(requirements)
+
+
+def is_requirement(line):
+    """
+    Return True if the requirement line is a package requirement;
+    that is, it is not blank, a comment, a URL, or an included file.
+    """
+    return line and not line.startswith(('-r', '#', '-e', 'git+', '-c'))
+
+
+setup(
+    name='edx-rest-api-client',
+    version=__version__,
+    description='Slumber client used to access various edX Platform REST APIs.',
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
     classifiers=[
-        "Intended Audience :: Developers",
-        "Intended Audience :: Education",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows :: Windows 10",
-        "Operating System :: Unix",
-        "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python",
-        "Topic :: Database",
-        "Topic :: Software Development :: Version Control :: Git",
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Internet',
+        'Intended Audience :: Developers',
+        'Environment :: Web Environment',
     ],
-    keywords=[
-        "Big Data",
-        "Card Games",
-        "Collectible",
-        "Database",
-        "JSON",
-        "MTG",
-        "MTGJSON",
-        "Trading Cards",
-        "Magic: The Gathering",
-    ],
-    include_package_data=True,
-    packages=setuptools.find_packages(),
-    install_requires=project_root.joinpath("requirements.txt")
-    .open(encoding="utf-8")
-    .readlines()
-    if project_root.joinpath("requirements.txt").is_file()
-    else [],  # Use the requirements file, if able
+    keywords='edx rest api client',
+    url='https://github.com/edx/edx-rest-api-client',
+    author='edX',
+    author_email='oscm@edx.org',
+    license='Apache',
+    packages=find_packages(exclude=['*.tests']),
+    install_requires=load_requirements('requirements/base.in'),
 )

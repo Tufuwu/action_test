@@ -1,1 +1,3 @@
-include mtgjson5/resources/*
+include LICENSE
+include README.rst
+include requirements/base.in
