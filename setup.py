@@ -1,55 +1,35 @@
-"""
-Python toolkit to work with BUFR messages.
-"""
-import os
+# yapf: disable
+from setuptools import setup, find_packages
 
-from setuptools import setup
-
-
-def get_version():
-    with open(os.path.join(os.path.dirname(__file__), 'pybufrkit', '__init__.py')) as ins:
-        for line in ins.readlines():
-            if line.startswith('__version__'):
-                return line.split('=')[1].strip()[1:-1]
-
-
-def get_requirements():
-    requirements = ['bitstring>=3.1.3', 'six']
-    return requirements
-
+version_file = open('VERSION')
+version = version_file.read().strip()
+version_file.close()
 
 setup(
-    name='pybufrkit',
-    version=get_version(),
-    platforms=['any'],
-    packages=['pybufrkit'],
-    package_dir={'pybufrkit': 'pybufrkit'},
-    include_package_data=True,
-    setup_requires=["pytest-runner"],
-    install_requires=get_requirements(),
-    tests_require=['pytest'],
-    entry_points={
-        'console_scripts': ['pybufrkit = pybufrkit:main'],
-    },
+    name='aiotg',
+    version=version,
+    description='Asynchronous Python API for building Telegram bots',
+    url='http://szastupov.github.io/aiotg',
 
-    author='Yang Wang',
-    author_email='ywangd@gmail.com',
-    description='Python toolkit to work with BUFR files',
-    long_description=__doc__,
+    author='Stepan Zastupov',
+    author_email='stepan.zastupov@gmail.com',
+
     license='MIT',
+
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "Operating System :: OS Independent",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Topic :: Utilities",
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Software Development',
+        'Topic :: Software Development :: Libraries'
     ],
-    keywords=['BUFR', 'WMO'],
-    url='https://github.com/ywangd/pybufrkit',
+
+    keywords='asyncio telegram',
+
+    packages=find_packages(exclude=['examples', 'docs', 'tests*']),
+
+    install_requires=['aiohttp>=3.0.0', 'aiosocksy>=0.1.1', 'watchdog>=0.9.0'],
+    setup_requires=['pytest-runner', 'flake8'],
+    tests_require=['pytest', 'testfixtures']
 )
