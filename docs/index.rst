@@ -1,52 +1,44 @@
-.. dask-geomodeling documentation master file, created by
-   sphinx-quickstart on Thu Sep  5 10:36:42 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+==============================
+sphinxcontrib-disqus |version|
+==============================
 
-Welcome to dask-geomodeling's documentation!
-============================================
+Add `Disqus <https://disqus.com>`_ comments to your Sphinx documents.
 
-Dask-geomodeling is a collection of classes that are to be stacked together to
-create configurations for on-the-fly operations on geographical maps. By
-generating `Dask <https://dask.pydata.org/>`_ compute graphs, these operation
-may be parallelized and (intermediate) results may be cached.
+``sphinxcontrib-disqus`` provides a ``disqus`` directive to be used in documents. It automatically adds the Javascript
+needed by Disqus. A working example is shown at the bottom of this page.
 
-Multiple Block instances together make a view. Each Block has the ``get_data``
-method that fetches the data in one go, as well as a ``get_compute_graph``
-method that creates a graph to compute the data later.
+Project Links
+=============
 
-Blocks are used for the on-the-fly modification of raster- and vectordata,
-respectively through the baseclasses :meth:`~dask_geomodeling.raster.base.RasterBlock` and
-:meth:`~dask_geomodeling.geometry.base.GeometryBlock`. Derived classes support
-operations such has grouping
-basic math, shifting time, smoothing, reclassification, geometry operations,
-zonal statistics, and property field operations.
+* Documentation: https://robpol86.github.io/sphinxcontrib-disqus
+* Source code: https://github.com/Robpol86/sphinxcontrib-disqus
+* PyPI homepage: https://pypi.python.org/pypi/sphinxcontrib-disqus
 
-About
------
+Caveats
+=======
 
-This package was developed by Nelen & Schuurmans and is used commercially
-under the name Geoblocks. Please consult the `Lizard <https://www.lizard.net/>`_
-website for more information about this product.
+When generating Sphinx documents locally and browsing to a ``file://`` URL, comments won't load. This is because the
+second batch of Javascript code downloaded by Disqus matches the same protocol the browser is using to visit the page
+you're on (in this case it's ``file://``). For security reasons Javascript doesn't load from ``file://``, only
+``http://`` or ``https://``.
 
-Contents
---------
+A simple workaround when you're writing docs locally (this isn't an issue once you host your documentation on a web
+server or service such as `Read the Docs <https://readthedocs.org/>`_) is to view your HTML files through a simple web
+server. You can fire one up easily running these commands (tested on OS X) after building your HTML files:
+
+1. ``cd docs/_build/html``
+2. ``python -m SimpleHTTPServer 8080``
+3. Browse to http://localhost:8080/
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 3
+    :caption: General
 
-   installation
-   quickstart
-   views
-   blocks
-   raster
-   geometry
+    install
+    usage
 
+Comments
+========
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. disqus::
+    :disqus_identifier: index
