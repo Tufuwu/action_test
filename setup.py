@@ -1,89 +1,77 @@
-#!/usr/bin/env python
-import os
-from codecs import open
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-from setuptools import find_packages, setup
+"""pyFAT package definition."""
 
-here = os.path.abspath(os.path.dirname(__file__))
+import io
+import re
 
-with open(os.path.join(here, 'README.rst'), 'r', 'utf-8') as handle:
-    readme = handle.read()
+from setuptools import setup, find_packages
+
+try:
+    # pip >= 10
+    from pip._internal.req import parse_requirements
+except ImportError:
+    # pip <= 9.0.3
+    from pip.req import parse_requirements
 
 
-setup(
-    name='nameko',
-    version='2.13.0',
-    description='A microservices framework for Python that lets service '
-                'developers concentrate on application logic and encourages '
-                'testability.',
-    long_description=readme,
-    author='onefinestay',
-    url='http://github.com/nameko/nameko',
-    packages=find_packages(exclude=['test', 'test.*']),
-    install_requires=[
-        "dnspython<2",
-        "eventlet>=0.20.1",
-        "kombu>=4.2.0,<5",
-        "mock>=1.2",
-        "path.py>=6.2",
-        "pyyaml>=5.1",
-        "requests>=1.2.0",
-        "six>=1.9.0",
-        "werkzeug>=0.9",
-        "wrapt>=1.0.0",
-    ],
-    extras_require={
-        'dev': [
-            "astroid==1.6.5",
-            "coverage==4.5.1",
-            "flake8==3.3.0",
-            "isort==4.2.15",
-            "mccabe==0.6.1",
-            "pycodestyle==2.3.1",
-            "pyflakes==1.5.0",
-            "pylint==1.7.1",
-            "pytest==4.3.1",
-            "pytest-cov==2.5.1",
-            "pytest-timeout==1.3.3",
-            "requests==2.19.1",
-            "urllib3==1.23",
-            "websocket-client==0.48.0",
-        ],
-        'docs': [
-            "pyenchant==1.6.11",
-            "Sphinx==1.8.5",
-            "sphinxcontrib-spelling==4.2.1",
-            "sphinx-nameko-theme==0.0.3",
-        ],
-        'examples': [
-            "nameko-sqlalchemy==0.0.1",
-            "PyJWT==1.5.2",
-            "moto==1.3.6",
-            "bcrypt==3.1.3",
-            "regex==2018.2.21"
-        ]
-    },
-    entry_points={
-        'console_scripts': [
-            'nameko=nameko.cli.main:main',
-        ],
-        'pytest11': [
-            'pytest_nameko=nameko.testing.pytest'
-        ]
-    },
-    zip_safe=True,
-    license='Apache License, Version 2.0',
-    classifiers=[
-        "Programming Language :: Python",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Topic :: Internet",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Intended Audience :: Developers",
-    ]
-)
+def load_requirements(fname):
+    reqs = parse_requirements(fname, session="test")
+    return [getattr(r, 'requirement',
+            str(getattr(r, 'req', None))) for r in reqs]
+
+
+def _get_attribute(name):
+    """Get version information from __init__.py."""
+    with io.open('pyfatfs/__init__.py') as f:
+        return re.search(r"{}\s*=\s*'([^']+)'\s*".format(name),
+                         f.read()).group(1)
+
+
+def _get_readme():
+    """Get contents of README.rst."""
+    with io.open('README.rst') as readme:
+        return readme.read()
+
+
+setup(name=_get_attribute('__name__'),
+      use_scm_version=True,
+      description='FAT12/16/32 implementation with VFAT support',
+      long_description=_get_readme(),
+      long_description_content_type='text/x-rst',
+      author=_get_attribute('__author__'),
+      author_email=_get_attribute('__author_email__'),
+      license=_get_attribute('__license__'),
+      url='https://github.com/nathanhi/pyfatfs',
+      project_urls={'Documentation': f'https://pyfatfs.readthedocs.io',
+                    'Changelog': 'https://github.com/nathanhi/pyfatfs/blob/master/CHANGELOG.rst',
+                    'Issues': 'https://github.com/nathanhi/pyfatfs/issues',
+                    'Source': 'https://github.com/nathanhi/pyfatfs',
+      },
+      packages=find_packages(),
+      keywords=['filesystem', 'PyFilesystem2', 'FAT12',
+                'FAT16', 'FAT32', 'VFAT', 'LFN'],
+      python_requires='~=3.6',
+      test_suite='tests',
+      install_requires=load_requirements("requirements/install.txt"),
+      setup_requires=['pytest-runner', 'setuptools_scm~=5.0.0'],
+      tests_require=load_requirements("requirements/test.txt"),
+      entry_points={
+          'fs.opener': ['fat = pyfatfs.PyFatFSOpener:PyFatFSOpener'],
+      },
+      classifiers=[
+          'Development Status :: 4 - Beta',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: MIT License',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python :: 3 :: Only',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
+          'Topic :: Software Development :: Libraries',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+          'Topic :: System :: Filesystems'],
+      )

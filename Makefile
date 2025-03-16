@@ -1,39 +1,25 @@
-.PHONY: test docs
+PYTHON_VERSION=$(shell python3 -c "import platform; print(platform.python_version())")
+VENV_DIR=.venv_$(PYTHON_VERSION)
 
-ENABLE_BRANCH_COVERAGE ?= 0
-AUTO_FIX_IMPORTS ?= 0
-
-ifneq ($(AUTO_FIX_IMPORTS), 1)
-  autofix = --check-only
+ifeq ($(PYTHON_VERSION),)
+	$(error No Python 3 interpreter found!)
 endif
 
-static: imports flake8 pylint
-test: static test_lib test_examples
+# Generate virtualenv
+$(VENV_DIR)/install.indicator: requirements
+	$(VENV_DIR)/bin/pip install -r requirements/development.txt
+	$(VENV_DIR)/bin/pip install -e .
+	touch $@
 
-flake8:
-	flake8 nameko test
+$(VENV_DIR):
+	virtualenv -p python3 $@
 
-pylint:
-	pylint --rcfile=pylintrc nameko -E
+.PHONY: make_venv
+make_venv: $(VENV_DIR) $(VENV_DIR)/install.indicator
 
-imports:
-	isort -rc $(autofix) nameko test
+# Generate requirements
+requirements/%.txt: requirements/in/%.in
+	$(VENV_DIR)/bin/pip-compile --header --annotate --upgrade --output-file $@ $<
 
-test_lib:
-	BRANCH=$(ENABLE_BRANCH_COVERAGE) coverage run -m pytest test --strict --timeout 30
-	BRANCH=$(ENABLE_BRANCH_COVERAGE) coverage report
-
-test_examples:
-	BRANCH=$(ENABLE_BRANCH_COVERAGE) py.test docs/examples/test --strict --timeout 30 --cov=docs/examples --cov-config=$(CURDIR)/.coveragerc
-	py.test docs/examples/testing
-
-test_docs: docs spelling #linkcheck
-
-docs:
-	sphinx-build -n -b html -d docs/build/doctrees docs docs/build/html
-
-spelling:
-	sphinx-build -b spelling -d docs/build/doctrees docs docs/build/spelling
-
-linkcheck:
-	sphinx-build -W -b linkcheck -d docs/build/doctrees docs docs/build/linkcheck
+.PHONY: update_requirements
+update_requirements: make_venv requirements/install.txt requirements/tasks.txt requirements/test.txt
