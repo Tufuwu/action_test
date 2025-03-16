@@ -1,121 +1,134 @@
-# make pep8 to check for basic Python code compliance
-# make autopep8 to fix most pep8 errors
-# make pylint to check Python code for enhanced compliance including naming
-#  and documentation
-# make coverage-report to check coverage of the python scripts by the tests
+# SPDX-License-Identifier: Apache-2.0
+#
+# http://nexb.com and https://github.com/nexB/scancode.io
+# The ScanCode.io software is licensed under the Apache License version 2.0.
+# Data generated with ScanCode.io is provided as-is without warranties.
+# ScanCode is a trademark of nexB Inc.
+#
+# You may not use this software except in compliance with the License.
+# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed
+# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations under the License.
+#
+# Data Generated with ScanCode.io is provided on an "AS IS" BASIS, WITHOUT WARRANTIES
+# OR CONDITIONS OF ANY KIND, either express or implied. No content created from
+# ScanCode.io should be considered or used as legal advice. Consult an Attorney
+# for any legal advice.
+#
+# ScanCode.io is a free software code scanning tool from nexB Inc. and others.
+# Visit https://github.com/nexB/scancode.io for support and download.
 
-PYSOURCES=$(wildcard screed/*.py)
-TESTSOURCES=$(wildcard screed/tests/*.py)
-SOURCES=$(PYSOURCES) setup.py
-DEVPKGS=pep8==1.5.7 diff_cover autopep8 pylint coverage pytest pytest-cov sphinx
+# Python version can be specified with `$ PYTHON_EXE=python3.x make conf`
+PYTHON_EXE?=python3
+MANAGE=bin/python manage.py
+ACTIVATE?=. bin/activate;
+ANSIBLE_PLAYBOOK=cd etc/ansible/ && ansible-playbook --inventory-file=hosts --verbose --ask-become-pass --user=${USER}
+BLACK_ARGS=--exclude="migrations|data|docs" .
+# Do not depend on Python to generate the SECRET_KEY
+GET_SECRET_KEY=`base64 /dev/urandom | head -c50`
+# Customize with `$ make envfile ENV_FILE=/etc/scancodeio/.env`
+ENV_FILE=.env
+# Customize with `$ make postgres SCANCODEIO_DB_PASSWORD=YOUR_PASSWORD`
+SCANCODEIO_DB_PASSWORD=scancodeio
 
-VERSION=$(shell git describe --tags --dirty | sed s/v//)
-all:
-	./setup.py build
+# Use sudo for postgres, but only on Linux
+UNAME := $(shell uname)
+ifeq ($(UNAME), Linux)
+	SUDO_POSTGRES=sudo -u postgres
+else
+	SUDO_POSTGRES=
+endif
 
-install-dependencies:
-	pip install --upgrade $(DEVPKGS) || pip2 install --upgrade $(DEVPKGS)
+conf:
+	@echo "-> Configure the Python venv and install dependencies"
+	${PYTHON_EXE} -m venv .
+	@${ACTIVATE} pip install -r etc/requirements/base.txt
+	@${ACTIVATE} pip install --editable .
+	# Workaround https://github.com/python/typing/issues/573#issuecomment-405986724
+	@${ACTIVATE} pip uninstall --yes typing
 
-install: FORCE
-	./setup.py build install
+dev: conf
+	@echo "-> Configure and install development dependencies"
+	@${ACTIVATE} pip install -r etc/requirements/dev.txt
 
-develop: FORCE
-	./setup.py develop
+envfile:
+	@echo "-> Create the .env file and generate a secret key"
+	@if test -f ${ENV_FILE}; then echo ".env file exists already"; exit 1; fi
+	@mkdir -p $(shell dirname ${ENV_FILE}) && touch ${ENV_FILE}
+	@echo SECRET_KEY=\"${GET_SECRET_KEY}\" > ${ENV_FILE}
 
-dist: dist/screed-$(VERSION).tar.gz
+install:
+	@echo "-> Install and configure the Python env with base dependencies, offline"
+	${PYTHON_EXE} -m venv .
+	bin/pip install --upgrade --no-index --no-cache-dir --find-links=thirdparty -e .
 
-dist/screed-$(VERSION).tar.gz: $(SOURCES)
-	./setup.py sdist
+check:
+	@echo "-> Run pycodestyle (PEP8) validation"
+	@${ACTIVATE} pycodestyle --max-line-length=88 --exclude=lib,thirdparty,docs,bin,migrations,settings,data,pipelines,var .
+	@echo "-> Run isort imports ordering validation"
+	@${ACTIVATE} isort --recursive --check-only .
+	@echo "-> Run black validation"
+	@${ACTIVATE} black --check ${BLACK_ARGS}
 
-clean: FORCE
-	./setup.py clean --all || true
-	rm -rf build/
-	rm -rf coverage-debug .coverage coverage.xml
-	rm -rf doc/_build
-	rm -rf .eggs/ *.egg-info/ .cache/ __pycache__/ *.pyc */*.pyc */*/*.pyc
+isort:
+	@echo "-> Apply isort changes to ensure proper imports ordering"
+	bin/isort --recursive --apply .
 
-pep8: $(PYSOURCES) $(TESTSOURCES)
-	pep8 --exclude=_version.py setup.py screed/
+black:
+	@echo "-> Apply black code formatter"
+	bin/black ${BLACK_ARGS}
 
-pep8_report.txt: $(PYSOURCES) $(TESTSOURCES)
-	pep8 --exclude=_version.py setup.py screed/ > pep8_report.txt || true
+valid: isort black
 
-diff_pep8_report: pep8_report.txt
-	diff-quality --violations=pep8 pep8_report.txt
+clean:
+	@echo "-> Clean the Python env"
+	rm -rf bin/ lib/ lib64/ include/ build/ dist/ pip-selfcheck.json pyvenv.cfg scancodeio.egg-info
+	find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 
-autopep8: $(PYSOURCES) $(TESTSOURCS)
-	autopep8 --recursive --in-place --exclude _version.py --ignore E309 \
-		setup.py screed
+migrate:
+	@echo "-> Apply database migrations"
+	${MANAGE} migrate
 
-# A command to automatically run autopep8 on appropriate files
-format: autopep8
-	# Do nothing
+postgres:
+	@echo "-> Configure PostgreSQL database"
+	@echo "-> Create database user 'scancodeio'"
+	${SUDO_POSTGRES} createuser --no-createrole --no-superuser --login --inherit --createdb scancodeio || true
+	${SUDO_POSTGRES} psql -c "alter user scancodeio with encrypted password '${SCANCODEIO_DB_PASSWORD}';" || true
+	@echo "-> Drop 'scancodeio' database"
+	${SUDO_POSTGRES} dropdb scancodeio || true
+	@echo "-> Create 'scancodeio' database"
+	${SUDO_POSTGRES} createdb --encoding=utf-8 --owner=scancodeio scancodeio
+	@$(MAKE) migrate
 
-pylint: FORCE
-	pylint --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" \
-		setup.py screed || true
+sqlite:
+	@echo "-> Configure SQLite database"
+	@echo SCANCODEIO_DB_ENGINE=\"django.db.backends.sqlite3\" >> ${ENV_FILE}
+	@echo SCANCODEIO_DB_NAME=\"sqlite3.db\" >> ${ENV_FILE}
+	@$(MAKE) migrate
 
-pylint_report.txt: ${PYSOURCES} $(TESTSOURCES)
-	pylint --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" \
-		setup.py screed > pylint_report.txt || true
+run:
+	${MANAGE} runserver 8001
 
-diff_pylint_report: pylint_report.txt
-	diff-quality --violations=pylint pylint_report.txt
+test:
+	@echo "-> Run the test suite"
+	${MANAGE} test --noinput
 
-.coverage: $(PYSOURCES) $(TESTSOURCES)
-	./setup.py test --addopts="--cov"
+package: conf
+	@echo "-> Create a scancode.io package for offline installation"
+	@echo "-> Fetch dependencies in thirdparty/ for offline installation"
+	rm -rf thirdparty && mkdir thirdparty
+	bin/pip download -r etc/requirements/base.txt --no-cache-dir --dest thirdparty
+	@echo "-> Create package in dist/ for offline installation"
+	bin/python setup.py sdist
 
-coverage.xml: .coverage
-	coverage xml --omit 'screed/tests/*'
+bump:
+	@echo "-> Bump the version to next patch number: 'major.minor.patch'"
+	bin/bumpversion patch --allow-dirty
 
-coverage.html: htmlcov/index.html
+docs:
+	rm -rf docs/_build/
+	sphinx-build docs/ docs/_build/
 
-htmlcov/index.html: .coverage
-	coverage html --omit 'screed/tests/*'
-	@echo Test coverage is now in htmlcov/index.html
-
-coverage-report: .coverage
-	coverage report --omit 'screed/tests/*'
-
-diff-cover: coverage.xml
-	diff-cover coverage.xml
-
-diff-cover.html: coverage.xml
-	diff-cover coverage.xml --html-report diff-cover.html
-
-tests.xml: FORCE
-	./setup.py test --addopts "--junitxml=$@"
-
-doxygen: doc/doxygen/html/index.html
-
-doc: build/sphinx/html/index.html
-
-convert-release-notes:
-		for file in doc/release-notes/*.md; do \
-				pandoc --from=markdown --to=rst $${file} > $${file%%.md}.rst; \
-				done
-
-build/sphinx/html/index.html: $(SOURCES) $(wildcard doc/*.txt) doc/conf.py all
-		./setup.py build_sphinx --fresh-env
-		@echo ''
-		@echo '--> docs in build/sphinx/html <--'
-		@echo ''
-
-doc/doxygen/html/index.html: ${CPPSOURCES} ${PYSOURCES}
-	mkdir -p doc/doxygen
-	sed "s/\$${VERSION}/`python get_version.py`/" Doxyfile.in > \
-		Doxyfile
-	doxygen
-
-test: FORCE
-	./setup.py develop
-	./setup.py test
-
-sloccount.sc: ${PYSOURCES} Makefile
-	sloccount --duplicates --wide --details screed setup.py Makefile \
-		> sloccount.sc
-
-sloccount: 
-	sloccount screed setup.py Makefile
-
-FORCE:
+.PHONY: conf dev envfile install check valid isort clean migrate postgres sqlite run test package bump docs

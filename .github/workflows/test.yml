@@ -1,59 +1,61 @@
-name: Python tests
+name: CI
 
-on:
-  push:
-    branches: [latest]
-  pull_request:
-    branches: [latest]
-  schedule:
-    - cron: "0 0 * * *" # daily
+on: [push, pull_request]
+
+env:
+  DB_NAME: scancodeio
+  DB_USER: scancodeio
+  DB_PASSWORD: scancodeio
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: ${{ env.DB_NAME }}
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     strategy:
+      max-parallel: 4
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        py: [3.9, 3.8, 3.7]
-      fail-fast: false
+        # Python 3.9 not supported until next scancode-toolkit version
+        python-version: ["3.9", "3.10"]
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.py }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.py }}
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: |
-          echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: pip cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install tox tox-gh-actions
+          make dev
+          make envfile
 
-      - name: tox cache
-        uses: actions/cache@v4
-        with:
-          path: .tox/
-          key: ${{ runner.os }}-tox-${{ hashFiles('**/setup.py') }}
-          restore-keys: |
-            ${{ runner.os }}-tox-
+      - name: Validate code format
+        run: make check
 
-      - name: Test with tox
-        run: tox
+      - name: Run tests
+        run: bin/python manage.py test --settings=scancodeio.settings.base --verbosity=2 --noinput
         env:
-          PYTHONDEVMODE: 1
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          SCANCODEIO_DB_NAME: ${{ env.DB_NAME }}
+          SCANCODEIO_DB_USER: ${{ env.DB_USER }}
+          SCANCODEIO_DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          # Run tasks in the current thread, no need for workers in CI mode
+          CELERY_TASK_ALWAYS_EAGER: True
