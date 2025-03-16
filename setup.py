@@ -1,25 +1,53 @@
+# SPDX-FileCopyrightText: Nir Soffer <nirsof@gmail.com>
+#
+# SPDX-License-Identifier: MIT
+
+import os
+import io
 from setuptools import setup
 
-path_requirements = 'requirements.txt'
-list_packages = ['bayeso_benchmarks']
 
-with open(path_requirements) as f:
-    required = f.read().splitlines()
+def read(fname):
+    path = os.path.join(os.path.dirname(__file__), fname)
+    with io.open(path, encoding="utf8") as f:
+        return f.read()
+
 
 setup(
-    name='bayeso-benchmarks',
-    version='0.1.6',
-    author='Jungtaek Kim',
-    author_email='jtkim@postech.ac.kr',
-    url='https://github.com/jungtaekkim/bayeso-benchmarks',
+    name='pytest-threadleak',
+    version='0.4.0',
+    author='Nir Soffer',
+    author_email='nirsof@gmail.com',
+    maintainer='Nir Soffer',
+    maintainer_email='nirsof@gmail.com',
     license='MIT',
-    description='Benchmarks for Bayesian optimization',
-    packages=list_packages,
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, != 3.3.*, !=3.4.*, !=3.5.*, <4',
-    install_requires=required,
+    url='https://github.com/nirs/pytest-threadleak',
+    description='Detects thread leaks',
+    long_description=read('README.rst'),
+    py_modules=['pytest_threadleak'],
+    install_requires=['pytest>=3.1.1'],
     classifiers=[
+        'Development Status :: 4 - Beta',
+        'Framework :: Pytest',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Testing',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Operating System :: OS Independent',
         'License :: OSI Approved :: MIT License',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-    ]
+    ],
+    entry_points={
+        'pytest11': [
+            'threadleak = pytest_threadleak',
+        ],
+    },
 )
