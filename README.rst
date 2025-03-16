@@ -1,422 +1,178 @@
-Usage (from a cloned CPython directory) ::
-
-   cherry_picker [--pr-remote REMOTE] [--dry-run] [--config-path CONFIG-PATH] [--status] [--abort/--continue] [--push/--no-push] <commit_sha1> <branches>
-
-|pyversion status|
-|pypi status|
-|travis status|
-
-.. contents::
-
-About
-=====
-
-This tool is used to backport CPython changes from ``main`` into one or more
-of the maintenance branches (``3.6``, ``3.5``, ``2.7``).
-
-``cherry_picker`` can be configured to backport other projects with similar
-workflow as CPython. See the configuration file options below for more details.
-
-The maintenance branch names should contain some sort of version number (X.Y).
-For example: ``3.6``, ``3.5``, ``2.7``, ``stable-2.6``, ``2.5-lts``, are all 
-supported branch names.
-
-It will prefix the commit message with the branch, e.g. ``[3.6]``, and then
-opens up the pull request page.
-
-Tests are to be written using `pytest <https://docs.pytest.org/en/latest/>`_.
+pydf
+====
 
 
-Setup Info
-==========
+|BuildStatus| |codecov| |PyPI| |license| |docker|
 
-Requires Python 3.6.
+PDF generation in python using
+`wkhtmltopdf <http://wkhtmltopdf.org/>`__.
 
-::
+Wkhtmltopdf binaries are precompiled and included in the package making
+pydf easier to use, in particular this means pydf works on heroku.
 
-    $ python3 -m venv venv
-    $ source venv/bin/activate
-    (venv) $ python -m pip install cherry_picker
+Currently using **wkhtmltopdf 0.12.5 for Ubuntu 18.04 (bionic)**, requires **Python 3.6+**.
 
-The cherry picking script assumes that if an ``upstream`` remote is defined, then
-it should be used as the source of upstream changes and as the base for
-cherry-pick branches. Otherwise, ``origin`` is used for that purpose.
+**If you're not on Linux amd64:** pydf comes bundled with a wkhtmltopdf binary which will only work on Linux amd64
+architectures. If you're on another OS or architecture your mileage may vary, it is likely that you'll need to supply
+your own wkhtmltopdf binary and point pydf towards it by setting the ``WKHTMLTOPDF_PATH`` environment variable.
 
-Verify that an ``upstream`` remote is set to the CPython repository::
+Install
+-------
 
-    $ git remote -v
-    ...
-    upstream	https://github.com/python/cpython (fetch)
-    upstream	https://github.com/python/cpython (push)
+.. code:: shell
 
-If needed, create the ``upstream`` remote::
+    pip install python-pdf
 
-    $ git remote add upstream https://github.com/python/cpython.git
+For python 2 use ``pip install python-pdf==0.30.0``.
 
-
-By default, the PR branches used to submit pull requests back to the main
-repository are pushed to ``origin``. If this is incorrect, then the correct
-remote will need be specified using the ``--pr-remote`` option (e.g.
-``--pr-remote pr`` to use a remote named ``pr``).
-
-
-Cherry-picking 🐍🍒⛏️
-=====================
-
-(Setup first! See prev section)
-
-From the cloned CPython directory:
-
-::
-
-    (venv) $ cherry_picker [--pr-remote REMOTE] [--dry-run] [--config-path CONFIG-PATH] [--abort/--continue] [--status] [--push/--no-push] <commit_sha1> <branches>
-
-
-Commit sha1
+Basic Usage
 -----------
 
-The commit sha1 for cherry-picking is the squashed commit that was merged to
-the ``main`` branch.  On the merged pull request, scroll to the bottom of the
-page.  Find the event that says something like::
+.. code:: python
 
-   <coredeveloper> merged commit <commit_sha1> into python:main <sometime> ago.
+    import pydf
+    pdf = pydf.generate_pdf('<h1>this is html</h1>')
+    with open('test_doc.pdf', 'wb') as f:
+        f.write(pdf)
 
-By following the link to ``<commit_sha1>``, you will get the full commit hash.
-Use the full commit hash for ``cherry_picker.py``.
+Async Usage
+-----------
+
+Generation of lots of documents with wkhtmltopdf can be slow as wkhtmltopdf can only generate one document
+per process. To get round this pydf uses python 3's asyncio ``create_subprocess_exec`` to generate multiple pdfs
+at the same time. Thus the time taken to spin up processes doesn't slow you down.
+
+.. code:: python
+
+    from pathlib import Path
+    from pydf import AsyncPydf
+
+    async def generate_async():
+        apydf = AsyncPydf()
+
+        async def gen(i):
+            pdf_content = await apydf.generate_pdf('<h1>this is html</h1>')
+            Path(f'output_{i:03}.pdf').write_bytes(pdf_content)
+
+        coros = [gen(i) for i in range(50)]
+        await asyncio.gather(*coros)
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(generate_async())
 
 
-Options
+See `benchmarks/run.py <https://github.com/tutorcruncher/pydf/blob/master/benchmark/run.py>`__
+for a full example.
+
+Locally generating an entire invoice goes from 0.372s/pdf to 0.035s/pdf with the async model.
+
+Docker
+------
+
+pydf is available as a docker image with a very simple http API for generating pdfs.
+
+Simple ``POST`` (or ``GET`` with data if possible) you HTML data to ``/generate.pdf``.
+
+Arguments can be passed using http headers; any header starting ``pdf-`` or ``pdf_`` will
+have that prefix removed, be converted to lower case and passed to wkhtmltopdf.
+
+For example:
+
+.. code:: shell
+
+   docker run -rm -p 8000:80 -d samuelcolvin/pydf
+   curl -d '<h1>this is html</h1>' -H "pdf-orientation: landscape" http://localhost:8000/generate.pdf > created.pdf
+   open "created.pdf"
+
+In docker compose:
+
+.. code:: yaml
+
+   services:
+     pdf:
+       image: samuelcolvin/pydf
+
+Other services can then generate PDFs by making requests to ``pdf/generate.pdf``. Pretty cool.
+
+API
+---
+
+**generate\_pdf(source, [\*\*kwargs])**
+
+Generate a pdf from either a url or a html string.
+
+After the html and url arguments all other arguments are passed straight
+to wkhtmltopdf
+
+For details on extra arguments see the output of get\_help() and
+get\_extended\_help()
+
+All arguments whether specified or caught with extra\_kwargs are
+converted to command line args with ``'--' + original_name.replace('_', '-')``.
+
+Arguments which are True are passed with no value eg. just --quiet,
+False and None arguments are missed, everything else is passed with
+str(value).
+
+**Arguments:**
+
+-  ``source``: html string to generate pdf from or url to get
+-  ``quiet``: bool
+-  ``grayscale``: bool
+-  ``lowquality``: bool
+-  ``margin_bottom``: string eg. 10mm
+-  ``margin_left``: string eg. 10mm
+-  ``margin_right``: string eg. 10mm
+-  ``margin_top``: string eg. 10mm
+-  ``orientation``: Portrait or Landscape
+-  ``page_height``: string eg. 10mm
+-  ``page_width``: string eg. 10mm
+-  ``page_size``: string: A4, Letter, etc.
+-  ``image_dpi``: int default 600
+-  ``image_quality``: int default 94
+-  ``extra_kwargs``: any exotic extra options for wkhtmltopdf
+
+Returns string representing pdf
+
+**get\_version()**
+
+Get version of pydf and wkhtmltopdf binary
+
+**get\_help()**
+
+get help string from wkhtmltopdf binary uses -h command line option
+
+**get\_extended\_help()**
+
+get extended help string from wkhtmltopdf binary uses -H command line
+option
+
+**execute\_wk(\*args)**
+
+Low level function to call wkhtmltopdf, arguments are added to
+wkhtmltopdf binary and passed to subprocess with not processing.
+
+.. |BuildStatus| image:: https://travis-ci.org/tutorcruncher/pydf.svg?branch=master
+   :target: https://travis-ci.org/tutorcruncher/pydf
+.. |codecov| image:: https://codecov.io/github/tutorcruncher/pydf/coverage.svg?branch=master
+   :target: https://codecov.io/github/tutorcruncher/pydf?branch=master
+.. |PyPI| image:: https://img.shields.io/pypi/v/python-pdf.svg?style=flat
+   :target: https://pypi.python.org/pypi/python-pdf
+.. |license| image:: https://img.shields.io/pypi/l/python-pdf.svg
+   :target: https://github.com/tutorcruncher/pydf
+.. |docker| image:: https://img.shields.io/docker/automated/samuelcolvin/pydf.svg
+   :target: https://hub.docker.com/r/samuelcolvin/pydf/
+
+
+Heroku
 -------
 
-::
+If you are deploying onto Heroku, then you will need to install a couple of dependencies before WKHTMLTOPDF will work.
 
-    --dry-run           Dry Run Mode.  Prints out the commands, but not executed.
-    --pr-remote REMOTE  Specify the git remote to push into.  Default is 'origin'.
-    --status            Do `git status` in cpython directory.
+Add the Heroku buildpack `https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku-community/apt.tgz`
 
+Then create an `Aptfile` in your root directory with the dependencies:
 
-Additional options::
-
-    --abort        Abort current cherry-pick and clean up branch
-    --continue     Continue cherry-pick, push, and clean up branch
-    --no-push      Changes won't be pushed to remote
-    --config-path  Path to config file
-                   (`.cherry_picker.toml` from project root by default)
-
-
-Configuration file example::
-
-   team = "aio-libs"
-   repo = "aiohttp"
-   check_sha = "f382b5ffc445e45a110734f5396728da7914aeb6"
-   fix_commit_msg = false
-   default_branch = "devel"
-
-
-Available config options::
-
-   team            github organization or individual nick,
-                   e.g "aio-libs" for https://github.com/aio-libs/aiohttp
-                   ("python" by default)
-
-   repo            github project name,
-                   e.g "aiohttp" for https://github.com/aio-libs/aiohttp
-                   ("cpython" by default)
-
-   check_sha       A long hash for any commit from the repo,
-                   e.g. a sha1 hash from the very first initial commit
-                   ("7f777ed95a19224294949e1b4ce56bbffcb1fe9f" by default)
-
-   fix_commit_msg  Replace # with GH- in cherry-picked commit message.
-                   It is the default behavior for CPython because of external
-                   Roundup bug tracker (https://bugs.python.org) behavior:
-                   #xxxx should point on issue xxxx but GH-xxxx points
-                   on pull-request xxxx.
-                   For projects using GitHub Issues, this option can be disabled.
-
-   default_branch  Project's default branch name,
-                   e.g "devel" for https://github.com/ansible/ansible
-                   ("main" by default)
-
-
-To customize the tool for used by other project:
-
-1. Create a file called ``.cherry_picker.toml`` in the project's root
-   folder (alongside with ``.git`` folder).
-
-2. Add ``team``, ``repo``, ``fix_commit_msg``, ``check_sha`` and
-   ``default_branch`` config values as described above.
-
-3. Use ``git add .cherry_picker.toml`` / ``git commit`` to add the config
-   into ``git``.
-
-4. Add ``cherry_picker`` to development dependencies or install it
-   by ``pip install cherry_picker``
-
-5. Now everything is ready, use ``cherry_picker <commit_sha> <branch1>
-   <branch2>`` for cherry-picking changes from ``<commit_sha>`` into
-   maintenance branches.
-   Branch name should contain at least major and minor version numbers
-   and may have some prefix or suffix.
-   Only the first version-like substring is matched when the version
-   is extracted from branch name.
-
-Demo
-----
-
-- Installation: https://asciinema.org/a/125254
-
-- Backport: https://asciinema.org/a/125256
-
-
-Example
--------
-
-For example, to cherry-pick ``6de2b7817f-some-commit-sha1-d064`` into
-``3.5`` and ``3.6``, run the following command from the cloned CPython
-directory:
-
-::
-
-    (venv) $ cherry_picker 6de2b7817f-some-commit-sha1-d064 3.5 3.6
-
-
-What this will do:
-
-::
-
-    (venv) $ git fetch upstream
-
-    (venv) $ git checkout -b backport-6de2b78-3.5 upstream/3.5
-    (venv) $ git cherry-pick -x 6de2b7817f-some-commit-sha1-d064
-    (venv) $ git push origin backport-6de2b78-3.5
-    (venv) $ git checkout main
-    (venv) $ git branch -D backport-6de2b78-3.5
-
-    (venv) $ git checkout -b backport-6de2b78-3.6 upstream/3.6
-    (venv) $ git cherry-pick -x 6de2b7817f-some-commit-sha1-d064
-    (venv) $ git push origin backport-6de2b78-3.6
-    (venv) $ git checkout main
-    (venv) $ git branch -D backport-6de2b78-3.6
-
-In case of merge conflicts or errors, the following message will be displayed::
-
-    Failed to cherry-pick 554626ada769abf82a5dabe6966afa4265acb6a6 into 2.7 :frowning_face:
-    ... Stopping here.
-
-    To continue and resolve the conflict:
-        $ cherry_picker --status  # to find out which files need attention
-        # Fix the conflict
-        $ cherry_picker --status  # should now say 'all conflict fixed'
-        $ cherry_picker --continue
-
-    To abort the cherry-pick and cleanup:
-        $ cherry_picker --abort
-
-
-Passing the ``--dry-run`` option will cause the script to print out all the
-steps it would execute without actually executing any of them. For example::
-
-    $ cherry_picker --dry-run --pr-remote pr 1e32a1be4a1705e34011770026cb64ada2d340b5 3.6 3.5
-    Dry run requested, listing expected command sequence
-    fetching upstream ...
-    dry_run: git fetch origin
-    Now backporting '1e32a1be4a1705e34011770026cb64ada2d340b5' into '3.6'
-    dry_run: git checkout -b backport-1e32a1b-3.6 origin/3.6
-    dry_run: git cherry-pick -x 1e32a1be4a1705e34011770026cb64ada2d340b5
-    dry_run: git push pr backport-1e32a1b-3.6
-    dry_run: Create new PR: https://github.com/python/cpython/compare/3.6...ncoghlan:backport-1e32a1b-3.6?expand=1
-    dry_run: git checkout main
-    dry_run: git branch -D backport-1e32a1b-3.6
-    Now backporting '1e32a1be4a1705e34011770026cb64ada2d340b5' into '3.5'
-    dry_run: git checkout -b backport-1e32a1b-3.5 origin/3.5
-    dry_run: git cherry-pick -x 1e32a1be4a1705e34011770026cb64ada2d340b5
-    dry_run: git push pr backport-1e32a1b-3.5
-    dry_run: Create new PR: https://github.com/python/cpython/compare/3.5...ncoghlan:backport-1e32a1b-3.5?expand=1
-    dry_run: git checkout main
-    dry_run: git branch -D backport-1e32a1b-3.5
-
-`--pr-remote` option
---------------------
-
-This will generate pull requests through a remote other than ``origin``
-(e.g. ``pr``)
-
-
-`--status` option
------------------
-
-This will do ``git status`` for the CPython directory.
-
-`--abort` option
-----------------
-
-Cancels the current cherry-pick and cleans up the cherry-pick branch.
-
-`--continue` option
--------------------
-
-Continues the current cherry-pick, commits, pushes the current branch to
-``origin``, opens the PR page, and cleans up the branch.
-
-`--no-push` option
-------------------
-
-Changes won't be pushed to remote.  This allows you to test and make additional
-changes.  Once you're satisfied with local changes, use ``--continue`` to complete
-the backport, or ``--abort`` to cancel and clean up the branch.  You can also
-cherry-pick additional commits, by::
-
-   $ git cherry-pick -x <commit_sha1>
-
-`--config-path` option
-----------------------
-
-Allows to override default config file path
-(``<PROJ-ROOT>/.cherry_picker.toml``) with a custom one. This allows cherry_picker
-to backport projects other than CPython.
-
-
-Creating Pull Requests
-======================
-
-When a cherry-pick was applied successfully, this script will open up a browser
-tab that points to the pull request creation page.
-
-The url of the pull request page looks similar to the following::
-
-   https://github.com/python/cpython/compare/3.5...<username>:backport-6de2b78-3.5?expand=1
-
-
-Press the ``Create Pull Request`` button.
-
-Bedevere will then remove the ``needs backport to ...`` label from the original
-pull request against ``main``.
-
-
-Running Tests
-=============
-
-Install pytest: ``pip install -U pytest``
-
-::
-
-    $ pytest
-
-
-Publishing to PyPI
-==================
-
-- Create a new release branch.
-
-- Update the version info in ``__init__.py`` and ``readme.rst``, dropping the ``.dev``.
-
-- Tag the branch as ``cherry-picker-vX.Y.Z``.
-
-
-Local installation
-==================
-
-With `flit <https://flit.readthedocs.io/en/latest/>`_ installed,
-in the directory where ``pyproject.toml`` exists::
-
-    flit install
-
-
-.. |pyversion status| image:: https://img.shields.io/pypi/pyversions/cherry-picker.svg
-   :target: https://pypi.org/project/cherry-picker/
-
-.. |pypi status| image:: https://img.shields.io/pypi/v/cherry-picker.svg
-   :target: https://pypi.org/project/cherry-picker/
-
-.. |travis status| image:: https://travis-ci.com/python/cherry-picker.svg?branch=main
-   :target: https://travis-ci.com/python/cherry-picker
-
-Changelog
-=========
-
-2.0.0
------
-
-- Support the ``main`` branch by default. (`PR 23 <https://github.com/python/cherry-picker/pull/23>`_)
-  To use a different default branch, please configure it in the
-  ``.cherry-picker.toml`` file.
-
-- Renamed ``cherry-picker``'s own default branch to ``main``.
-
-1.3.2
------
-
-- Use ``--no-tags`` option when fetching upstream. (`PR 319 <https://github.com/python/core-workflow/pull/319>`_)
-
-1.3.1
------
-
-- Modernize cherry_picker's pyproject.toml file. (`PR #316 <https://github.com/python/core-workflow/pull/316>`_)
-
-- Remove the ``BACKPORT_COMPLETE`` state. Unset the states when backport is completed.
-  (`PR #315 <https://github.com/python/core-workflow/pull/315>`_)
-
-- Run Travis CI test on Windows (`PR #311 <https://github.com/python/core-workflow/pull/311>`_).
-
-1.3.0
------
-
-- Implement state machine and storing reference to the config
-  used at the beginning of the backport process using commit sha
-  and a repo-local Git config.
-  (`PR #295 <https://github.com/python/core-workflow/pull/295>`_).
-
-1.2.2
------
-
-- Relaxed click dependency (`PR #302 <https://github.com/python/core-workflow/pull/302>`_).
-
-1.2.1
------
-
-- Validate the branch name to operate on with ``--continue`` and fail early if the branch could not
-  have been created by cherry_picker. (`PR #266 <https://github.com/python/core-workflow/pull/266>`_).
-
-- Bugfix: Allow ``--continue`` to support version branches that have dashes in them.  This is
-  a bugfix of the additional branch versioning schemes introduced in 1.2.0.
-  (`PR #265 <https://github.com/python/core-workflow/pull/265>`_).
-
-- Bugfix: Be explicit about the branch name on the remote to push the cherry pick to.  This allows
-  cherry_picker to work correctly when the user has a git push strategy other than the default
-  configured. (`PR #264 <https://github.com/python/core-workflow/pull/264>`_).
-
-1.2.0
------
-
-- Add ``default_branch`` configuration item. The default is ``master``, which
-  is the default branch for CPython. It can be configured to other branches like,
-  ``devel``, or ``develop``.  The default branch is the branch cherry_picker
-  will return to after backporting. (`PR #254 <https://github.com/python/core-workflow/pull/254>`_
-  and `Issue #250 <https://github.com/python/core-workflow/issues/250>`_).
-
-- Support additional branch versioning schemes, such as ``something-X.Y``,
-  or ``X.Y-somethingelse``. (`PR #253 <https://github.com/python/core-workflow/pull/253>`_
-  and `Issue #251 <https://github.com/python/core-workflow/issues/251>`_).
-
-1.1.1
------
-
-- Change the calls to ``subprocess`` to use lists instead of strings. This fixes
-  the bug that affects users in Windows. (`PR #238 <https://github.com/python/core-workflow/pull/238>`_).
-
-1.1.0
------
-
-- Add ``fix_commit_msg`` configuration item. Setting fix_commit_msg to ``true``
-  will replace the issue number in the commit message, from ``#`` to ``GH-``.
-  This is the default behavior for CPython. Other projects can opt out by
-  setting it to ``false``. (`PR #233 <https://github.com/python/core-workflow/pull/233>`_
-  and `aiohttp Issue #2853 <https://github.com/aio-libs/aiohttp/issues/2853>`_).
-
-1.0.0
------
-
-- Support configuration file by using ``--config-path`` option, or by adding
-  ``.cherry-picker.toml`` file to the root of the project. (`Issue #225
-  <https://github.com/python/core-workflow/issues/225>`_).
+.. code::shell
+  libjpeg62
+  libc6
