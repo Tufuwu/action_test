@@ -1,82 +1,81 @@
-DistFolder := ./dist
-BuildFolder := ./build
-SourceFiles := setup.py ./tpl/*.py
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
 
-.PHONY: zipapp
-zipapp: $(DistFolder)/tpl
+.PHONY: help build clean nuke dev dev-http docs install bdist sdist test release
 
-.PHONY: docker
-docker: zipapp Dockerfile
-	docker build -t "tpl:v`./setup.py -V`" ./
-	@echo " ==>" `tput setaf 2`Succesfully`tput sgr0` build `tput setaf 4`$@`tput sgr0`.
+SA:=source activate
+ENV:=kernel-gateway-dev
+SHELL:=/bin/bash
 
-.PHONY: wheel
-wheel: $(DistFolder)/tpl.1
-	python3 ./setup.py sdist bdist_wheel
-	@echo " ==>" `tput setaf 2`Succesfully`tput sgr0` build `tput setaf 4`$@`tput sgr0`.
+help:
+# http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: docs documentation
-docs documentation: $(DistFolder)/tpl.1 $(BuildFolder)
-	@echo " ==>" `tput setaf 3`Building`tput sgr0` HTML documentation for `tput setaf 4;./setup.py -V;tput sgr0`
-	sphinx-build -j auto -d $(BuildFolder)/sphinx -b html docs $(DistFolder)/docs
+build:
+env: ## Make a dev environment
+	conda create -y -n $(ENV) -c conda-forge --file requirements.txt \
+		--file requirements-test.txt
+	source activate $(ENV) && \
+		pip install -r requirements-doc.txt && \
+		pip install -e .
 
-$(DistFolder)/tpl.1: docs/manpage.rst
-	@# calling `./setup.py -V` makes sure that tpl.__version__ exists and docs/conf.py can import it
-	@echo " ==>" `tput setaf 3`Building`tput sgr0` manpage for `tput setaf 4;./setup.py -V;tput sgr0`
-	sphinx-build -d $(BuildFolder)/sphinx -b man -E docs $(DistFolder)
+activate: ## eval `make activate`
+	@echo "$(SA) $(ENV)"
 
-.PHONY: test
-test: TEST_SELECTOR ?= ""
-test: codestyle
-	pytest -k ${TEST_SELECTOR} ./tests
+clean: ## Make a clean source tree
+	-rm -rf dist
+	-rm -rf build
+	-rm -rf *.egg-info
+	-find kernel_gateway -name __pycache__ -exec rm -fr {} \;
+	-find kernel_gateway -name '*.pyc' -exec rm -fr {} \;
+	-$(SA) $(ENV) && make -C docs clean
 
-.PHONY: codestyle
-codestyle:
-	flake8 --max-line-length=88 tpl/
-	@# we have to ingore 401 and 811 because of the way that pytest
-	@# fixtures work
-	-flake8 --ignore=F401,F811 --max-line-length=88 tests/ && echo " ==>" Codestyle is `tput setaf 2`conforming`tput sgr0`.
+nuke: ## Make clean + remove conda env
+	-conda env remove -n $(ENV) -y
 
-.PHONY: all
-all: test zipapp documentation # this is not all but the ones we recommend
+dev: ## Make a server in jupyter_websocket mode
+	$(SA) $(ENV) && python kernel_gateway
 
-.PHONY: check-releasable-git-state
-check-releasable-git-state:
-	# check if there are changes staged to be commited
-	git diff --cached --stat --exit-code
-	# check if there are any changes to tracked files
-	git diff --stat --exit-code
-	# check if there are untracked files in tpl/ and tests/
-	! git status --porcelain=2 | grep -E "\\? [\"']?(tpl|tests)/"
-	# check if the current state is tagged in git
-	git describe --tags --exact
-	@echo " ==>" git state is `tput setaf 2`releasable`tput sgr0`
+dev-http: ## Make a server in notebook_http mode
+	$(SA) $(ENV) && python kernel_gateway \
+			--KernelGatewayApp.api='kernel_gateway.notebook_http' \
+			--KernelGatewayApp.seed_uri=etc/api_examples/api_intro.ipynb
 
-.PHONY: release
-release: check-releasable-git-state test zipapp wheel
-	@# check if there are no further changes not commited to git in $(SourceFiles)
-	@echo " ==>" `tput setaf 3`Releasing`tput sgr0` tag `tput setaf 4;./setup.py -V;tput sgr0` to PyPI.
-	twine upload dist/tpl-`./setup.py -V`*
-	@echo " ==>" `tput setaf 2`Released`tput sgr0` version `tput setaf 4;./setup.py -V;tput sgr0` to PyPI.
+docs: ## Make HTML documentation
+	$(SA) $(ENV) && make -C docs html
 
-.PHONY: install
-install: $(SourceFiles)
-	python -m pip install ./
+install: ## Make a conda env with dist/*.whl and dist/*.tar.gz installed
+	-conda env remove -y -n $(ENV)-install
+	conda create -y -n $(ENV)-install python=3 pip
+	$(SA) $(ENV)-install && \
+		pip install dist/*.whl && \
+			jupyter kernelgateway --help && \
+			pip uninstall -y jupyter_kernel_gateway
+	conda env remove -y -n $(ENV)-install
 
-$(DistFolder)/tpl: $(DistFolder) $(BuildFolder) $(SourceFiles)
-	python -m pip install ./ -t $(BuildFolder)
-	python -m zipapp --python "/usr/bin/env python3" --main tpl.__main__:_argv_wrapper --output $@ $(BuildFolder)
-	@echo " ==>" `tput setaf 2`Succesfully`tput sgr0` build `tput setaf 4`$@`tput sgr0`, you can now copy it somewhere into your `tput setaf 3`\$$PATH`tput sgr0`.
+	conda create -y -n $(ENV)-install python=3 pip
+	$(SA) $(ENV)-install && \
+		pip install dist/*.tar.gz && \
+			jupyter kernelgateway --help && \
+			pip uninstall -y jupyter_kernel_gateway
+	conda env remove -y -n $(ENV)-install
 
-$(DistFolder):
-	mkdir -p $@
-$(BuildFolder):
-	mkdir -p $@
+bdist: ## Make a dist/*.whl binary distribution
+	$(SA) $(ENV) && python setup.py bdist_wheel $(POST_SDIST) \
+		&& rm -rf *.egg-info
 
-.PHONY: clean
-clean:
-	rm -rf $(BuildFolder)
+sdist: ## Make a dist/*.tar.gz source distribution
+	$(SA) $(ENV) && python setup.py sdist $(POST_SDIST) \
+		&& rm -rf *.egg-info
 
-.PHONY: distclean
-distclean: clean
-	rm -rf $(DistFolder)
+test: TEST?=
+test: ## Make a python3 test run
+ifeq ($(TEST),)
+	$(SA) $(ENV) && nosetests
+else
+# e.g., make test TEST="test_gatewayapp.TestGatewayAppConfig"
+	$(SA) $(ENV) && nosetests kernel_gateway.tests.$(TEST)
+endif
+
+release: POST_SDIST=register upload
+release: bdist sdist ## Make a wheel + source release on PyPI

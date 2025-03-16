@@ -1,5 +1,2 @@
-include Makefile LICENSE CHANGELOG.rst Pipfile Dockerfile
-
-graft tests
-graft docs
-
+include kernel_gateway/jupyter_websocket/swagger.*
+include LICENSE.md
