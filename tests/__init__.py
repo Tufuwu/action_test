@@ -1,30 +1,39 @@
-import sys
+from pkg_resources import parse_version
+import pytest
+from sqlalchemy import __version__ as SA_VERSION
 
 
-class temporary_python_path(object):
-    """
-    Acts as a context manager to temporarily prepend a list of paths to
-    sys.path
-    """
-    def __init__(self, paths):
-        self.paths = paths
-
-    def __enter__(self):
-        self.original_paths = sys.path[:]
-        sys.path = self.paths + self.original_paths
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        sys.path = self.original_paths
+def skip_postgis1(postgis_version):
+    return pytest.mark.skipif(
+        postgis_version.startswith('1.'),
+        reason="requires PostGIS != 1",
+    )
 
 
-def delete_from_import_cache(module_name):
-    """
-    Deletes imported modules from the cache, so that they do not interfere with
-    subsequent imports of different modules of the same names.
+def skip_postgis2(postgis_version):
+    return pytest.mark.skipif(
+        postgis_version.startswith('2.'),
+        reason="requires PostGIS != 2",
+    )
 
-    Useful in situations where dynamically-created files are imported.
-    """
-    parts = module_name.split('.')
-    for i, _ in enumerate(parts, 1):
-        submodule_name = '.'.join(parts[:i])
-        del sys.modules[submodule_name]
+
+def skip_postgis3(postgis_version):
+    return pytest.mark.skipif(
+        postgis_version.startswith('3.'),
+        reason="requires PostGIS != 3",
+    )
+
+
+def skip_case_insensitivity():
+    return pytest.mark.skipif(
+        parse_version(SA_VERSION) < parse_version("1.3.4"),
+        reason='Case-insensitivity is only available for sqlalchemy>=1.3.4')
+
+
+def skip_pg12_sa1217(postgres_major_version):
+    return pytest.mark.skipif(
+        (
+            parse_version(SA_VERSION) < parse_version("1.2.17")
+            and int(postgres_major_version) >= 12
+        ),
+        reason='Reflection for PostgreSQL-12 is only supported by sqlalchemy>=1.2.17')

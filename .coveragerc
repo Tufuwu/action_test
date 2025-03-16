@@ -1,5 +1,2 @@
 [run]
-source = oscar
-omit =
-    *migrations*
-    */oscar/test/*
+source=geoalchemy2
