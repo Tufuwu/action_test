@@ -1,18 +1,66 @@
-# **_re:load_**
+# Duo Universal Python SDK
 
-An analytics ETL for BigQuery. Pairs well with [Redash](https://github.com/getredash/redash).
+This SDK allows a web developer to quickly add Duo's interactive, self-service, two-factor authentication to any Python web login form. Both Python 2 and Python 3 are supported.
 
-## Run Server
+What's here:
+* `duo_universal` - The Python Duo SDK for interacting with the Duo Universal Prompt
+* `demo` - An example web application with Duo integrated
+* `tests` - Test cases
 
-`make dev`
-
-## Rebuild `ra.min.js`
-
+## Getting Started
+To use the SDK in your existing development environment, install it from pypi (https://pypi.org/project/duo_universal).
 ```
-npm install
-npm run build
+pip install duo_universal
+```
+Once it's installed, see our developer documentation at https://duo.com/docs/duoweb-v4 and `demo/app.py` in this repo for guidance on integrating Duo 2FA into your web application.
+
+## Contribute
+To contribute, fork this repo and make a pull request with your changes when they're ready. 
+
+If you're not already working from a dedicated development environment, it's recommended a virtual environment is used. Assuming a virtual environment named `env`, create and activate the environment:
+```
+# Python 3
+python -m venv env
+source env/bin/activate
+
+# Python 2
+virtualenv env
+source env/bin/activate
 ```
 
-## Integration testing
+Build and install the SDK from source:
+```
+pip install -r requirements.txt
+pip install .
+```
 
-Start the server and point your browser to `localhost:port/client/test.html`. Check that no javascript errors were thrown.
+## Tests
+Install the test requirements:
+```
+cd tests
+pip install -r requirements.txt
+```
+Then run tests from the `test` directory:
+```
+# Run an individual test file
+python <test_name>.py
+
+# Run all tests with nose
+nose2
+
+# Run all tests with unittest
+python -m unittest
+```
+
+## Lint
+```
+flake8
+```
+
+## Support
+
+Please report any bugs, feature requests, or issues to us directly at support@duosecurity.com.
+
+Thank you for using Duo!
+
+https://duo.com/
