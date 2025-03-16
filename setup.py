@@ -1,48 +1,45 @@
-# -*- coding: utf-8 -*-
-from setuptools import setup
+import os
 
-__author__ = 'Martin Uhrin'
-__license__ = 'GPLv3 and MIT'
-__contributors__ = 'Sebastiaan P. Huber'
+from setuptools import setup, find_packages
 
-ABOUT = {}
-with open('kiwipy/version.py') as f:
-    exec(f.read(), ABOUT)  # pylint: disable=exec-used
+base_dir = os.path.dirname(__file__)
 
-setup(
-    name='kiwipy',
-    version=ABOUT['__version__'],
-    description='Robust, high-volume, message based communication made easy',
-    long_description=open('README.rst').read(),
-    url='https://github.com/aiidateam/kiwipy.git',
-    author='Martin Uhrin',
-    author_email='martin.uhrin.10@ucl.ac.uk',
-    license=__license__,
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: MIT License',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-    ],
-    keywords='communication messaging rpc broadcast',
-    install_requires=['shortuuid', 'async_generator', 'pytray>=0.2.2, <0.3.0', 'deprecation'],
-    python_requires='>=3.5',
-    extras_require={
-        'docs': [
-            'docutils==0.14',
-            'jupyter',  # For running doc examples
-            'nbsphinx',  # Jupyter notebooks in docs
-            'pandoc',
-            'sphinx',
-            'sphinx-autobuild',
+about = {}
+with open(os.path.join(base_dir, 'stacks', '__about__.py')) as f:
+    exec(f.read(), about)
+
+install_requires = [
+    'configargparse>=0.9.3',
+    'PyYAML>=4.2b1',
+    'Jinja2>=2.7.3',
+    'boto>=2.40.0',
+    'tabulate>=0.7.5',
+    'setuptools',
+    'pytz',
+    'tzlocal',
+]
+
+tests_require = [
+    'moto',
+]
+
+config = {
+    'name': 'cfstacks',
+    'description': 'Manage CloudFormation sanely with templates written in YAML',
+    'url': about['__url__'],
+    'download_url': about['__url__'],
+    'version': about['__version__'],
+    'maintainer': about['__maintainer__'],
+    'maintainer_email': about['__maintainer_email__'],
+    'packages': find_packages(),
+    'install_requires': install_requires,
+    'tests_require': tests_require,
+    'entry_points': {
+        'console_scripts': [
+            'stacks = stacks.__main__:main',
         ],
-        'pre-commit': ['pre-commit~=2.2', 'pylint==2.5.2'],
-        'rmq': ['aio-pika', 'pyyaml~=5.1'],
-        'tests': ['coverage', 'pytest-cov', 'pytest~=5.4', 'pytest-asyncio<=0.10.0', 'pytest-notebook']
     },
-    packages=['kiwipy', 'kiwipy.rmq'],
-    test_suite='test'
-)
+    'python_requires': '>=3',
+}
+
+setup(**config)
