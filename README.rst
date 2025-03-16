@@ -1,128 +1,51 @@
-.. image:: https://img.shields.io/github/workflow/status/alanhamlett/pip-update-requirements/Tests/master?label=tests
-    :target: https://github.com/alanhamlett/pip-update-requirements/actions
-    :alt: Tests
+===================================
+Libvirt test provider for virt-test
+===================================
 
-.. image:: https://codecov.io/gh/alanhamlett/pip-update-requirements/branch/master/graph/badge.svg?token=Ob1I7eMhiS
-    :target: https://codecov.io/gh/alanhamlett/pip-update-requirements
-    :alt: Coverage
+This is the official test provider [1]_ for the following
+subtest types:
 
-.. image:: https://img.shields.io/pypi/v/pur.svg
-    :target: https://pypi.python.org/pypi/pur
-    :alt: Version
+* Libvirt
+* LVSB
+* V2V
+* Libguestfs
 
-.. image:: https://img.shields.io/pypi/pyversions/pur.svg
-    :target: https://pypi.python.org/pypi/pur
-    :alt: Supported Python Versions
+Really quick start guide
+------------------------
 
-.. image:: https://wakatime.com/badge/github/alanhamlett/pip-update-requirements.svg
-    :target: https://wakatime.com/badge/github/alanhamlett/pip-update-requirements
+1. Fork this repo on github
+2. Create a new topic branch for your work
+3. Create a new test provider file in your virt test repo,
+   like::
 
+    cp io-github-autotest-libvirt.ini myprovider.ini
 
-pip-update-requirements
-=======================
+   ::
 
-Update the packages in a ``requirements.txt`` file.
+    [provider]
+    uri: file:///home/foo/Code/tp-libvirt
+    [libvirt]
+    subdir: libvirt/
+    [libguestfs]
+    subdir: libguestfs/
+    [lvsb]
+    subdir: lvsb/
+    [v2v]
+    subdir: v2v/
 
-.. image:: https://raw.githubusercontent.com/alanhamlett/pip-update-requirements/master/pur.gif
-    :alt: Purring Cat
+   You can optionally delete temporarily the
+   `io-github-autotest-qemu.ini` file, just so you don't have test
+   conflicts. Then you can develop your new test code, run it
+   using virt test, and commit your changes.
 
+4. Make sure you have `inspektor installed. <https://github.com/autotest/inspektor#inspektor>`_
+5. Run::
 
-Installation
-------------
+    inspekt checkall --disable-style E501,E265,W601,E402,E722,E741 --no-license-check <test_script_name>.py
 
-::
+6. Ensure <https://github.com/autotest/tp-libvirt/blob/master/tp-libvirt_review_comment_summary.rst> are met
+7. Fix any problems
+8. Push your changes and submit a pull request
+9. That's it.
 
-    pip install pur
-
-
-Usage
------
-
-Give pur your ``requirements.txt`` file and it updates all your packages to
-the latest versions.
-
-For example, given a ``requirements.txt`` file::
-
-    flask==0.9
-    sqlalchemy==0.9.10
-    alembic==0.8.4
-
-Running pur on that file updates the packages to current latest versions::
-
-    $ pur -r requirements.txt
-    Updated flask: 0.9 -> 1.0.2
-    Updated sqlalchemy: 0.9.10 -> 1.2.8
-    Updated alembic: 0.8.4 -> 0.9.9
-    All requirements up-to-date.
-
-
-Pur never modifies your environment or installed packages, it only modifies
-your ``requirements.txt`` file.
-
-You can also use Pur directly from Python::
-
-    $ python
-    Python 3.6.1
-    >>> from pur import update_requirements
-    >>> print([x[0]['message'] for x in update_requirements(input_file='requirements.txt').values()])
-    ['Updated flask: 0.9 -> 1.0.2', 'Updated sqlalchemy: 0.9.10 -> 1.2.8', 'Updated alembic: 0.8.4 -> 0.9.9']
-    >>> print(open('requirements.txt').read())
-    flask==1.0.2
-    sqlalchemy==1.2.8
-    alembic==0.9.9
-
-
-Options
--------
-
--r, --requirement PATH   The requirements.txt file to update; Defaults to
-                         using requirements.txt from the current directory
-                         if it exist.
--o, --output PATH        Output updated packages to this file; Defaults to
-                         overwriting the input requirements.txt file.
--i, --interactive        Interactively prompts before updating each package.
--f, --force              Force updating packages even when a package has no
-                         version specified in the input requirements.txt
-                         file.
--d, --dry-run            Output changes to STDOUT instead of overwriting the
-                         requirements.txt file.
--n, --no-recursive       Prevents updating nested requirements files.
--s, --skip TEXT          Comma separated list of packages to skip updating.
---index-url TEXT         Base URL of the Python Package Index. Can be
-                         provided multiple times for extra index urls.
---verify PATH            Either a boolean true/false, in which case it
-                         controls whether we verify the server's TLS
-                         certificate, or a string, in which case it must be
-                         a path to a CA certs bundle. Defaults to True.
---only TEXT              Comma separated list of packages. Only these
-                         packages will be updated.
--m, --minor TEXT         Comma separated list of packages to only update
-                         minor versions, never major. Use "*" to limit every
-                         package to minor version updates.
--p, --patch TEXT         Comma separated list of packages to only update
-                         patch versions, never major or minor. Use "*" to
-                         limit every package to patch version updates.
---pre TEXT               Comma separated list of packages to allow updating
-                         to pre-release versions. Use "*" to allow all
-                         packages to be updated to pre-release versions. By
-                         default packages are only updated to stable
-                         versions.
--z, --nonzero-exit-code  Exit with status 10 when all packages up-to-date,
-                         11 when some packages were updated. Defaults to
-                         exit status zero on success and non-zero on
-                         failure.
---version                Show the version and exit.
---help                   Show this message and exit.
-
-
-Contributing
-------------
-
-Before contributing a pull request, make sure tests pass::
-
-    virtualenv venv
-    . venv/bin/activate
-    pip install tox
-    tox
-
-Many thanks to all `contributors <https://github.com/alanhamlett/pip-update-requirements/blob/master/AUTHORS>`_!
+.. [1] You can always create your own test provider, if you have special purposes, or just want to develop your work independently.
