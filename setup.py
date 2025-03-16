@@ -1,59 +1,68 @@
-# -*- coding: utf-8 -*-
-from setuptools import setup
-import os
-import re
+#!/usr/bin/env python3
 
-# Lovingly adapted from https://github.com/kennethreitz/requests/blob/39d693548892057adad703fda630f925e61ee557/setup.py#L50-L55
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pusher/version.py'), 'r') as fd:
-    VERSION = re.search(r'^VERSION = [\']([^\']*)[\']',
-                        fd.read(), re.MULTILINE).group(1)
+from setuptools import setup, find_packages
 
-if not VERSION:
-    raise RuntimeError('Ensure `VERSION` is correctly set in ./pusher/version.py')
+
+__version__ = "0.2a5"
 
 setup(
-    name='pusher',
-    version=VERSION,
-    description='A Python library to interract with the Pusher Channels API',
-    url='https://github.com/pusher/pusher-http-python',
-    author='Pusher',
-    author_email='support@pusher.com',
+    name='ndn-python-repo',
+    version=__version__,
+    description='An NDN Repo implementation using Python',
+    url='https://github.com/JonnyKong/ndn-python-repo',
+    author='Zhaoning Kong',
+    author_email='jonnykong@cs.ucla.edu',
+    download_url='https://pypi.python.org/pypi/ndn-python-repo',
+    project_urls={
+        "Bug Tracker": "https://github.com/JonnyKong/ndn-python-repo/issues",
+        "Source Code": "https://github.com/JonnyKong/ndn-python-repo",
+    },
+    license='Apache License 2.0',
+    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
         'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Topic :: Internet :: WWW/HTTP',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 3',
-    ],
-    keywords='pusher rest realtime websockets service',
-    license='MIT',
 
-    packages=[
-        'pusher'
+        'Topic :: Database',
+        'Topic :: Internet',
+        'Topic :: System :: Networking',
+
+        'License :: OSI Approved :: Apache Software License',
+
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
+
+    keywords='NDN',
+
+    packages=find_packages(exclude=['tests']),
 
     install_requires=[
-        'six',
-        'requests>=2.3.0',
-        'urllib3',
-        'pyopenssl',
-        'ndg-httpsclient',
-        'pyasn1',
-        'pynacl'
+        "python-ndn >= 0.2b2.post1",
+        "PyYAML >= 5.1.2",
+    ],
+    extras_require={
+        'test': [ 'pytest', 'pytest-cov'],
+        'leveldb': ['plyvel'],
+        'mongodb': ['pymongo']
+    },
+    python_requires=">=3.6",
+
+    entry_points={
+        'console_scripts': [
+            'ndn-python-repo = ndn_python_repo.cmd.main:main',
+            'ndn-python-repo-install = ndn_python_repo.cmd.install:main',
+            'ndn-python-repo-port = ndn_python_repo.cmd.port:main'
+        ],
+    },
+
+    data_files=[
+        # ('/usr/local/etc/ndn', ['ndn_python_repo/ndn-python-repo.conf']),
+        # ('/etc/systemd/system/', ['ndn_python_repo/ndn-python-repo.service']),
     ],
 
-    tests_require=['nose', 'mock', 'HTTPretty'],
-
-    extras_require={
-        'aiohttp': ['aiohttp>=0.20.0'],
-        'tornado': ['tornado>=5.0.0']
-    },
-
     package_data={
-        'pusher': ['cacert.pem']
+        '': ['*.conf.sample', '*.service'],
     },
-
-    test_suite='pusher_tests',
+    include_package_data=True,
 )
