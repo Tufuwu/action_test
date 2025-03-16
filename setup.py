@@ -1,47 +1,27 @@
-#!/usr/bin/env python
+import setuptools
 
-from setuptools import setup
-
-setup(
-    name='topy',
-    version='1.1.0',
-
-    # PyPI metadata
-    author='Marti Raudsepp',
-    author_email='marti@juffo.org',
-    url='https://github.com/intgr/topy',
-    download_url='https://pypi.python.org/pypi/topy/',
-    license='MIT, CC-BY-SA',
-    description='Fixes typos in text using regular expressions, based on RegExTypoFix from Wikipedia',
-    long_description=open('README.rst').read(),
-    platforms='any',
-    keywords='typo spelling grammar text',
+setuptools.setup(
+    name="behave-pandas",
+    version="1.0.0-dev",
+    url="https://github.com/clembou/behave-pandas",
+    author="Clément Bouscasse",
+    author_email="clement.bouscasse@gmail.com",
+    description="Provides helper functions to help converting behave tables into pandas dataframes and vice versa.",
+    long_description=open("README.md", "r").read(),
+    long_description_content_type="text/markdown",
+    packages=setuptools.find_packages(),
+    install_requires=["behave", "pandas>=0.21,<1.5", "tabulate", "numpy<1.24"],
     classifiers=[
-        # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        # Until we have a test suite we're conservative about Python version compatibility claims
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Topic :: Documentation',
-        'Topic :: Software Development :: Quality Assurance',
-        'Topic :: Text Processing :: Filters',
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
-
-    # Installation settings
-    packages=['topy'],
-    entry_points={'console_scripts': ['topy = topy.topy:main']},
-    package_data={
-        '': ['*.txt']
-    },
-    install_requires=[
-        'regex>=2016.07.14',
-        'beautifulsoup4',
-    ],
-    test_suite='tests',
+    license="MIT",
+    keywords="behave pandas testing bdd",
+    python_requires=">=3.6",
 )
