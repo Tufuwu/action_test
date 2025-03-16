@@ -1,8 +1,2 @@
 [run]
-source = rnc2rng
-
-[report]
-exclude_lines =
-    pragma: no cover
-    def __repr__
-    assert
+omit=matplotlib_scalebar/_version.py

@@ -1,33 +1,45 @@
-from setuptools import setup
+#!/usr/bin/env python
+
+# Standard library modules.
+from pathlib import Path
+
+# Third party modules.
+from setuptools import setup, find_packages
+
+# Local modules.
+import versioneer
+
+# Globals and constants variables.
+BASEDIR = Path(__file__).parent.resolve()
+
+# Get the long description from the relevant file
+with open(BASEDIR.joinpath("README.rst"), "r") as f:
+    long_description = f.read()
 
 setup(
-    name='rnc2rng',
-    version='2.6.1',
-    url='https://github.com/djc/rnc2rng',
-    author='David Mertz',
-    description='RELAX NG Compact to regular syntax conversion library',
-    maintainer='Dirkjan Ochtman',
-    maintainer_email='dirkjan@ochtman.nl',
+    name="matplotlib-scalebar",
+    version=versioneer.get_version(),
+    description="Artist for matplotlib to display a scale bar",
+    long_description=long_description,
+    author="Philippe Pinard",
+    author_email="philippe.pinard@gmail.com",
+    maintainer="Philippe Pinard",
+    maintainer_email="philippe.pinard@gmail.com",
+    url="https://github.com/ppinard/matplotlib-scalebar",
+    license="BSD",
+    keywords="matplotlib scale micron bar",
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Operating System :: OS Independent',
-        'License :: Public Domain',
-        'Topic :: Text Processing :: Markup :: XML',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Topic :: Scientific/Engineering :: Visualization",
     ],
-    packages=['rnc2rng'],
-    entry_points={
-        'console_scripts': [
-            'rnc2rng = rnc2rng.__main__:main',
-        ],
-    },
-    use_2to3=True,
-    install_requires=['rply'],
+    packages=find_packages(),
+    package_data={},
+    install_requires=["matplotlib"],
+    zip_safe=True,
+    test_suite="nose.collector",
+    cmdclass=versioneer.get_cmdclass(),
 )
