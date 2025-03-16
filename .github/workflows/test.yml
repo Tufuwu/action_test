@@ -1,43 +1,29 @@
-name: Tests
+name: pyTenable Unit Tests
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push]
 
 jobs:
-  build_ubuntu:
+  unit_tests:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+        python-version: ["3.9", "3.10"]
+
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - uses: actions/cache@v4
-        with:
-          path: |
-            .venv
-            .tox
-          key: ${{ matrix.os }}-${{ hashFiles('tox.ini') }}-${{ hashFiles('requirements-dev.txt') }}
-      - name: tox
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
         run: |
-          python3.8 -m venv .venv
-          .venv/bin/python -m pip install --upgrade pip
-          .venv/bin/python -m pip install tox
-          .venv/bin/tox -q -p all
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+          pip install -r requirements.txt
+      #- name: Lint with flak8
+      #  run: |
+      #    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Test with pytest
+        run: |
+          pytest --vcr-record=none --cov-report term-missing --cov=tenable tests
