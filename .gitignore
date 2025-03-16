@@ -1,11 +1,3 @@
-*.log
-*.pot
-*.pyc
-local_settings.py
-dist
-build
-MANIFEST
-*.sqlite
-tests/.coverage
-tests/coverage.lcov
-django_thumborstorage.egg-info
+_build/*
+locale/**/*.mo
+locale/pot/.doctrees
