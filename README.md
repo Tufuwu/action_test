@@ -1,64 +1,33 @@
-[![](https://github.com/Hexlet/hexlet-friends/workflows/CI/badge.svg)](https://github.com/Hexlet/hexlet-friends/actions)
-[![Maintainability](https://api.codeclimate.com/v1/badges/dedb9f8ad241a9152fd0/maintainability)](https://codeclimate.com/github/Hexlet/hexlet-friends/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/dedb9f8ad241a9152fd0/test_coverage)](https://codeclimate.com/github/Hexlet/hexlet-friends/test_coverage)
-[![wemake-python-styleguide](https://img.shields.io/badge/style-wemake-000000.svg)](https://github.com/wemake-services/wemake-python-styleguide)
+# Coding Pirates member mangement system.
+![CircleCI branch](https://img.shields.io/circleci/project/github/CodingPirates/forenings_medlemmer/master.svg?style=for-the-badge)![Coveralls github branch](https://img.shields.io/coveralls/github/CodingPirates/forenings_medlemmer/master.svg?style=for-the-badge)![Code style: black](https://img.shields.io/badge/CODE%20STYLE-Black-black.svg?style=for-the-badge)
 
-# Hexlet Friends
-Сервис для отслеживания вклада участников сообщества Хекслет в его open-source проекты на GitHub.
 
-Вклад &mdash; issues, pull requests, commits, comments.
+This system is used by the union [Coding Pirates][cpDK], we are a volunteer
+non profit that teaches programming, 3D printing, and other IT related
+activities to kids.
 
-## Установка и настройка
+We use this system to manage our unions, chapters, members, activities and
+volunteers.
 
-### 0. Убедиться, что в системе установлены **poetry** и **make**.
+### The system
+> The system is going through a redesign and thus the code is still between
+> phases and thus a bit messy.
 
-### 1. Выполнить команды:
+The system is coded in [django][django], and exposes a [graphQL][graphQL]
+endpoint that can be consumed by a front end, and the built in django admin
+interface which is used by the administrative personal.
 
-```
-git clone https://github.com/Hexlet/hexlet-friends
-cd hexlet-friends
-make install
-```
+The system is setup using the principles of a [twelve factor app][12factor],
+which makes it easy to deploy.
 
-### 2. Задать значения переменным окружения в _.env_:
 
-`GITHUB_AUTH_TOKEN` &mdash; Personal access token из [настроек GitHub](https://github.com/settings/tokens).
+### Development
+For more info, see our [wiki][wiki] or ask on [Slack][slack]
 
-Значения для `GITHUB_WEBHOOK_TOKEN` и `SECRET_KEY` можно сгенерировать командой `make secretkey`.
-
-`DEBUG=True`
-
-### 3. Выполнить команду `make setup`.
-
-## Наполнение базы данных
-
-По именам организаций:
-
-```
-make sync ARGS='ORG [ORG ...]'
-```
-
-По __полным__ именам репозиториев (org_name/repo_name):
-
-```
-make sync ARGS='--repo REPO [REPO ...]'
-```
-
-Последующее обновление данных:
-```
-make sync
-```
-
-## Запуск сервера для разработки
-
-```
-make start
-```
-
-## Локализация текста
-
-Требуется утилита **gettext**.
-
-1. `make transprepare` &mdash; подготовить файл **locale/ru/LC_MESSAGES/django.po**.
-2. Внести изменения в этот файл.
-3. Выполнить `make transcompile`.
+<!-- Links -->
+[cpDK]: https://codingpirates.dk
+[django]: https://www.djangoproject.com
+[graphQl]: https://www.howtographql.com
+[12factor]: https://12factor.net
+[wiki]: https://github.com/CodingPirates/forenings_medlemmer/wiki
+[slack]: https://slackinvite.codingpirates.dk/
