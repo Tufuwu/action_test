@@ -1,26 +1,29 @@
-import setuptools
+from setuptools import setup
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
 
-setuptools.setup(
-    name="pydatastructs",
-    version="0.0.1-dev",
-    author="PyDataStructs Development Team",
-    author_email="pydatastructs@googlegroups.com",
-    description="A python package for data structures",
-    long_description=long_description,
+setup(
+    name="django-object-actions",
+    version="3.0.2",
+    author="Chris Chang",
+    author_email="c@crccheck.com",
+    url="https://github.com/crccheck/django-object-actions",
+    packages=["django_object_actions"],
+    include_package_data=True,  # automatically include things from MANIFEST
+    license="Apache License, Version 2.0",
+    description="A Django app for adding object tools for models in the admin",
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/codezonediitj/pydatastructs",
-    packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: BSD License",
+        "Development Status :: 5 - Production/Stable",
+        "Framework :: Django",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
-        "Topic :: Education :: Data Structures",
-        "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Information Analysis",
-        "Topic :: Software Development :: Libraries"
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
-    python_requires='>=3.5',
 )

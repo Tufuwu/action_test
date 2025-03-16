@@ -1,111 +1,245 @@
-PyDataStructs
-=============
+Django Object Actions
+=====================
 
-[![Build Status](https://app.travis-ci.com/codezonediitj/pydatastructs.svg?branch=master)](https://app.travis-ci.com/github/codezonediitj/pydatastructs) [![Join the chat at https://gitter.im/codezonediitj/pydatastructs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/codezoned2017/Lobby) [![Discuss at pydatastructs@googlegroups.com](https://img.shields.io/badge/discuss-pydatastructs%40googlegroups.com-blue.svg)](https://groups.google.com/forum/#!forum/pydatastructs) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/codezonediitj/pydatastructs/pulls) [![codecov](https://codecov.io/gh/codezonediitj/pydatastructs/branch/master/graph/badge.svg)](https://codecov.io/gh/codezonediitj/pydatastructs)
+[![CI](https://github.com/crccheck/django-object-actions/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/crccheck/django-object-actions/actions/workflows/ci.yml?query=branch%3Amaster)
 
-About
+If you've ever tried making admin object tools you may have thought, "why can't
+this be as easy as making Django Admin Actions?" Well now they can be.
+
+
+Quick-Start Guide
+-----------------
+
+Install Django Object Actions:
+
+```shell
+$ pip install django-object-actions
+```
+
+Add `django_object_actions` to your `INSTALLED_APPS` so Django can find
+our templates.
+
+In your admin.py:
+
+```python
+from django_object_actions import DjangoObjectActions
+
+class ArticleAdmin(DjangoObjectActions, admin.ModelAdmin):
+    def publish_this(self, request, obj):
+        publish_obj(obj)
+    publish_this.label = "Publish"  # optional
+    publish_this.short_description = "Submit this article"  # optional
+
+    change_actions = ('publish_this', )
+```
+
+
+Usage
 -----
 
-This project aims to be a Python package for various data structures in computer science. We are also working on the development of algorithms including their parallel implementations. To the best of our knowledge, a well-designed library/package which has covered most of the data structures and algorithms including their parallel implementation doesn't exist yet.
+Defining new &*tool actions* is just like defining regular [admin actions]. The
+major difference is the functions for `django-object-actions` will take an
+object instance instead of a queryset (see *Re-using Admin Actions* below).
 
-Once the software design becomes more stable after a few releases of this package in the near future, we also aim to provide APIs for the code in C++ and Java as well.
-
-Installation
-------------
-
-You can install the library by running the following command,
-
-```python
-python -m pip install .
-```
-
-For development purposes, you can use the option `e` as shown below,
+*Tool actions* are exposed by putting them in a `change_actions` attribute in
+your `admin.ModelAdmin`. You can also add *tool actions* to the main changelist
+views too. There, you'll get a queryset like a regular [admin action][admin actions]:
 
 ```python
-python -m pip install -e .
+from django_object_actions import DjangoObjectActions
+
+class MyModelAdmin(DjangoObjectActions, admin.ModelAdmin):
+    def toolfunc(self, request, obj):
+        pass
+    toolfunc.label = "This will be the label of the button"  # optional
+    toolfunc.short_description = "This will be the tooltip of the button"  # optional
+
+    def make_published(modeladmin, request, queryset):
+        queryset.update(status='p')
+
+    change_actions = ('toolfunc', )
+    changelist_actions = ('make_published', )
 ```
 
-Make sure that your python version is above `3.5`.
+Just like admin actions, you can send a message with `self.message_user`.
+Normally, you would do something to the object and return to the same url, but
+if you return a `HttpResponse`, it will follow it (hey, just like [admin
+actions]!).
 
-Testing
--------
+If your admin modifies `get_urls`, `change_view`, or `changelist_view`,
+you'll need to take extra care because `django-object-actions` uses them too.
 
-For testing your patch locally follow the steps given below,
+### Re-using Admin Actions
 
-1. Install [pytest-cov](https://pypi.org/project/pytest-cov/). Skip this step if you are already having the package.
-2. Run, `python3 -m pytest --doctest-modules --cov=./ --cov-report=html`. Look for, `htmlcov/index.html` and open it in your browser, which will show the coverage report. Try to ensure that the coverage is not decreasing by more than 1% for your patch.
+If you would like a preexisting admin action to also be an *object action*, add
+the `takes_instance_or_queryset` decorator to convert object instances into a
+queryset and pass querysets:
 
-For a good visualisation of the different data structures and algorithms, refer the following websites:
-- https://visualgo.net/
-- https://www.cs.usfca.edu/~galles/visualization/
+```python
+from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
 
-You can use the examples given in the following book as tests for your code:
-- [https://opendatastructures.org/ods-python.pdf](https://opendatastructures.org/ods-python.pdf)
+class RobotAdmin(DjangoObjectActions, admin.ModelAdmin):
+    # ... snip ...
 
-Why do we use Python?
-------------------
+    @takes_instance_or_queryset
+    def tighten_lug_nuts(self, request, queryset):
+        queryset.update(lugnuts=F('lugnuts') - 1)
 
-As we know Python is an interpreted language and hence is slow compared to C++, the most popular language for competitive programming. We still decided to use Python because the software development can happen at a much faster pace and it is much easier to test various software designs and APIs as coding them out takes no time. However, keeping the need of the users in mind, we will shift to C++ backend,  which will happen quickly as we would be required to just translate the tested code rather than writing it from scratch, after a few releases with APIs available for all the languages.
+    change_actions = ['tighten_lug_nuts']
+    actions = ['tighten_lug_nuts']
+```
 
-How to contribute?
-------------------
+[admin actions]: https://docs.djangoproject.com/en/stable/ref/contrib/admin/actions/
 
-Follow the steps given below,
+### Customizing *Object Actions*
 
-1. Fork, https://github.com/codezonediitj/pydatastructs/
-2. Execute, `git clone https://github.com/codezonediitj/pydatastructs/`
-3. Change your working directory to `../pydatastructs`.
-4. Execute, `git remote add origin_user https://github.com/<your-github-username>/pydatastructs/`
-5. Execute, `git checkout -b <your-new-branch-for-working>`.
-6. Make changes to the code.
-7. Add your name and email to the AUTHORS, if you wish to.
-8. Execute, `git add .`.
-9. Execute, `git commit -m "your-commit-message"`.
-10. Execute, `git push origin_user <your-current-branch>`.
-11. Make PR.
+To give the action some a helpful title tooltip, add a
+`short_description` attribute, similar to how admin actions work:
 
-That's it, 10 easy steps for your first contribution. For future contributions just follow steps 5 to 10. Make sure that before starting work, always checkout to master and pull the recent changes using the remote `origin` and then start following steps 5 to 10.
+```python
+def increment_vote(self, request, obj):
+    obj.votes = obj.votes + 1
+    obj.save()
+increment_vote.short_description = "Increment the vote count by one"
+```
 
-See you soon with your first PR.
+By default, Django Object Actions will guess what to label the button
+based on the name of the function. You can override this with a `label`
+attribute:
 
-It is recommended to go through the following links before you start working.
+```python
+def increment_vote(self, request, obj):
+    obj.votes = obj.votes + 1
+    obj.save()
+increment_vote.label = "Vote++"
+```
 
-- [Issue Policy](https://github.com/codezonediitj/pydatastructs/wiki/Issue-Policy)
-- [Pull Request Policy](https://github.com/codezonediitj/pydatastructs/wiki/Pull-Request-Policy)
-- [Plan of Action for the Projects](https://github.com/codezonediitj/pydatastructs/wiki/Plan-of-Action-for-the-Projects)
+If you need even more control, you can add arbitrary attributes to the buttons
+by adding a Django widget style
+[attrs](https://docs.djangoproject.com/en/stable/ref/forms/widgets/#django.forms.Widget.attrs)
+attribute:
+
+```python
+def increment_vote(self, request, obj):
+    obj.votes = obj.votes + 1
+    obj.save()
+increment_vote.attrs = {
+    'class': 'addlink',
+}
+```
+
+### Programmatically Disabling Actions
+
+You can programmatically disable registered actions by defining your own
+custom `get_change_actions()` method. In this example, certain actions
+only apply to certain object states (e.g. You should not be able to
+close an company account if the account is already closed):
+
+```python
+def get_change_actions(self, request, object_id, form_url):
+    actions = super(PollAdmin, self).get_change_actions(request, object_id, form_url)
+    actions = list(actions)
+    if not request.user.is_superuser:
+        return []
+
+    obj = self.model.objects.get(pk=object_id)
+    if obj.question.endswith('?'):
+        actions.remove('question_mark')
+
+    return actions
+```
+
+The same is true for changelist actions with `get_changelist_actions`.
+
+### Alternate Installation
+
+You don't have to add this to `INSTALLED_APPS`, all you need to to do
+is copy the template `django_object_actions/change_form.html` some place
+Django's template loader [will find
+it](https://docs.djangoproject.com/en/stable/ref/settings/#template-dirs).
+
+If you don't intend to use the template customizations at all, don't
+add `django_object_actions` to your `INSTALLED_APPS` at all and use
+`BaseDjangoObjectActions` instead of `DjangoObjectActions`.
 
 
-Guidelines
-----------
+More Examples
+-------------
 
-We recommend you to join our [gitter channel](https://gitter.im/codezoned2017/Lobby) for discussing anything related to the project.
+Making an action that links off-site:
 
-Please follow the rules and guidelines given below,
+```python
+def external_link(self, request, obj):
+    from django.http import HttpResponseRedirect
+    return HttpResponseRedirect(f'https://example.com/{obj.id}')
+```
 
-1. Follow the [numpydoc docstring guide](https://numpydoc.readthedocs.io/en/latest/format.html).
-2. If you are planning to contribute a new data structure then first raise an **issue** for discussing the API, rather than directly making a PR. Please go through [Plan of Action for Adding New Data Structures](https://github.com/codezonediitj/pydatastructs/wiki/Plan-of-Action-for-Adding-New-Data-Structures)
-3. For the first-time contributors we recommend not to take a complex data structure, rather start with `beginner` or `easy`.
-4. We don't assign issues to any individual. Instead, we follow First Come First Serve for taking over issues, i.e., if one contributor has already shown interest then no comment should be made after that as it won't be considered. Anyone willing to work on an issue can comment on the thread that he/she is working on and raise a PR for the same.
-5. Any open PR must be provided with some updates after being reviewed. If it is stalled for more than 4 days, it will be labeled as `Please take over`, meaning that anyone willing to continue that PR can start working on it.
-6. PRs that are not related to the project or don't follow any guidelines will be labeled as `Could Close`, meaning that the PR is not necessary at the moment.
 
-The following parameters are to be followed to pass the code quality tests for your Pull Requests,
+Limitations
+-----------
 
-1. There should not be any trailing white spaces at any line of code.
-2. Each `.py` file should end with exactly one new line.
-3. Comparisons involving `True`, `False` and `None` should be done by
-reference (using `is`, `is not`) and not by value(`==`, `!=`).
+1.  `django-object-actions` expects functions to be methods of the model
+    admin. While Django gives you a lot more options for their admin
+    actions.
+2.  If you provide your own custom `change_form.html`, you'll also need
+    to manually copy in the relevant bits of [our change form
+    ](./django_object_actions/templates/django_object_actions/change_form.html).
+3.  Security. This has been written with the assumption that everyone in
+    the Django admin belongs there. Permissions should be enforced in
+    your own actions irregardless of what this provides. Better default
+    security is planned for the future.
 
-Keep contributing!!
 
-Thanks to these wonderful people ✨✨:
+Python and Django compatibility
+-------------------------------
 
-<table>
-	<tr>
-		<td>
-			<a href="https://github.com/codezonediitj/pydatastructs/graphs/contributors">
-  				<img src="https://contrib.rocks/image?repo=codezonediitj/pydatastructs" />
-			</a>
-		</td>
-	</tr>
-</table>
+See [`tox.ini`](./tox.ini) for which Python and Django versions this supports.
+
+
+Demo Admin & Docker images
+--------------------------
+
+You can try the demo admin against several versions of Django with these Docker
+images: https://hub.docker.com/r/crccheck/django-object-actions/tags
+
+This runs the example Django project in `./example_project` based on the "polls"
+tutorial. `admin.py` demos what you can do with this app.
+
+
+Development
+-----------
+
+Getting started *(with virtualenvwrapper)*:
+
+```shell
+# get a copy of the code
+git clone git@github.com:crccheck/django-object-actions.git
+cd django-object-actions
+# set up your virtualenv (with virtualenvwrapper)
+mkvirtualenv django-object-actions
+# Install requirements
+make install
+# Hack your path so that we can reference packages starting from the root
+add2virtualenv .
+make test  # run test suite
+make quickstart  # runs 'make resetdb' and some extra steps
+```
+
+This will install whatever the latest stable version of Django is. You
+can also install a specific version of Django and
+`pip install -r requirements.txt`.
+
+Various helpers are available as make commands. Type `make help` and
+view the `Makefile` to see what other things you can do.
+
+
+Similar Packages
+----------------
+
+If you want an actions menu for each row of your changelist, check out [Django
+Admin Row Actions](https://github.com/DjangoAdminHackers/django-admin-row-actions).
+
+Django Object Actions is very similar to
+[django-object-tools](https://github.com/praekelt/django-object-tools), but does
+not require messing with your urls.py, does not do anything special with
+permissions, and uses the same patterns as making [admin actions].
