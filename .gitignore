@@ -1,12 +1,16 @@
-# Compiled python modules.
 *.pyc
-
-# vim tmp files
-*.swp
-
-# Setuptools distribution folder.
+__pycache__
+/.cache
+/.coverage
+/.coveragerc
+/.idea
 /dist/
 /build/
-
-# Python egg metadata, regenerated from source files by setuptools.
-/*.egg-info
+*.egg-info
+/htmlcov
+/.tox
+/docs/_build
+docs/build
+docs/source/requirement_coverage.rst
+docs/source/requirement_coverage.yaml
+pytest-report.html
