@@ -1,45 +1,53 @@
-#!/usr/bin/env python
+# The MIT License (MIT)
+#
+# Copyright (c) 2016-2019 Frederic Guillot
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
-# Standard library modules.
-from pathlib import Path
+from setuptools import setup
 
-# Third party modules.
-from setuptools import setup, find_packages
 
-# Local modules.
-import versioneer
+def readme():
+    with open('README.rst') as f:
+        return f.read()
 
-# Globals and constants variables.
-BASEDIR = Path(__file__).parent.resolve()
-
-# Get the long description from the relevant file
-with open(BASEDIR.joinpath("README.rst"), "r") as f:
-    long_description = f.read()
 
 setup(
-    name="matplotlib-scalebar",
-    version=versioneer.get_version(),
-    description="Artist for matplotlib to display a scale bar",
-    long_description=long_description,
-    author="Philippe Pinard",
-    author_email="philippe.pinard@gmail.com",
-    maintainer="Philippe Pinard",
-    maintainer_email="philippe.pinard@gmail.com",
-    url="https://github.com/ppinard/matplotlib-scalebar",
-    license="BSD",
-    keywords="matplotlib scale micron bar",
+    name='kanboard',
+    version='1.1.1',
+    description='Client library for Kanboard API',
+    long_description=readme(),
+    keywords='kanboard api client',
+    url='https://github.com/kanboard/python-api-client',
+    author='Frederic Guillot',
+    author_email='fred@kanboard.net',
+    license='MIT',
+    py_modules=['kanboard'],
+    test_suite='test_kanboard',
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3",
-        "Topic :: Scientific/Engineering :: Visualization",
-    ],
-    packages=find_packages(),
-    package_data={},
-    install_requires=["matplotlib"],
-    zip_safe=True,
-    test_suite="nose.collector",
-    cmdclass=versioneer.get_cmdclass(),
+        'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
+        'Natural Language :: English',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+    ]
 )
