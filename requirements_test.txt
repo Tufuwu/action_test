@@ -1,0 +1,6 @@
+flake8
+mock
+objgraph
+pytest
+pytest-cov
+pytest-xdist

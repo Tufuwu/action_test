@@ -1,9 +1,12 @@
+include CHANGES.md
+include CONTRIBUTING.md
+include README.md
 include LICENSE
-include README.rst
-include VERSION
-include virttest/passfd.c
-recursive-include avocado_vt/conf.d *
-recursive-include virttest/test-providers.d *
-recursive-include virttest/backends *
-recursive-include virttest/shared *
-recursive-exclude virttest/shared/scripts/pmsocat *
+include MANIFEST.in
+exclude .gitignore
+exclude .travis.yml
+exclude Makefile
+exclude run_failure.py
+recursive-include kazoo *
+recursive-include docs *
+global-exclude *pyc *pyo
