@@ -1,2 +1,4 @@
-numpy
-visdom
+wheel
+selenium
+websocket-client
+pytest

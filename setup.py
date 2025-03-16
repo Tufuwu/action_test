@@ -1,35 +1,37 @@
-#!/usr/bin/env python
-import os
-import shutil
-import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
-VERSION = '0.0.5.1'
+with open('README.md', 'r') as fh:
+    long_description = fh.read()
 
-long_description = "Simple tools for logging and visualizing, loading and training"
-
-setup_info = dict(
-    # Metadata
-    name='torchnet',
-    version=VERSION,
-    author='PyTorch',
-    author_email='sergey.zagoruyko@enpc.fr',
-    url='https://github.com/pytorch/tnt/',
-    description='an abstraction to train neural networks',
+setup(
+    name='linkedin-jobs-scraper',
+    version='1.4.0',
+    author='Ludovico Fabbri',
+    author_email='ludovico.fabbri@gmail.com',
+    description='Scrape public available jobs on Linkedin using headless browser',
     long_description=long_description,
-    license='BSD',
-
-    # Package info
-    packages=find_packages(exclude=('test', 'docs')),
-
-    zip_safe=True,
-
+    long_description_content_type='text/markdown',
+    url='https://github.com/spinlud/py-linkedin-jobs-scraper.git',
+    packages=[
+        'linkedin_jobs_scraper',
+        'linkedin_jobs_scraper.chrome_cdp',
+        'linkedin_jobs_scraper.events',
+        'linkedin_jobs_scraper.exceptions',
+        'linkedin_jobs_scraper.filters',
+        'linkedin_jobs_scraper.query',
+        'linkedin_jobs_scraper.strategies',
+        'linkedin_jobs_scraper.utils',
+    ],
     install_requires=[
-        'torch',
-        'six',
-        'future',
-        'visdom'
-    ]
+        'selenium',
+        'websocket-client'
+    ],
+    classifiers=[
+        'Intended Audience :: Developers',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.6',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+    ],
+    python_requires='>=3.6',
 )
-
-setup(**setup_info)
