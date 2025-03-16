@@ -1,105 +1,92 @@
-#!/usr/bin/python3
-"""
-Run the test suite on multiple Python versions.
-
-Usage::
-
-    python3 test_matrix.py
-    python3 test_matrix.py -v # verbose mode
-"""
-from __future__ import absolute_import
-from __future__ import print_function
-import argparse
+#!/usr/bin/env python3
 import os.path
 import shutil
 import subprocess
 import sys
-try:
-    from shutil import which
-except ImportError:
-    # Python 2
-    from distutils.spawn import find_executable as which
+import tempfile
 
 
-from tests.utils import run_command
+def run_cmd(cmd):
+    print("Execute: %s" % ' '.join(cmd))
+    proc = subprocess.Popen(cmd)
+    try:
+        proc.wait()
+    except:   # noqa
+        proc.kill()
+        proc.wait()
+        raise
+    exitcode = proc.returncode
+    if exitcode:
+        sys.exit(exitcode)
+    print("")
 
 
-TEST_DIR = os.path.join(os.path.dirname(__file__), 'tests')
-TEST_COMPAT = os.path.join(TEST_DIR, "test_pythoncapi_compat.py")
-TEST_UPGRADE = os.path.join(TEST_DIR, "test_upgrade_pythoncapi.py")
+def run_tests(venv):
+    # Move to the root directly
+    root = os.path.dirname(__file__)
+    if root:
+        os.chdir(root)
 
-PYTHONS = (
-    "python2.7",
-    "python3.4",
-    "python3.5",
-    "python3.6",
-    "python3.7",
-    "python3.8",
-    "python3.9",
-    "python3.10",
-    "python3",
-    "python3-debug",
-)
+    python = sys.executable
+    script = 'pyperformance'
+    if os.name == "nt":
+        python_executable = os.path.basename(python)
+        venv_python = os.path.join(venv, 'Scripts', python_executable)
+    else:
+        venv_python = os.path.join(venv, 'bin', 'python')
 
+    def run_bench(*cmd):
+        cmd = cmd + ('--venv', venv)
+        run_cmd(cmd)
 
-def run_tests_exe(executable, verbose, tested):
-    executable = os.path.realpath(executable)
-    if executable in tested:
-        return
+    run_bench(python, script, 'venv', 'create')
 
-    cmd = [executable, TEST_COMPAT]
-    if verbose:
-        cmd.append('-v')
-    run_command(cmd)
-    tested.add(executable)
+    egg_info = "pyperformance.egg-info"
+    print("Remove directory %s" % egg_info)
+    try:
+        shutil.rmtree(egg_info)
+    except FileNotFoundError:
+        pass
 
+    run_bench(python, script, 'venv')
 
-def run_tests(python, verbose, tested):
-    executable = which(python)
-    if not executable:
-        print("Ignore missing Python executable: %s" % python)
-        return
-    run_tests_exe(executable, verbose, tested)
+    for filename in (
+        os.path.join('pyperformance', 'tests', 'data', 'py36.json'),
+        os.path.join('pyperformance', 'tests', 'data', 'mem1.json'),
+    ):
+        run_cmd((python, script, 'show', filename))
 
+    run_bench(python, script, 'list')
+    run_bench(python, script, 'list_groups')
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbose', action="store_true",
-                        help='Verbose mode')
-    parser.add_argument('-c', '--current', action="store_true",
-                        help="Only test the current Python executable "
-                             "(don't test multiple Python versions)")
-    return parser.parse_args()
+    json = os.path.join(venv, 'bench.json')
+
+    # -b all: check that *all* benchmark work
+    #
+    # --debug-single-value: benchmark results don't matter, we only
+    # check that running benchmarks don't fail.
+    run_bench(python, script, 'run', '-b', 'all', '--debug-single-value',
+              '-o', json)
+
+    # Display slowest benchmarks
+    run_cmd((venv_python, '-m', 'pyperf', 'slowest', json))
+
+    run_bench(python, script, 'venv', 'remove')
 
 
 def main():
-    args = parse_args()
+    # Unit tests
+    cmd = [sys.executable,
+           os.path.join('pyperformance', 'tests', 'test_compare.py')]
+    run_cmd(cmd)
 
-    path = os.path.join(TEST_DIR, 'build')
-    if os.path.exists(path):
-        shutil.rmtree(path)
-
-    # upgrade_pythoncapi.py requires Python 3.6 or newer
-    if sys.version_info >= (3, 6):
-        print("Run %s" % TEST_UPGRADE)
-        cmd = [sys.executable, TEST_UPGRADE]
-        if args.verbose:
-            cmd.append('-v')
-        run_command(cmd)
-    else:
-        print("Don't test upgrade_pythoncapi.py: it requires Python 3.6")
-    print()
-
-    tested = set()
-    if not args.current:
-        for python in PYTHONS:
-            run_tests(python, args.verbose, tested)
-        run_tests_exe(sys.executable, args.verbose, tested)
-
-        print()
-        print("Tested: %s Python executables" % len(tested))
-    else:
-        run_tests_exe(sys.executable, args.verbose, tested)
+    # Functional tests
+    tmpdir = tempfile.mkdtemp()
+    try:
+        run_tests(tmpdir)
+    finally:
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
 
 
 if __name__ == "__main__":
