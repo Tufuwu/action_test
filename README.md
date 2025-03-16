@@ -1,126 +1,256 @@
-# simple-pid
+# in-toto demo [![Build Status](https://travis-ci.com/in-toto/demo.svg?branch=master)](https://travis-ci.com/in-toto/demo)
 
-[![Tests](https://github.com/m-lundberg/simple-pid/actions/workflows/run-tests.yml/badge.svg)](https://github.com/m-lundberg/simple-pid/actions?query=workflow%3Atests)
-[![PyPI](https://img.shields.io/pypi/v/simple-pid.svg)](https://pypi.org/project/simple-pid/)
-[![Read the Docs](https://img.shields.io/readthedocs/simple-pid.svg)](https://simple-pid.readthedocs.io/)
-[![License](https://img.shields.io/github/license/m-lundberg/simple-pid.svg)](https://github.com/m-lundberg/simple-pid/blob/master/LICENSE.md)
-[![Downloads](https://pepy.tech/badge/simple-pid)](https://pepy.tech/project/simple-pid)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+In this demo, we will use in-toto to secure a software supply chain with a very
+simple workflow.  Bob is a developer for a project, Carl packages the software, and
+Alice oversees the project.  So, using in-toto's names for the parties, 
+Alice is the project owner - she creates and signs the software supply chain
+layout with her private key - and Bob and Carl are project functionaries -
+they carry out the steps of the software supply chain as defined in the layout.
 
-A simple and easy to use PID controller in Python. If you want a PID controller without external dependencies that just works, this is for you! The PID was designed to be robust with help from [Brett Beauregards guide](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/).
+For the sake of demonstrating in-toto, we will have you run all parts of the
+software supply chain.
+This is, you will perform the commands on behalf of Alice, Bob and Carl as well
+as the client who verifies the final product.
 
-Usage is very simple:
 
-```python
-from simple_pid import PID
-pid = PID(1, 0.1, 0.05, setpoint=1)
+## Download and setup in-toto on \*NIX (Linux, OS X, ..)
+__Virtual Environments (optional)__
 
-# Assume we have a system we want to control in controlled_system
-v = controlled_system.update(0)
+We highly recommend installing `in-toto` and its dependencies in a
+[`venv`](https://docs.python.org/3/library/venv.html) Python virtual
+environment. Just copy-paste the following snippet to create a virtual
+environment:
 
-while True:
-    # Compute new output from the PID according to the systems current value
-    control = pid(v)
-    
-    # Feed the PID output to the system and get its current value
-    v = controlled_system.update(control)
+```bash
+# Create the virtual environment
+python -m venv in-toto-demo
+
+# Activate the virtual environment
+# This will add the prefix "(in-toto-demo)" to your shell prompt
+source in-toto-demo/bin/activate
 ```
 
-Complete API documentation can be found [here](https://simple-pid.readthedocs.io/en/latest/simple_pid.html#module-simple_pid.PID).
+__Get demo files and install in-toto__
+```bash
+# Fetch the demo repo using git
+git clone https://github.com/in-toto/demo.git
 
-## Installation
-To install, run:
+# Change into the demo directory
+cd demo
+
+# Install a compatible version of in-toto
+pip install -r requirements.txt
 ```
-pip install simple-pid
-```
+*Note: If you are having troubles installing in-toto, make sure you have all
+the system dependencies. See the [installation guide on
+in-toto.readthedocs.io](https://in-toto.readthedocs.io/en/latest/installing.html)
+for details.*
 
-## Usage
-The `PID` class implements `__call__()`, which means that to compute a new output value, you simply call the object like this:
-```python
-output = pid(current_value)
-```
-
-### The basics
-The PID works best when it is updated at regular intervals. To achieve this, set `sample_time` to the amount of time there should be between each update and then call the PID every time in the program loop. A new output will only be calculated when `sample_time` seconds has passed:
-```python
-pid.sample_time = 0.01  # Update every 0.01 seconds
-
-while True:
-    output = pid(current_value)
-```
-
-To set the setpoint, ie. the value that the PID is trying to achieve, simply set it like this:
-```python
-pid.setpoint = 10
-```
-
-The tunings can be changed any time when the PID is running. They can either be set individually or all at once:
-```python
-pid.Ki = 1.0
-pid.tunings = (1.0, 0.2, 0.4)
-```
-
-To use the PID in [reverse mode](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-direction/), meaning that an increase in the input leads to a decrease in the output (like when cooling for example), you can set the tunings to negative values:
-
-```python
-pid.tunings = (-1.0, -0.1, 0)
-```
-
-Note that all the tunings should have the same sign.
-
-In order to get output values in a certain range, and also to avoid [integral windup](https://en.wikipedia.org/wiki/Integral_windup) (since the integral term will never be allowed to grow outside of these limits), the output can be limited to a range:
-```python
-pid.output_limits = (0, 10)    # Output value will be between 0 and 10
-pid.output_limits = (0, None)  # Output will always be above 0, but with no upper bound
+Inside the demo directory you will find four directories: `owner_alice`,
+`functionary_bob`, `functionary_carl` and `final_product`. Alice, Bob and Carl
+already have RSA keys in each of their directories. This is what you see:
+```bash
+tree  # If you don't have tree, try 'find .' instead
+# the tree command gives you the following output
+# .
+# ├── README.md
+# ├── final_product
+# ├── functionary_bob
+# │   ├── bob
+# │   └── bob.pub
+# ├── functionary_carl
+# │   ├── carl
+# │   └── carl.pub
+# ├── owner_alice
+# │   ├── alice
+# │   ├── alice.pub
+# │   └── create_layout.py
+# ├── requirements.txt
+# ├── run_demo.py
+# └── run_demo_md.py
 ```
 
-### Other features
-#### Auto mode
-To disable the PID so that no new values are computed, set auto mode to False:
-```python
-pid.auto_mode = False  # No new values will be computed when pid is called
-pid.auto_mode = True   # pid is enabled again
+## Run the demo commands
+Note: if you don't want to type or copy & paste commands and would rather watch
+a script run through the commands, jump to [the last section of this document](#tired-of-copy-pasting-commands)
+
+### Define software supply chain layout (Alice)
+First, we will need to define the software supply chain layout. To simplify this
+process, we provide a script that generates a simple layout for the purpose of
+the demo.
+
+In this software supply chain layout, we have Alice, who is the project
+owner that creates the layout, Bob, who clones the project's repo and
+performs some pre-packaging editing (update version number), and Carl, who uses
+`tar` to package the project sources into a tarball, which
+together with the in-toto metadata composes the final product that will
+eventually be installed and verified by the end user.
+
+```shell
+# Create and sign the software supply chain layout on behalf of Alice
+cd owner_alice
+python create_layout.py
 ```
-When disabling the PID and controlling a system manually, it might be useful to tell the PID controller where to start from when giving back control to it. This can be done by enabling auto mode like this:
-```python
-pid.set_auto_mode(True, last_output=8.0)
-```
-This will set the I-term to the value given to `last_output`, meaning that if the system that is being controlled was stable at that output value the PID will keep the system stable if started from that point, without any big bumps in the output when turning the PID back on.
+The script will create a layout, add Bob's and Carl's public keys (fetched from
+their directories), sign it with Alice's private key and dump it to `root.layout`.
+In `root.layout`, you will find that (besides the signature and other information)
+there are three steps, `clone`, `update-version` and `package`, that
+the functionaries Bob and Carl, identified by their public keys, are authorized
+to perform.
 
-#### Observing separate components
-When tuning the PID, it can be useful to see how each of the components contribute to the output. They can be seen like this:
-```python
-p, i, d = pid.components  # The separate terms are now in p, i, d
-```
+### Clone project source code (Bob)
+Now, we will take the role of the functionary Bob and perform the step
+`clone` on his behalf, that is we use in-toto to clone the project repo from GitHub and
+record metadata for what we do. Execute the following commands to change to Bob's
+directory and perform the step.
 
-#### Proportional on measurement
-To eliminate overshoot in certain types of systems, you can calculate the [proportional term directly on the measurement](http://brettbeauregard.com/blog/2017/06/introducing-proportional-on-measurement/) instead of the error. This can be enabled like this:
-```python
-pid.proportional_on_measurement = True
-```
-
-#### Error mapping
-To transform the error value to another domain before doing any computations on it, you can supply an `error_map` callback function to the PID. The callback function should take one argument which is the error from the setpoint. This can be used e.g. to get a degree value error in a yaw angle control with values between [-pi, pi):
-```python
-import math
-
-def pi_clip(angle):
-    if angle > 0:
-        if angle > math.pi:
-            return angle - 2*math.pi
-    else:
-        if angle < -math.pi:
-            return angle + 2*math.pi
-    return angle
-
-pid.error_map = pi_clip
+```shell
+cd ../functionary_bob
+in-toto-run --step-name clone --products demo-project/foo.py --key bob -- git clone https://github.com/in-toto/demo-project.git
 ```
 
-## Tests
-Use the following to run tests:
-```
-tox
+Here is what happens behind the scenes:
+ 1. In-toto wraps the command `git clone https://github.com/in-toto/demo-project.git`,
+ 1. hashes the contents of the source code, i.e. `demo-project/foo.py`,
+ 1. adds the hash together with other information to a metadata file,
+ 1. signs the metadata with Bob's private key, and
+ 1. stores everything to `clone.[Bob's keyid].link`.
+
+### Update version number (Bob)
+Before Carl packages the source code, Bob will update
+a version number hard-coded into `foo.py`. He does this using the `in-toto-record` command,
+which produces the same link metadata file as above but does not require Bob to wrap his action in a single command.
+So first Bob records the state of the files he will modify:
+
+```shell
+# In functionary_bob directory
+in-toto-record start --step-name update-version --key bob --materials demo-project/foo.py
 ```
 
-## License
-Licensed under the [MIT License](https://github.com/m-lundberg/simple-pid/blob/master/LICENSE.md).
+Then Bob uses an editor of his choice to update the version number in `demo-project/foo.py`, e.g.:
+
+```shell
+sed -i.bak 's/v0/v1/' demo-project/foo.py && rm demo-project/foo.py.bak
+```
+
+And finally he records the state of files after the modification and produces
+a link metadata file called `update-version.[Bob's keyid].link`.
+```shell
+# In functionary_bob directory
+in-toto-record stop --step-name update-version --key bob --products demo-project/foo.py
+```
+
+Bob has done his work and can send over the sources to Carl, who will create
+the package for the user.
+
+```shell
+# Bob has to send the update sources to Carl so that he can package them
+cp -r demo-project ../functionary_carl/
+```
+
+### Package (Carl)
+Now, we will perform Carl’s `package` step by executing the following commands
+to change to Carl's directory and create a package of the software project
+
+```shell
+cd ../functionary_carl
+in-toto-run --step-name package --materials demo-project/foo.py --products demo-project.tar.gz --key carl -- tar --exclude ".git" -zcvf demo-project.tar.gz demo-project
+```
+
+This will create another step link metadata file, called `package.[Carl's keyid].link`.
+It's time to release our software now.
+
+
+### Verify final product (client)
+Let's first copy all relevant files into the `final_product` that is
+our software package `demo-project.tar.gz` and the related metadata files `root.layout`,
+`clone.[Bob's keyid].link`, `update-version.[Bob's keyid].link` and `package.[Carl's keyid].link`:
+```shell
+cd ..
+cp owner_alice/root.layout functionary_bob/clone.776a00e2.link functionary_bob/update-version.776a00e2.link functionary_carl/package.2f89b927.link functionary_carl/demo-project.tar.gz final_product/
+```
+And now run verification on behalf of the client:
+```shell
+cd final_product
+# Fetch Alice's public key from a trusted source to verify the layout signature
+# Note: The functionary public keys are fetched from the layout
+cp ../owner_alice/alice.pub .
+in-toto-verify --layout root.layout --layout-key alice.pub
+```
+This command will verify that
+ 1. the layout has not expired,
+ 2. was signed with Alice’s private key,
+<br>and that according to the definitions in the layout
+ 3. each step was performed and signed by the authorized functionary
+ 4. the recorded materials and products follow the artifact rules and
+ 5. the inspection `untar` finds what it expects.
+
+
+From it, you will see the meaningful output `PASSING` and a return value
+of `0`, that indicates verification worked out well:
+```shell
+echo $?
+# should output 0
+```
+
+### Tampering with the software supply chain
+Now, let’s try to tamper with the software supply chain.
+Imagine that someone got a hold of the source code before Carl could package it.
+We will simulate this by changing `demo-project/foo.py` on Carl's machine
+(in `functionary_carl` directory) and then let Carl package and ship the
+malicious code.
+
+```shell
+cd ../functionary_carl
+echo something evil >> demo-project/foo.py
+```
+Carl thought that this is the genuine code he got from Bob and
+unwittingly packages the tampered version of foo.py
+
+```shell
+in-toto-run --step-name package --materials demo-project/foo.py --products demo-project.tar.gz --key carl -- tar --exclude ".git" -zcvf demo-project.tar.gz demo-project
+```
+and ships everything out as final product to the client:
+```shell
+cd ..
+cp owner_alice/root.layout functionary_bob/clone.776a00e2.link functionary_bob/update-version.776a00e2.link functionary_carl/package.2f89b927.link functionary_carl/demo-project.tar.gz final_product/
+```
+
+### Verifying the malicious product
+
+```shell
+cd final_product
+in-toto-verify --layout root.layout --layout-key alice.pub
+```
+This time, in-toto will detect that the product `foo.py` from Bob's `update-version`
+step was not used as material in Carl's `package` step (the verified hashes
+won't match) and therefore will fail verification an return a non-zero value:
+```shell
+echo $?
+# should output 1
+```
+
+
+### Wrapping up
+Congratulations! You have completed the in-toto demo! This exercise shows a very
+simple case in how in-toto can protect the different steps within the software
+supply chain. More complex software supply chains that contain more steps can be
+created in a similar way. You can read more about what in-toto protects against
+and how to use it on [in-toto's Github page](https://in-toto.github.io/).
+
+## Cleaning up and automated run through
+### Clean slate
+If you want to run the demo again, you can use the following script to remove all the files you created above.
+
+```bash
+cd .. # You have to be the demo directory
+python run_demo.py -c
+```
+
+### Tired of copy-pasting commands?
+The same script can be used to sequentially execute all commands listed above. Just change into the `demo` directory, run `python run_demo.py` without flags and observe the output.
+
+```bash
+# In the demo directory
+python run_demo.py
+```
