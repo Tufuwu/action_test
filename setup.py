@@ -1,100 +1,52 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
-
-# SPDX-License-Identifier: Apache-2.0
-#
-# http://nexb.com and https://github.com/nexB/scancode.io
-# The ScanCode.io software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode.io is provided as-is without warranties.
-# ScanCode is a trademark of nexB Inc.
-#
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
-#
-# Data Generated with ScanCode.io is provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-# OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-# ScanCode.io should be considered or used as legal advice. Consult an Attorney
-# for any legal advice.
-#
-# ScanCode.io is a free software code scanning tool from nexB Inc. and others.
-# Visit https://github.com/nexB/scancode.io for support and download.
-
-from setuptools import find_packages
+"""Setup file for micropipenv python package."""
 from setuptools import setup
+import os
 
-__version__ = "1.0.6"
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
-requirement_files = ["etc/requirements/base.txt"]
 
-all_requirements = [
-    r.strip()
-    for req_file in requirement_files
-    for r in open(req_file).readlines()
-    if r.strip() and not r.strip().startswith("#")
-]
+def get_version():
+    """Get version of micropipenv.py."""
+    with open(os.path.join(_HERE, "micropipenv.py")) as f:
+        content = f.readlines()
+
+    for line in content:
+        if line.startswith("__version__ ="):
+            # dirty, remove trailing and leading chars
+            return line.split(" = ")[1][1:-2]
+
+    raise ValueError("No version identifier found")
+
 
 setup(
-    name="scancodeio",
-    version=__version__,
-    license="Apache-2.0",
-    description="ScanCode.io",
-    long_description="ScanCode.io",
-    author="nexB Inc.",
-    author_email="info@scancode.io",
-    url="https://github.com/nexB/scancode.io",
-    packages=find_packages(),
-    include_package_data=True,
-    zip_safe=False,
-    python_requires=">= 3.6",
-    install_requires=all_requirements,
-    entry_points={
-        "console_scripts": [
-            "scanpipe = scancodeio:command_line",
-        ],
-    },
+    name="micropipenv",
+    version=get_version(),
+    description="A simple wrapper around pip to support requirements.txt, Pipenv and Poetry files for containerized applications",
+    keywords=["packaging", "pipenv", "poetry", "pip", "dependencies", "dependency-management", "utilities"],
+    url="https://github.com/thoth-station/micropipenv",
+    download_url="https://pypi.org/project/micropipenv",
+    long_description=open(os.path.join(_HERE, "README.rst")).read(),
+    long_description_content_type="text/x-rst",
+    author="Fridolin Pokorny",
+    author_email="fridex.devel@gmail.com",
+    maintainer="Fridolin Pokorny",
+    maintainer_email="fridex.devel@gmail.com",
+    license="LGPLv3+",
+    py_modules=["micropipenv"],
+    install_requires=["pip>=9"],
+    entry_points={"console_scripts": ["micropipenv=micropipenv:main"]},
     classifiers=[
-        # complete classifiers list
-        # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: Legal Industry",
-        "Framework :: Django",
-        "License :: OSI Approved :: Apache Software License",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: Linux",
+        "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Topic :: Utilities",
     ],
-    keywords=[
-        "open source",
-        "scan",
-        "license",
-        "package",
-        "dependency",
-        "copyright",
-        "filetype",
-        "author",
-        "extract",
-        "licensing",
-        "scancode",
-        "scanpipe",
-        "docker",
-        "rootfs",
-        "vm",
-        "virtual machine",
-        "pipeline",
-        "code analysis",
-        "container",
-    ],
+    extras_require={
+        "toml": ["toml"],
+    },
 )
