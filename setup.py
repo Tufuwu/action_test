@@ -1,55 +1,51 @@
-import logging
-from setuptools import setup, find_packages, Extension
+# pylint: disable=missing-docstring
+
+# Copyright (c) 2019 Alexander Todorov <atodorov@MrSenko.com>
+
+# Licensed under the GPL 3.0: https://www.gnu.org/licenses/gpl-3.0.txt
+
+from setuptools import setup, find_packages
 
 
-logger = logging.getLogger()
-if not logger.handlers:
-    logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.INFO)
+def get_long_description():
+    with open('README.rst', 'r') as file:
+        return file.read()
 
-setup_kwargs = {}
 
-try:
-    from Cython.Distutils import build_ext
-    setup_kwargs.update(dict(
-        ext_modules=[
-            Extension(
-                'olo.utils',
-                sources=['olo/utils.py'],
-                extra_compile_args=['-O3'],
-                language='c++'
-            ),
-            Extension(
-                'olo._speedups',
-                sources=['olo/_speedups.py'],
-                extra_compile_args=['-O3'],
-                language='c++'
-            ),
-        ],
-        cmdclass={'build_ext': build_ext},
-    ))
-except ImportError:
-    logger.warn('No cython for optimize!!!')
+def get_install_requires(path):
+    requires = []
 
-install_requires = []
-for line in open('requirements.txt', 'r'):
-    install_requires.append(line.strip())
+    with open(path, 'r') as file:
+        for line in file:
+            if line.startswith('-r '):
+                continue
+            requires.append(line.strip())
+        return requires
+
 
 setup(
-    name='olo',
-    version='0.4.0',
-    keywords=('ORM', 'olo', 'cache', 'sqlstore'),
-    description='ORM with intelligent and elegant cache manager',
-    url='https://github.com/yetone/olo',
-    license='MIT License',
-    author='yetone',
-    author_email='guanxipeng@douban.com',
-    packages=find_packages(exclude=['test.*', 'test', 'benchmarks']),
-    setup_requires=['Cython >= 0.20'],
-    install_requires=install_requires,
-    platforms='any',
-    tests_require=(
-        'pytest',
-    ),
-    **setup_kwargs
+    name='kiwitcms-tenants',
+    version='1.6.0',
+    description='Multi-tenant support for Kiwi TCMS',
+    long_description=get_long_description(),
+    author='Kiwi TCMS',
+    author_email='info@kiwitcms.org',
+    url='https://github.com/kiwitcms/tenants/',
+    license='GPLv3+',
+    install_requires=get_install_requires('requirements.txt'),
+    include_package_data=True,
+    packages=find_packages(exclude=['test_project*', '*.tests']),
+    zip_safe=False,
+    entry_points={"kiwitcms.plugins": ["kiwitcms_tenants = tcms_tenants"]},
+    classifiers=[
+        'Framework :: Django',
+        'Development Status :: 5 - Production/Stable',
+        'Topic :: Software Development :: Quality Assurance',
+        'Topic :: Software Development :: Testing',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+    ],
 )
