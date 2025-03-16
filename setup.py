@@ -1,72 +1,76 @@
-import ast
-import re
+# -*- coding: utf-8 -*-
+# vim:fenc=utf-8 ff=unix ft=python ts=4 sw=4 sts=4 si et
+"""
+pip-licenses
+
+MIT License
+
+Copyright (c) 2018 raimon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+import os
+from setuptools import setup
+from codecs import open
 from os import path
-from setuptools import setup, find_packages
+
+from piplicenses import (__pkgname__ as PKG_NAME, __version__ as VERSION,
+                         __author__ as AUTHOR, __license__ as LICENSE,
+                         __summary__ as SUMMARY, __url__ as URL)
 
 
-PROJECT_DIR = path.abspath(path.dirname(__file__))
+here = path.abspath(path.dirname(__file__))
 
 
-def get_version():
-    constants = path.join(PROJECT_DIR, "django_migration_linter", "constants.py")
-    _version_re = re.compile(r"__version__\s+=\s+(?P<version>.*)")
-    with open(constants, "r") as f:
-        match = _version_re.search(f.read())
-        version = match.group("version") if match is not None else '"unknown"'
-    return str(ast.literal_eval(version))
+def read_file(filename):
+    content = ''
+    with open(path.join(here, filename), encoding='utf-8') as f:
+        content = f.read()
+
+    return content
 
 
-with open(path.join(PROJECT_DIR, "README.md")) as f:
-    long_description = f.read()
+LONG_DESC = ''
+try:
+    from pypandoc import convert_file
+
+    about_this = convert_file('README.md', 'rst', format='markdown_github')
+    separate = '\n\n'
+    change_log = convert_file('CHANGELOG.md', 'rst', format='markdown_github')
+
+    LONG_DESC = about_this + separate + change_log
+except (IOError, ImportError):
+    LONG_DESC = read_file('README.md')
 
 
 setup(
-    name="django-migration-linter",
-    version=get_version(),
-    description="Detect backward incompatible migrations for your django project",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/3YOURMIND/django-migration-linter",
-    author="3YOURMIND GmbH",
-    author_email="david.wobrock@gmail.com",
-    license="Apache License 2.0",
-    packages=find_packages(exclude=["tests/"]),
-    install_requires=[
-        "django>=1.11",
-        "appdirs>=1.4.3",
-        'enum34>=1.1.6;python_version<"3.4"',
-        "six>=1.14.0",
-    ],
-    extras_require={
-        "test": [
-            "tox>=3.15.2",
-            "mysqlclient>=1.4.6",
-            "psycopg2-binary>=2.8.5",
-            "django_add_default_value>=0.4.0",
-            'mock>=3.0.5;python_version<"3.3"',
-            'backports.tempfile>=1.0;python_version<="2.7"',
-        ]
+    name=PKG_NAME,
+    version=VERSION,
+    description=SUMMARY,
+    long_description=LONG_DESC,
+    url=URL,
+    author=AUTHOR,
+    license=LICENSE,
+    entry_points={
+        'console_scripts': [
+            PKG_NAME + '=piplicenses:main',
+        ],
     },
-    keywords="django migration lint linter database backward compatibility",
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "Environment :: Web Environment",
-        "Framework :: Django",
-        "Framework :: Django :: 1.11",
-        "Framework :: Django :: 2.0",
-        "Framework :: Django :: 2.1",
-        "Framework :: Django :: 2.2",
-        "Framework :: Django :: 3.0",
-        "Framework :: Django :: 3.1",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-    ],
 )

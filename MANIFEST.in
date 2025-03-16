@@ -1,2 +1,5 @@
-include README.md
 include LICENSE
+include README.md
+include CHANGELOG.md
+include test_piplicenses.py
+include tests/fixtures/*.txt

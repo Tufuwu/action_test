@@ -1,205 +1,182 @@
-## 2.5.0
+## CHANGELOG
 
-* Add Python 3.9 support
+### 3.1.0
 
-Switched from Travis CI to GitHub Actions for tests
+* Implement new option for use in continuous integration
+    * `--fail-on`
+    * `--allow-only`
 
-## 2.4.1
+### 3.0.0
 
-* Add Django 3.1 support
-* Upgrade linter versions of `flake8` and `black` to the latest
+* Dropped support Python 3.5
+* Clarified support for Python 3.9
+* Migrate package metadata to `setup.cfg`
+* Breaking changes
+    * Change default behavior to `--from=mixed`
 
-## 2.4.0
+### 2.3.0
 
-* Add possibility to lint newly generated migrations through the `makemigrations` command.
-You can activate it through the `--lint` command option, or by default with the `MIGRATION_LINTER_OVERRIDE_MAKEMIGRATIONS = True`  Django settings.
+* Implement new option for manage unicode characters
+    * `--filter-strings`
+    * `--filter-code-page`
 
-## 2.3.0
+### 2.2.1
 
-* Handle making a column NOT NULL with a  Django default value as backward incompatible.
-This should have been the case from the beginning, but it was not.
-When one uses the `django-add-default-value` lib, the operation should still be compatible.
-* Improve behaviour of the `--include-migrations-from` option.
-When the given filename is missplelled, fail instead of linting all migrations.
-When the file is empty, lint no migrations instead of linting all migrations.
-* Update libraries used for testing (`tox`, `flake8`, etc.)
+* Fixed the file that is selected when multiple matches are made with `LICENSE*` with run `--with-license-file`
 
-## 2.2.2
+### 2.2.0
 
-* Don't pin dependencies but only define minimal versions
+* Implement new option `--with-notice-file`
+* Added to find British style file name `LICENCE` with run `--with-license-file`
 
-## 2.2.1
+### 2.1.1
 
-Fixed bug:
-* Correctly detect `apps.get_models` when on multiple lines in data migration
+* Suppress errors when opening license files
 
-## 2.2.0
+### 2.1.0
 
-* Make summary output more friendly (Thanks to @vald-phoenix)
-* Add forgotten documentation about `IgnoreMigration`
-* Don't pin the `appdirs` strictly to 1.4.3, but allow higher versions
+* Implement new option `--format=plain-vertical`
+* Support for outputting license file named `COPYING *`
 
-## 2.1.0
+### 2.0.1
 
-* Detect in data migrations if models are imported the correct way or not
+* Better license file open handling in Python 3
 
-## 2.0.0
+### 2.0.0
 
-* Add linting on data migrations that will raise warnings
-* Add `--quiet warning` option to suppress warning messages
-* Add `--warnings-as-errors` option to handle warnings as errors
+* Dropped support Python 2.7
+* Breaking changes
+    * Removed migration path to obsolete options
+        * `--from-classifier`
+        * `--format-markdown`
+        * `--format-rst`
+        * `--format-confluence`
+        * `--format-html`
+        * `--format-json`
+* Implement new option `--no-license-path`
 
-## 1.5.0
+### 1.18.0
 
-* Rework documentation.
-Make README smaller and clearer.
-Move detailed documentation to docs/ folder.
-* Add Django 3.0 to test matrix.
+* Supports compatibility to work with either PTable or prettytable
 
-## 1.4.1
+### 1.17.0
 
-* Update testing dependencies (``mysqlclient``, Django 2.2 and ``black``)
+* Implement new option `--output-file`
+* Clarified support for Python 3.8
 
-## 1.4.0
+### 1.16.1
 
-* Add `--include-migrations-from` option to only consider migrations specified in a given file.
-No matter if the migrations are selected from a git commit or not, we only select the ones in the given file.
-* Add ``--quiet {ok,ignore,error}`` option to remove different or multiple types of messages from being printed to stdout.
-* Make detection of problematic table and column a bit more resilient for UX.
-* Add Python 3.8 to test matrix and update test dependencies.
+* Add a help text for `--format=json-license-finder` option
 
-Fixed bugs:
+### 1.16.0
 
-* Handle adding many to many fields correctly.
+* Implement new option `--format=json-license-finder`
 
-## 1.3.0
+### 1.15.2
 
-* Add `--exclude-migration-tests` option to ignore backward incompatible migration tests.
-* Do not falsely detect dropping `NOT NULL`  constraint.
-* Detect `DROP TABLE` backward incompatible migration.
-* Detect adding a `UNIQUE` constraint as backward incompatible migration.
-* Handle when Django tries to generate the SQL of a migration but raises an exception because
-it cannot find the name of a certain constraint (because it has been dropped already).
+* Read license file works well with Windows
 
-Internal change:
+### 1.15.1
 
-* Differentiate different database vendors during SQL analysis.
+* Skip parsing of license file for packages specified with `--ignore-packages` option
 
-## 1.2.0
+### 1.15.0
 
-* Add `--unapplied-migrations` and `--applied-migrations` mutually exclusive options
-in order to respectively lint only unapplied or applied migrations.
-* When loading migration starting from a git ref, cross the found migrations
-with the currently loaded migrations in the project.
-* Add `--project-root-path` which allows to specify the root path
-which is used for finding the `.git` folder. (thanks to @linuxmaniac)
+* Implement new option `--format=csv`
 
-## 1.1.0
+### 1.14.0
 
-* Improve speed of ignored migration through the `IgnoreMigration`  operation.
-Instead of generating their SQL, we verify if the Operation class is present.
-Thus we don't have to wait for the SQL generation. Also improves the caching strategy.
+* Implement new option `--from=mixed` as a mixed mode
 
-Breaks some internal APIs, so minor update to 1.1.0.
+### 1.13.0
 
-## 1.0.0
+* Implement new option `--from=meta`, `from=classifier`
+* Dropped support Python 3.4
 
-**Breaking changes** of the linter usage. The linter now is a Django management command.
-It should be used with a `python manage.py lintmigrations` followed by the usual options.
-Additionally, the linter now needs to be added the to the `INSTALLED_APPS` in your Django settings.
+### 1.12.1
 
-* The linter is now much faster: we don't setup django once for each migration
-* The linter is now more robust: we rely on Django internals to discover migrations
-* Clean up of the testing setup: it is cleaner, less brittle and we have more confidence that it works
-* Added support for Django 2.2
-* Dropped support for Python 3.4
+* Fix bug
+    * Change warning output to standard error
 
-Fixed bugs:
+### 1.12.0
 
-* Made the cache database-dependent. Between multiple databases, some migrations would be considered correct while they are not on the used DB.
-* Adding an erroneous migration to the ignore list on the second run would get the migration content from the cache and not ignore it.
+* Supports execution within Docker container
+* Warning of deprecated options
+* Fix bug
+    * Ignore `OSI Approved` string with multiple licenses
 
-## 0.1.5
+### 1.11.0
 
-* Bug fix: handle migration files with spaces in their name by quoting the migration name
+* Implement new option `--with-license-file`
 
-## 0.1.4
+### 1.10.0
 
-* Explicitly test for mysql, sqlite3 and postgresql
-* Fix alter column type detection in postgresql
-* Do not create cache folder when -no-cache option
-* Fix tests on Windows
-* Use the same Python interpreter as used for launching the linter, instead of manually trying to re-create the path
+* Implement new option `--with-description`
 
-## 0.1.3
+### 1.9.0
 
-* Fixes migrations that are ignored to generate empty SQL, that PostgreSQL complains about. It throws an exception making migrations fail, that are in fact valid. (Thanks to @fevral13 and @mes3yd)
-* Add options -V and --version to show the current linter version
+* Implement new option `--summary`
 
-## 0.1.2
+### 1.8.0
 
-* Bug fix: handle when the linter is called in the working dir django-migration-linter .
-* Bug fix: don't assume that the git root is at the same path as the django project
+* Implement new option `--format-json`
+* Dropped support Python 3.3
 
-## 0.1.1
+### 1.7.1
 
-* Fix caching when app is in a folder and not at the root of the project
-* Do not check for .git folder at root, because it might be located somewhere else. Let git itself do the job
-* Make some imports relative
+* Fix bug
+    * Support pip 10.x
 
-## 0.1.0
+### 1.7.0
 
-The django migration linter is now set to a Beta version, instead of Alpha since it has been used for quite some time.
+* Implement new option `--format-confluence`
 
-Version 0.1.0 comes with:
+### 1.6.1
 
-* Possibility to ignore migration files entirely (without specifying them on the command line)
-* This can be used by adding the migration operation IgnoreMigration() in the migrations operations list. See readme
-* Caching. We cache failed and succeeded migrations (w.r.t. migration linting) in a cache file.
-* Each migration file is stored as the MD5 hash of its content with the result of the linting
+* Fix bug
+    * Support display multiple license with `--from-classifier` option
+* Improve document
+    * Add section of 'Uninstallation' in README
 
-Other things:
+### 1.6.0
 
-* Added support for Python 3.7
-* Added support for Django 2.1
-* The codebase is now in black format to improve Python-code readability
-* 2019 ! Happy new year
+* Implement new option `--format-html`
 
-## 0.0.7
+### 1.5.0
 
-* Minor bug fix when no errors detected
+* Implement new option `--format-rst`
 
-## 0.0.6
+### 1.4.0
 
-* Use logger correctly
-* Drop django 1.10 support
+* Implement new option `--format-markdown`
+* Include LICENSE file in distribution package
 
-## 0.0.5
+### 1.3.0
 
-* Only consider added migrations during linting
-* Change readme to rst format (for PyPi)
-* Added examples folder
-* Add django (at least 1.10) as requirement for the linter
+* Implement new option `--ignore-packages`
 
-## 0.0.4
+### 1.2.0
 
-Assure compatibility for multiple python and django versions.
+* Implement new option `--from-classifier`
 
-* Try to improve PyPi readme
-* Better error messages
+### 1.1.0
 
-## 0.0.3
+* Improve document
+    * Add ToC to README document
+    * Add a information of dependencies
 
-* Made a mistake and accidentally deleted 0.0.2 from PyPi
+### 1.0.0
 
-## 0.0.2
+* First stable release version
 
-* Python 3 compatibility
-* Faster migration gathering
+### 0.2.0
+* Implement new option `--order`
+    * Default behavior is `--order=name`
 
-* Code base refactoring
-* Test base refactoring
+### 0.1.0
 
-## 0.0.1
-
-First version of command line tool to lint django migrations.
+* First implementation version
+    * Support options
+        * `--with-system`
+        * `--with-authors`
+        * `--with-urls`
