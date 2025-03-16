@@ -1,60 +1,76 @@
-from setuptools import setup
+import setuptools
+import os
+import codecs
+import re
+import atexit
+from setuptools.command.install import install
+from setuptools.command.develop import develop
 
 
-with open('README.rst') as readme:
-    long_description = readme.read()
+here = os.path.abspath(os.path.dirname(__file__))
 
-setup(
-    name='edx-repo-tools',
-    version='0.2.1',
-    description="This repo contains a number of tools Open edX uses for working with GitHub repositories.",
+
+def read(*parts):
+    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+        return fp.read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
+def _post_install():
+    from post_setup import RunPostInstall
+    RunPostInstall()
+
+
+class new_install(install):
+    def run(self):
+        atexit.register(_post_install)
+        install.run(self)
+
+
+class dev_install(develop):
+    def run(self):
+        develop.run(self)
+
+readmepath = os.path.normpath(os.path.join(here, "docs/README.md"))
+with open(readmepath, "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="castervoice",
+    version=find_version("castervoice/lib", "version.py"),
+    author="synkarius",
+    author_email="dconway1985@gmail.com",
+    description="Dragonfly-Based Voice Programming Toolkit",
     long_description=long_description,
-    license='Apache',
-    keywords='edx repo tools',
-    url='https://github.com/edx/repo-tools',
-    author='edX',
-    author_email='oscm@edx.org',
+    long_description_content_type="text/markdown",
+    url="https://github.com/dictation-toolbox/Caster",
+    packages=setuptools.find_packages(),
+    include_package_data=True,
+    zip_safe=False,
     classifiers=[
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License'
-    ],
-    packages=[
-        'edx_repo_tools',
-        'edx_repo_tools.dev',
-        'edx_repo_tools.oep2',
-        'edx_repo_tools.oep2.checks',
-        'edx_repo_tools.oep2.report',
-        'edx_repo_tools.ospr',
-        'edx_repo_tools.release',
-        'edx_repo_tools.drip_survey',
+        "Programming Language :: Python :: 2",
+        "Operating System :: OS Independent"
     ],
     install_requires=[
-        'appdirs',
-        'click',
-        'lazy',
-        'github3.py',
-        'pytest',
-        'pytest-xdist',
-        'pyyaml',
-        'ruamel.yaml'
+        "dragonfly2>=0.20.0",
+        "wxpython",
+        "pillow",
+        "tomlkit",
+        "future",
+        "mock",
+        "appdirs",
+        "scandir",
+        "pyvda;platform_system=='Windows'",
     ],
-    entry_points={
-        'console_scripts': [
-            'clone_org = edx_repo_tools.dev.clone_org:main',
-            'show_hooks = edx_repo_tools.dev.show_hooks:main',
-            'oep2 = edx_repo_tools.oep2:_cli',
-            'sync_labels = edx_repo_tools.ospr.sync_labels:sync_labels',
-            'no_yaml = edx_repo_tools.ospr.no_yaml:no_yaml',
-            'tag_release = edx_repo_tools.release.tag_release:main',
-            'drip = edx_repo_tools.drip_survey:cli',
-            'get_org_repo_urls = edx_repo_tools.dev.get_org_repo_urls:main',
-            'modernize_travis = django3_codemods.config_tools.travis_modernizer:main',
-            'modernize_tox = django3_codemods.config_tools.tox_modernizer:main',
-            'modernize_openedx_yaml = edx_repo_tools.modernize_openedx_yaml:main',
-        ],
-    },
-    package_data={
-        'edx_repo_tools.oep2.report': ['oep2-report.ini'],
-    }
+    cmdclass={'install': new_install,
+              'develop': dev_install,
+              },
 )
