@@ -1,13 +1,9 @@
-arrow
-bbcode
-blinker
-flake8
-importlib_resources
-jinja2
-jmespath
-jsonapi-client
-mypy
+numpy>=1.7
+scipy>=0.10
+healpy>=1.8
+mpi4py
+h5py
+click
 pytest
-requests
-requests-mock
-tqdm
+caput @ git+https://github.com/radiocosmology/caput.git
+cora @ git+https://github.com/radiocosmology/cora.git
