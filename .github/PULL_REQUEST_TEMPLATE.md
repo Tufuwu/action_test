@@ -1,23 +1,7 @@
-##### ISSUE TYPE
-<!--- Pick one below and delete the rest: -->
- - New Template Pull Request
- - Bugfix Pull Request
- - Additional Testing
- - Docs Pull Request
+**Checklist**:
 
-##### COMPONENT
-<!--- Name of the template, os and command  -->
-
-##### SUMMARY
-<!--- Describe the change, including rationale and design decisions -->
-
-<!---
-If you are fixing an existing issue, please include "Fixes #nnn" in your
-commit message and your description; but you should still explain what
-the change does.
--->
-
-<!-- Paste verbatim command output below, e.g. before and after your change -->
-```
-
-```
+* [ ] All tests are passing
+* [ ] I have added any necessary documentation and/or release notes
+* [ ] I have followed the [commit message guidelines](https://wiki.antonischristofides.com/en/sops/production/development/git-and-github#committing-and-commit-messages) and the ["before submitting a pull request" guidelines](https://wiki.antonischristofides.com/en/sops/production/development/git-and-github#before-submitting-a-pull-request)
+* [ ] If I introduced (or abolished) any third-party library, I will write a short paragraph in this PR [according to the guidelines](https://wiki.antonischristofides.com/sops/production/development/third-party-libraries)
+* [ ] I have removed all obsoleted code
