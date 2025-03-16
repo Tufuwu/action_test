@@ -1,62 +1,63 @@
-name: build
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Upload Python Package
 
 on:
-  pull_request:
-  workflow_call:
+  push:
+    tags:
+      - '\d+\.\d+\.[0-9a-z]+'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: Build and Test Package
-    strategy:
-      matrix:
-        version:
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
-        os: [ubuntu-latest, windows-latest]
-        include:
-          - version: '3.12'
-            os: ubuntu-latest
-            upload: true
-    runs-on: ${{ matrix.os }}
+  release-build:
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.version }}
+      - uses: actions/checkout@v4
 
-    - name: Install packages
-      run: pip install .
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
-    - name: Run tests
-      run: python -m unittest discover -v
+      - name: Build release distributions
+        run: |
+          # NOTE: put your own distribution build steps here.
+          python -m pip install build
+          python -m build
 
-    - name: Build documentation
-      run: |-
-        mkdir html
-        git fetch --all
-        python -I -m sphinx_multiversion -W docs html
-        cp assets/gh-pages-redirect.html html/index.html
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
 
-    - name: Upload the Docs
-      uses: actions/upload-pages-artifact@v3
-      if: matrix.upload
-      with:
-        path: html/
+  pypi-publish:
+    name: upload release to PyPI
+    runs-on: ubuntu-latest
+    environment: release
 
-    - name: Install pypa/build
-      run: pip install build
+    needs:
+      - release-build
 
-    - name: Build a binary wheel and a source tarball
-      run: python3 -m build
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+      contents: write
 
-    - name: Store the distribution packages
-      if: matrix.upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
