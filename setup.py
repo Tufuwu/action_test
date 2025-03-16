@@ -1,67 +1,36 @@
-#!/usr/bin/env python
-# Copyright 2005-2011 Divmod, Inc.
-# Copyright 2013 Florent Xicluna.  See LICENSE file for details
-from __future__ import with_statement
+import setuptools
 
-import os.path
+with open('README.md') as fh:
+    long_description = fh.read()
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-    extra = {'scripts': ["bin/pyflakes"]}
-else:
-    extra = {
-        'test_suite': 'pyflakes.test',
-        'entry_points': {
-            'console_scripts': ['pyflakes = pyflakes.api:main'],
-        },
-    }
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
-
-def get_version(fname=os.path.join('pyflakes', '__init__.py')):
-    with open(fname) as f:
-        for line in f:
-            if line.startswith('__version__'):
-                return eval(line.split('=')[-1])
-
-
-def get_long_description():
-    descr = []
-    for fname in ('README.rst',):
-        with open(fname) as f:
-            descr.append(f.read())
-    return '\n\n'.join(descr)
-
-
-setup(
-    name="pyflakes",
-    license="MIT",
-    version=get_version(),
-    description="passive checker of Python programs",
-    long_description=get_long_description(),
-    author="A lot of people",
-    author_email="code-quality@python.org",
-    url="https://github.com/PyCQA/pyflakes",
-    packages=["pyflakes", "pyflakes.scripts", "pyflakes.test"],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+setuptools.setup(
+    name="queenbee",
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
+    author="Ladybug Tools",
+    author_email="info@ladybug.tools",
+    description="Queenbee is a workflow language and a package manager for creating "
+    "DAG workflows which empowers all workflow libraries in Ladybug Tools!",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/ladybug-tools/queenbee",
+    packages=setuptools.find_packages(exclude=["tests", "docs"]),
+    install_requires=requirements,
+    extras_require={
+        'cli': ['click>=7.0', 'click_plugins==1.1.1']
+    },
+    entry_points={
+        "console_scripts": ["queenbee = queenbee.cli:main"]
+    },
+    include_package_data=True,
     classifiers=[
-        "Development Status :: 6 - Mature",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: Implementation :: PyPy",
-        "Topic :: Software Development",
-        "Topic :: Utilities",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent"
     ],
-    **extra)
+    license="MIT"
+)
