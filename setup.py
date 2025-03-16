@@ -1,83 +1,44 @@
-"""
-Links
-`````
-* `documentation
-  <http://pythonhosted.org/pyramid_storage/>`_
-* `development version
-  <https://github.com/danjac/pyramid_storage>`_
+import io
+import os
 
-"""
+from setuptools import find_packages, setup
 
-from setuptools import setup, Command
+VERSION = "0.1.3"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-
-class PyTest(Command):
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        import sys
-        import subprocess
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
-
-
-docs_extras = [
-    'Sphinx',
-    'docutils',
-    'repoze.sphinx.autointerface',
-]
-
-tests_require = [
-    'pytest',
-    'mock',
-]
-
+with io.open("README.md", "r", encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
-    name='pyramid_storage',
-    cmdclass={'test': PyTest},
-    version='0.4.0.dev0',
-    license='BSD',
-    author='Dan Jacob',
-    author_email='danjac354@gmail.com',
-    description='File storage package for Pyramid',
-    long_description=__doc__,
-    url='https://github.com/danjac/pyramid_storage/',
-    packages=[
-        'pyramid_storage',
-    ],
+    name="elasticsearch-dbapi",
+    description=("A DBAPI and SQLAlchemy dialect for Elasticsearch"),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    version=VERSION,
+    packages=find_packages(),
+    include_package_data=True,
     zip_safe=False,
-    platforms='any',
-    install_requires=[
-        'pyramid',
-    ],
-    tests_require=tests_require,
-    extras_require={
-        'docs': docs_extras,
-        's3': ['boto'],
-        'gcloud': ['google-cloud-storage'],
+    entry_points={
+        "sqlalchemy.dialects": [
+            "elasticsearch = es.elastic.sqlalchemy:ESHTTPDialect",
+            "elasticsearch.http = es.elastic.sqlalchemy:ESHTTPDialect",
+            "elasticsearch.https = es.elastic.sqlalchemy:ESHTTPSDialect",
+            "odelasticsearch = es.opendistro.sqlalchemy:ESHTTPDialect",
+            "odelasticsearch.http = es.opendistro.sqlalchemy:ESHTTPDialect",
+            "odelasticsearch.https = es.opendistro.sqlalchemy:ESHTTPSDialect",
+        ]
     },
-    test_suite='pyramid_storage',
+    install_requires=["elasticsearch>7", "sqlalchemy"],
+    extras_require={"opendistro": ["requests_aws4auth"]},
+    author="Preset Inc.",
+    author_email="daniel@preset.io",
+    url="http://preset.io",
+    download_url="https://github.com/preset-io/elasticsearch-dbapi/releases/tag/"
+    + VERSION,
     classifiers=[
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Topic :: Communications :: Email',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Framework :: Pyramid',
-    ]
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+    ],
+    tests_require=["nose>=1.0"],
+    test_suite="nose.collector",
 )
