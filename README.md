@@ -1,245 +1,228 @@
-Django Object Actions
-=====================
+# django-prometheus
 
-[![CI](https://github.com/crccheck/django-object-actions/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/crccheck/django-object-actions/actions/workflows/ci.yml?query=branch%3Amaster)
+Export Django monitoring metrics for Prometheus.io
 
-If you've ever tried making admin object tools you may have thought, "why can't
-this be as easy as making Django Admin Actions?" Well now they can be.
+[![Join the chat at https://gitter.im/django-prometheus/community](https://badges.gitter.im/django-prometheus/community.svg)](https://gitter.im/django-prometheus/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+[![PyPI version](https://badge.fury.io/py/django-prometheus.svg)](http://badge.fury.io/py/django-prometheus)
+[![Build Status](https://github.com/korfuri/django-prometheus/actions/workflows/ci.yml/badge.svg)](https://github.com/korfuri/django-prometheus/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/korfuri/django-prometheus/badge.svg?branch=master)](https://coveralls.io/github/korfuri/django-prometheus?branch=master)
+[![PyPi page link -- Python versions](https://img.shields.io/pypi/pyversions/django-prometheus.svg)](https://pypi.python.org/pypi/django-prometheus)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Quick-Start Guide
------------------
+## Features
 
-Install Django Object Actions:
+This library provides Prometheus metrics for Django related operations:
+
+* Requests & Responses
+* Database access done via [Django ORM](https://docs.djangoproject.com/en/3.0/topics/db/)
+* Cache access done via [Django Cache framework](https://docs.djangoproject.com/en/3.0/topics/cache/)
+
+## Usage
+
+### Requirements
+
+* Django >= 2.2
+
+### Installation
+
+Install with:
 
 ```shell
-$ pip install django-object-actions
+pip install django-prometheus
 ```
 
-Add `django_object_actions` to your `INSTALLED_APPS` so Django can find
-our templates.
+Or, if you're using a development version cloned from this repository:
 
-In your admin.py:
-
-```python
-from django_object_actions import DjangoObjectActions
-
-class ArticleAdmin(DjangoObjectActions, admin.ModelAdmin):
-    def publish_this(self, request, obj):
-        publish_obj(obj)
-    publish_this.label = "Publish"  # optional
-    publish_this.short_description = "Submit this article"  # optional
-
-    change_actions = ('publish_this', )
+```shell
+python path-to-where-you-cloned-django-prometheus/setup.py install
 ```
 
+This will install [prometheus_client](https://github.com/prometheus/client_python) as a dependency.
 
-Usage
------
+### Quickstart
 
-Defining new &*tool actions* is just like defining regular [admin actions]. The
-major difference is the functions for `django-object-actions` will take an
-object instance instead of a queryset (see *Re-using Admin Actions* below).
-
-*Tool actions* are exposed by putting them in a `change_actions` attribute in
-your `admin.ModelAdmin`. You can also add *tool actions* to the main changelist
-views too. There, you'll get a queryset like a regular [admin action][admin actions]:
+In your settings.py:
 
 ```python
-from django_object_actions import DjangoObjectActions
+INSTALLED_APPS = [
+   ...
+   'django_prometheus',
+   ...
+]
 
-class MyModelAdmin(DjangoObjectActions, admin.ModelAdmin):
-    def toolfunc(self, request, obj):
-        pass
-    toolfunc.label = "This will be the label of the button"  # optional
-    toolfunc.short_description = "This will be the tooltip of the button"  # optional
-
-    def make_published(modeladmin, request, queryset):
-        queryset.update(status='p')
-
-    change_actions = ('toolfunc', )
-    changelist_actions = ('make_published', )
+MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    # All your other middlewares go here, including the default
+    # middlewares like SessionMiddleware, CommonMiddleware,
+    # CsrfViewmiddleware, SecurityMiddleware, etc.
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+]
 ```
 
-Just like admin actions, you can send a message with `self.message_user`.
-Normally, you would do something to the object and return to the same url, but
-if you return a `HttpResponse`, it will follow it (hey, just like [admin
-actions]!).
-
-If your admin modifies `get_urls`, `change_view`, or `changelist_view`,
-you'll need to take extra care because `django-object-actions` uses them too.
-
-### Re-using Admin Actions
-
-If you would like a preexisting admin action to also be an *object action*, add
-the `takes_instance_or_queryset` decorator to convert object instances into a
-queryset and pass querysets:
+In your urls.py:
 
 ```python
-from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
-
-class RobotAdmin(DjangoObjectActions, admin.ModelAdmin):
-    # ... snip ...
-
-    @takes_instance_or_queryset
-    def tighten_lug_nuts(self, request, queryset):
-        queryset.update(lugnuts=F('lugnuts') - 1)
-
-    change_actions = ['tighten_lug_nuts']
-    actions = ['tighten_lug_nuts']
+urlpatterns = [
+    ...
+    path('', include('django_prometheus.urls')),
+]
 ```
 
-[admin actions]: https://docs.djangoproject.com/en/stable/ref/contrib/admin/actions/
+### Configuration
 
-### Customizing *Object Actions*
+Prometheus uses Histogram based grouping for monitoring latencies. The default
+buckets are here: https://github.com/prometheus/client_python/blob/master/prometheus_client/core.py
 
-To give the action some a helpful title tooltip, add a
-`short_description` attribute, similar to how admin actions work:
+You can define custom buckets for latency, adding more buckets decreases performance but
+increases accuracy: https://prometheus.io/docs/practices/histograms/
 
 ```python
-def increment_vote(self, request, obj):
-    obj.votes = obj.votes + 1
-    obj.save()
-increment_vote.short_description = "Increment the vote count by one"
+PROMETHEUS_LATENCY_BUCKETS = (.1, .2, .5, .6, .8, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 9.0, 12.0, 15.0, 20.0, 30.0, float("inf"))
 ```
 
-By default, Django Object Actions will guess what to label the button
-based on the name of the function. You can override this with a `label`
-attribute:
+### Monitoring your databases
+
+SQLite, MySQL, and PostgreSQL databases can be monitored. Just
+replace the `ENGINE` property of your database, replacing
+`django.db.backends` with `django_prometheus.db.backends`.
 
 ```python
-def increment_vote(self, request, obj):
-    obj.votes = obj.votes + 1
-    obj.save()
-increment_vote.label = "Vote++"
-```
-
-If you need even more control, you can add arbitrary attributes to the buttons
-by adding a Django widget style
-[attrs](https://docs.djangoproject.com/en/stable/ref/forms/widgets/#django.forms.Widget.attrs)
-attribute:
-
-```python
-def increment_vote(self, request, obj):
-    obj.votes = obj.votes + 1
-    obj.save()
-increment_vote.attrs = {
-    'class': 'addlink',
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_prometheus.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
 }
 ```
 
-### Programmatically Disabling Actions
+### Monitoring your caches
 
-You can programmatically disable registered actions by defining your own
-custom `get_change_actions()` method. In this example, certain actions
-only apply to certain object states (e.g. You should not be able to
-close an company account if the account is already closed):
-
-```python
-def get_change_actions(self, request, object_id, form_url):
-    actions = super(PollAdmin, self).get_change_actions(request, object_id, form_url)
-    actions = list(actions)
-    if not request.user.is_superuser:
-        return []
-
-    obj = self.model.objects.get(pk=object_id)
-    if obj.question.endswith('?'):
-        actions.remove('question_mark')
-
-    return actions
-```
-
-The same is true for changelist actions with `get_changelist_actions`.
-
-### Alternate Installation
-
-You don't have to add this to `INSTALLED_APPS`, all you need to to do
-is copy the template `django_object_actions/change_form.html` some place
-Django's template loader [will find
-it](https://docs.djangoproject.com/en/stable/ref/settings/#template-dirs).
-
-If you don't intend to use the template customizations at all, don't
-add `django_object_actions` to your `INSTALLED_APPS` at all and use
-`BaseDjangoObjectActions` instead of `DjangoObjectActions`.
-
-
-More Examples
--------------
-
-Making an action that links off-site:
+Filebased, memcached, redis caches can be monitored. Just replace
+the cache backend to use the one provided by django_prometheus
+`django.core.cache.backends` with `django_prometheus.cache.backends`.
 
 ```python
-def external_link(self, request, obj):
-    from django.http import HttpResponseRedirect
-    return HttpResponseRedirect(f'https://example.com/{obj.id}')
+CACHES = {
+    'default': {
+        'BACKEND': 'django_prometheus.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
 ```
 
+### Monitoring your models
 
-Limitations
------------
+You may want to monitor the creation/deletion/update rate for your
+model. This can be done by adding a mixin to them. This is safe to do
+on existing models (it does not require a migration).
 
-1.  `django-object-actions` expects functions to be methods of the model
-    admin. While Django gives you a lot more options for their admin
-    actions.
-2.  If you provide your own custom `change_form.html`, you'll also need
-    to manually copy in the relevant bits of [our change form
-    ](./django_object_actions/templates/django_object_actions/change_form.html).
-3.  Security. This has been written with the assumption that everyone in
-    the Django admin belongs there. Permissions should be enforced in
-    your own actions irregardless of what this provides. Better default
-    security is planned for the future.
+If your model is:
 
-
-Python and Django compatibility
--------------------------------
-
-See [`tox.ini`](./tox.ini) for which Python and Django versions this supports.
-
-
-Demo Admin & Docker images
---------------------------
-
-You can try the demo admin against several versions of Django with these Docker
-images: https://hub.docker.com/r/crccheck/django-object-actions/tags
-
-This runs the example Django project in `./example_project` based on the "polls"
-tutorial. `admin.py` demos what you can do with this app.
-
-
-Development
------------
-
-Getting started *(with virtualenvwrapper)*:
-
-```shell
-# get a copy of the code
-git clone git@github.com:crccheck/django-object-actions.git
-cd django-object-actions
-# set up your virtualenv (with virtualenvwrapper)
-mkvirtualenv django-object-actions
-# Install requirements
-make install
-# Hack your path so that we can reference packages starting from the root
-add2virtualenv .
-make test  # run test suite
-make quickstart  # runs 'make resetdb' and some extra steps
+```python
+class Dog(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    breed = models.CharField(max_length=100, blank=True, null=True)
+    age = models.PositiveIntegerField(blank=True, null=True)
 ```
 
-This will install whatever the latest stable version of Django is. You
-can also install a specific version of Django and
-`pip install -r requirements.txt`.
+Just add the `ExportModelOperationsMixin` as such:
 
-Various helpers are available as make commands. Type `make help` and
-view the `Makefile` to see what other things you can do.
+```python
+from django_prometheus.models import ExportModelOperationsMixin
+
+class Dog(ExportModelOperationsMixin('dog'), models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    breed = models.CharField(max_length=100, blank=True, null=True)
+    age = models.PositiveIntegerField(blank=True, null=True)
+```
+
+This will export 3 metrics, `django_model_inserts_total{model="dog"}`,
+`django_model_updates_total{model="dog"}` and
+`django_model_deletes_total{model="dog"}`.
+
+Note that the exported metrics are counters of creations,
+modifications and deletions done in the current process. They are not
+gauges of the number of objects in the model.
+
+Starting with Django 1.7, migrations are also monitored. Two gauges
+are exported, `django_migrations_applied_by_connection` and
+`django_migrations_unapplied_by_connection`. You may want to alert if
+there are unapplied migrations.
+
+If you want to disable the Django migration metrics, set the
+`PROMETHEUS_EXPORT_MIGRATIONS` setting to False.
+
+### Monitoring and aggregating the metrics
+
+Prometheus is quite easy to set up. An example prometheus.conf to
+scrape `127.0.0.1:8001` can be found in `examples/prometheus`.
+
+Here's an example of a PromDash displaying some of the metrics
+collected by django-prometheus:
+
+![Example dashboard](https://raw.githubusercontent.com/korfuri/django-prometheus/master/examples/django-promdash.png)
+
+## Adding your own metrics
+
+You can add application-level metrics in your code by using
+[prometheus_client](https://github.com/prometheus/client_python)
+directly. The exporter is global and will pick up your metrics.
+
+To add metrics to the Django internals, the easiest way is to extend
+django-prometheus' classes. Please consider contributing your metrics,
+pull requests are welcome. Make sure to read the Prometheus best
+practices on
+[instrumentation](http://prometheus.io/docs/practices/instrumentation/)
+and [naming](http://prometheus.io/docs/practices/naming/).
+
+## Importing Django Prometheus using only local settings
+
+If you wish to use Django Prometheus but are not able to change
+the code base, it's possible to have all the default metrics by
+modifying only the settings.
+
+First step is to inject prometheus' middlewares and to add
+django_prometheus in INSTALLED_APPS
+
+```python
+MIDDLEWARE = \
+    ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + \
+    MIDDLEWARE + \
+    ['django_prometheus.middleware.PrometheusAfterMiddleware']
+
+INSTALLED_APPS += ['django_prometheus']
+```
+
+Second step is to create the /metrics end point, for that we need
+another file (called urls_prometheus_wrapper.py in this example) that
+will wraps the apps URLs and add one on top:
+
+```python
+from django.conf.urls import include, url
 
 
-Similar Packages
-----------------
+urlpatterns = []
 
-If you want an actions menu for each row of your changelist, check out [Django
-Admin Row Actions](https://github.com/DjangoAdminHackers/django-admin-row-actions).
+urlpatterns.append(url('prometheus/', include('django_prometheus.urls')))
+urlpatterns.append(url('', include('myapp.urls')))
+```
 
-Django Object Actions is very similar to
-[django-object-tools](https://github.com/praekelt/django-object-tools), but does
-not require messing with your urls.py, does not do anything special with
-permissions, and uses the same patterns as making [admin actions].
+This file will add a "/prometheus/metrics" end point to the URLs of django
+that will export the metrics (replace myapp by your project name).
+
+Then we inject the wrapper in settings:
+
+```python
+ROOT_URLCONF = "graphite.urls_prometheus_wrapper"
+```
+
+## Adding custom labels to middleware (request/response) metrics
+
+You can add application specific labels to metrics reported by the django-prometheus middleware.
+This involves extending the classes defined in middleware.py.
+
+* Extend the Metrics class and override the `register_metric` method to add the application specific labels.
+* Extend middleware classes, set the metrics_cls class attribute to the the extended metric class and override the label_metric method to attach custom metrics.
+
+See implementation example in [the test app](django_prometheus/tests/end2end/testapp/test_middleware_custom_labels.py#L19-L46)
