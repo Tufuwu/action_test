@@ -1,37 +1,83 @@
-from setuptools import setup
+"""
+Links
+`````
+* `documentation
+  <http://pythonhosted.org/pyramid_storage/>`_
+* `development version
+  <https://github.com/danjac/pyramid_storage>`_
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
+"""
+
+from setuptools import setup, Command
+
+
+class PyTest(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import sys
+        import subprocess
+        errno = subprocess.call([sys.executable, 'runtests.py'])
+        raise SystemExit(errno)
+
+
+docs_extras = [
+    'Sphinx',
+    'docutils',
+    'repoze.sphinx.autointerface',
+]
+
+tests_require = [
+    'pytest',
+    'mock',
+]
+
 
 setup(
-    name='linkedin-jobs-scraper',
-    version='1.4.0',
-    author='Ludovico Fabbri',
-    author_email='ludovico.fabbri@gmail.com',
-    description='Scrape public available jobs on Linkedin using headless browser',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/spinlud/py-linkedin-jobs-scraper.git',
+    name='pyramid_storage',
+    cmdclass={'test': PyTest},
+    version='0.4.0.dev0',
+    license='BSD',
+    author='Dan Jacob',
+    author_email='danjac354@gmail.com',
+    description='File storage package for Pyramid',
+    long_description=__doc__,
+    url='https://github.com/danjac/pyramid_storage/',
     packages=[
-        'linkedin_jobs_scraper',
-        'linkedin_jobs_scraper.chrome_cdp',
-        'linkedin_jobs_scraper.events',
-        'linkedin_jobs_scraper.exceptions',
-        'linkedin_jobs_scraper.filters',
-        'linkedin_jobs_scraper.query',
-        'linkedin_jobs_scraper.strategies',
-        'linkedin_jobs_scraper.utils',
+        'pyramid_storage',
     ],
+    zip_safe=False,
+    platforms='any',
     install_requires=[
-        'selenium',
-        'websocket-client'
+        'pyramid',
     ],
+    tests_require=tests_require,
+    extras_require={
+        'docs': docs_extras,
+        's3': ['boto'],
+        'gcloud': ['google-cloud-storage'],
+    },
+    test_suite='pyramid_storage',
     classifiers=[
         'Intended Audience :: Developers',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-    ],
-    python_requires='>=3.6',
+        'Topic :: Communications :: Email',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Framework :: Pyramid',
+    ]
 )
