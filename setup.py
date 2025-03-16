@@ -1,37 +1,29 @@
 from setuptools import setup
-import versioneer
-import os
+
+from aactivator import __version__
 
 
-def main():
-    this_directory = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(this_directory, 'README.md'), 'r') as f:
-        long_description = f.read()
-
-    setup(
-        name='thunor',
-        version=versioneer.get_version(),
-        description='Dose response curve and drug induced proliferation '
-                    '(DIP) rate fits and visualisation',
-        long_description=long_description,
-        long_description_content_type='text/markdown',
-        author='Alex Lubbock',
-        author_email='code@alexlubbock.com',
-        url='https://www.thunor.net',
-        packages=['thunor'],
-        install_requires=['numpy', 'scipy', 'pandas', 'plotly==4.5.0', 'seaborn', 'tables'],
-        tests_require=['pytest', 'nbval', 'django', 'nbformat>4,<5'],
-        cmdclass=versioneer.get_cmdclass(),
-        zip_safe=True,
-        classifiers=[
-            'Intended Audience :: Science/Research',
-            'Programming Language :: Python',
-            'Topic :: Scientific/Engineering :: Bio-Informatics',
-            'Topic :: Scientific/Engineering :: Chemistry',
-            'Topic :: Scientific/Engineering :: Medical Science Apps.',
-        ]
-    )
-
-
-if __name__ == '__main__':
-    main()
+setup(
+    name='aactivator',
+    description=(
+        'Automatically activate Python virtualenvs (and other environments).'
+    ),
+    url='https://github.com/Yelp/aactivator',
+    version=__version__,
+    author='Yelp',
+    platforms='linux',
+    classifiers=[
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+    ],
+    py_modules=['aactivator'],
+    entry_points={
+        'console_scripts': [
+            'aactivator = aactivator:main',
+        ],
+    },
+)
