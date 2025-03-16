@@ -1,3 +1,5 @@
-graft flask_bootstrap/static
-graft flask_bootstrap/templates
-include LICENSE
+include Makefile LICENSE CHANGELOG.rst Pipfile Dockerfile
+
+graft tests
+graft docs
+

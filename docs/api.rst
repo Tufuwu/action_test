@@ -1,8 +1,6 @@
-API Reference
-==============
+Python API
+==========
 
-.. module:: flask_bootstrap
+.. automodule:: tpl
+    :members:
 
-.. autoclass:: Bootstrap
-   :members:
-   :undoc-members:

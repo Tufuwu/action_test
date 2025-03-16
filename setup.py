@@ -1,64 +1,50 @@
-# -*- coding: utf-8 -*-
-"""
-Bootstrap-Flask
----------------
+#!/usr/bin/env python3
+from os import popen
 
-[Bootstrap 4](https://getbootstrap.com) helper for Flask/Jinja2.
 
-If you come from Flask-Bootstrap, check out [this tutorial](https://bootstrap-flask.readthedocs.io/en/latest/migrate.html) on how to migrate to this extension.
-
-Go to [GitHub page](https://github.com/greyli/bootstrap-flask), which you
-can check for more details.
-"""
 from setuptools import setup
 
+
+with open("./README.rst") as readme:
+    readme_text = readme.read()
+
+with popen(
+        "git describe --tags --dirty --match 'v*' "
+        "| sed -e 's/^v//' -e 's/-/_/g' -e 's/_/+/1' -e 's/_/./g'",
+        "r"
+) as git_output:
+    git_version_string = git_output.readline()[:-1]  # truncate the \n
+
+    # update version file
+    with open("tpl/__version__.py", "w") as v:
+        v.write(
+            "__version__ = '{version_string}'\n".format(
+                version_string=git_version_string
+            )
+        )
+
+
 setup(
-    name='Bootstrap-Flask',
-    version='1.5.2',
-    url='https://github.com/greyli/bootstrap-flask',
-    license='MIT',
-    author='Grey Li',
-    author_email='withlihui@gmail.com',
-    description='Bootstrap helper for Flask/Jinja2.',
-    long_description=__doc__,
-    long_description_content_type='text/markdown',
-    platforms='any',
-    packages=['flask_bootstrap'],
-    zip_safe=False,
-    include_package_data=True,
-    test_suite='tests',
-    install_requires=[
-        'Flask'
-    ],
-    extras_require={
-        'dev': [
-            'coverage',
-            'tox',
-            'sphinx',
-            'pallets-sphinx-themes',
-            'sphinxcontrib-log-cabinet',
-        ],
-        'docs': [
-            'sphinx',
-            'pallets-sphinx-themes',
-            'sphinxcontrib-log-cabinet',
-        ]
+    name='tpl',
+    version=git_version_string,
+    author='Simon Lutz Brüggen',
+    author_email='tpl@m3t0r.de',
+    description="Render templates with data from various sources",
+    url="https://github.com/m3t0r/tpl",
+    long_description=readme_text,
+    python_requires=">3.5",
+    install_requires=["pyyaml>=3.13", "jinja2>=2.10.1"],
+    entry_points={
+        'console_scripts': ["tpl=tpl.__main__:_argv_wrapper"]
     },
-    keywords='flask extension development',
+    packages=["tpl"],
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "Operating System :: Unix",
+        "Programming Language :: Python :: 3",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: MIT License",
     ]
 )
