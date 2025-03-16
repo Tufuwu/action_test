@@ -1,13 +1,4 @@
-include AUTHORS.rst
-include CONTRIBUTING.rst
-include HISTORY.rst
-include LICENSE
-include README.rst
-
-include mixsea/tests/data/*.csv
-
-recursive-include tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
-
-recursive-include docs *.rst conf.py Makefile *.jpg *.png *.gif
+include versioneer.py
+include src/nexusformat/_version.py
+include src/notebooks/*.ipynb
+include COPYING

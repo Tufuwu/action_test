@@ -1,47 +1,56 @@
-from setuptools import find_packages, setup
+#!/usr/bin/env python
+#-----------------------------------------------------------------------------
+# Copyright (c) 2013-2016, NeXpy Development Team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING, distributed with this software.
+#-----------------------------------------------------------------------------
 
-with open("README.rst") as readme_file:
-    readme = readme_file.read()
+from setuptools import setup, find_packages, Extension
 
-with open("HISTORY.rst") as history_file:
-    history = history_file.read()
+import os, sys
+import versioneer
 
-setup(
-    # Project information
-    name="mixsea",
-    version="0.1.0",
-    author="mixsea Developers",
-    author_email="",
-    url="https://github.com/modscripps/mixsea",
-    license="MIT License",
-    # Description
-    description="Ocean mixing parameterizations",
-    long_description=f"{readme}\n\n{history}",
-    long_description_content_type="text/x-rst",
-    # Requirements
-    python_requires=">=3.6",
-    install_requires=["numpy", "gsw", "scipy"],
-    extras_require={
-        "test": ["pytest"],  # install these with: pip install mixsea[test]
-    },
-    # Packaging
-    packages=find_packages(include=["mixsea", "mixsea.*"], exclude=["*.tests"]),
-    package_data={"mixsea": ["tests/data/*.csv"]},
-    include_package_data=True,
-    zip_safe=False,
-    platforms=["any"],  # or more specific, e.g. "win32", "cygwin", "osx"
-    # Metadata
-    project_urls={"Documentation": "https://mixsea.readthedocs.io"},
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering :: Physics",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-    ],
-)
+# pull in some definitions from the package's __init__.py file
+sys.path.insert(0, os.path.join('src', ))
+import nexusformat
+import nexusformat.requires
+
+verbose=1
+
+setup (name =  nexusformat.__package_name__, # NeXpy
+       version=versioneer.get_version(),
+       cmdclass=versioneer.get_cmdclass(),
+       license = nexusformat.__license__,
+       description = nexusformat.__description__,
+       long_description = nexusformat.__long_description__,
+       author=nexusformat.__author_name__,
+       author_email=nexusformat.__author_email__,
+       url=nexusformat.__url__,
+       download_url=nexusformat.__download_url__,
+       platforms='any',
+       python_requires='>=3.6',
+       install_requires = nexusformat.requires.pkg_requirements,
+       package_dir = {'': 'src'},
+       packages = find_packages('src'),
+       entry_points={
+            # create & install scripts in <python>/bin
+            'console_scripts': 
+                ['nxstack=nexusformat.scripts.nxstack:main',                
+                 'nxduplicate=nexusformat.scripts.nxduplicate:main',
+                 'nexusformat=nexusformat.scripts.nexusformat:main'],
+       },
+       classifiers= ['Development Status :: 4 - Beta',
+                     'Intended Audience :: Developers',
+                     'Intended Audience :: Science/Research',
+                     'License :: OSI Approved :: BSD License',
+                     'Programming Language :: Python',
+                     'Programming Language :: Python :: 3',
+                     'Programming Language :: Python :: 3.6',
+                     'Programming Language :: Python :: 3.7',
+                     'Programming Language :: Python :: 3.8',
+                     'Programming Language :: Python :: 3.9',
+                     'Topic :: Scientific/Engineering',
+                     'Topic :: Scientific/Engineering :: Visualization'],
+      )
