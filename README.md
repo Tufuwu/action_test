@@ -1,128 +1,341 @@
-PyConcorde
-==========
+# django_dramatiq
 
-[![Build Status](https://travis-ci.org/jvkersch/pyconcorde.svg?branch=master)](https://travis-ci.org/jvkersch/pyconcorde)
+[![Build Status](https://github.com/Bogdanp/django_dramatiq/actions/workflows/push.yml/badge.svg)](https://github.com/Bogdanp/django_dramatiq/actions/workflows/push.yml)
+[![PyPI version](https://badge.fury.io/py/django-dramatiq.svg)](https://badge.fury.io/py/django-dramatiq)
 
-What is it?
------
+**django_dramatiq** is a Django app that integrates with [Dramatiq][dramatiq].
 
-PyConcorde is a Python wrapper around the [Concorde TSP
-solver](http://www.math.uwaterloo.ca/tsp/concorde.html).
 
-PyConcorde allows you to compute solutions to the Traveling Salesman Problem
-with just a few lines of Python code. It uses the state-of-the-art Concorde
-solver and provides a convenient Python layer around it.
+## Requirements
 
-<p align="center">
-  <a href="examples/us_state_capitals.py">
-	<img src="examples/us_state_capitals.png" alt="US state capital tour"/>
-	</a>
-</p>
+* [Django][django] 1.11+
+* [Dramatiq][dramatiq] 0.18+
 
-Note: until commit e065497 (pre version 0.1) PyConcorde was called PyTSP. It
-was renamed to emphasize the central role of the underlying Concorde solver.
 
-How do I install it?
-------
+## Example
 
-PyConcorde runs under Python 2.7 and 3.5 and up. It needs the [Concorde TSP
-solver](http://www.math.uwaterloo.ca/tsp/concorde.html) and [QSOpt linear
-programming library](http://www.math.uwaterloo.ca/~bico/qsopt/). Further
-instructions on building/downloading those can be found below.
+You can find an example application built with django_dramatiq [here][example].
 
-To build PyConcorde, clone the repository:
 
-    git clone https://github.com/jvkersch/pyconcorde
-	cd pyconcorde
-	
-Then run 
+## Installation
 
-	pip install -e .
-	
-This will download and build Concorde (and its dependency QSOpt) and then build
-PyConcorde. While this may take a few minutes, downloading Concorde only
-happens the first time the install script is run (unless you remove the `data`
-directory).
+    pip install django-dramatiq
 
-If you already have Concorde and/or QSOpt installed (or an equivalent linear
-solver), you can use those instead. Simply set the environment variable
-`CONCORDE_DIR` (or `QSOPT_DIR`) to point to the folder where you installed
-Concorde (or QSOpt).
+Add `django_dramatiq` to installed apps *before* any of your custom
+apps:
 
-Detailed instructions to build Concorde can be found at [this web
-page](https://github.com/perrygeo/pytsp/wiki/Installing-Solvers).
+``` python
+import os
 
-What can I do with it?
--------
+INSTALLED_APPS = [
+    "django_dramatiq",
 
-PyConcorde is a very light-weight library. The main entry point is the
-`TSPSolver` class. Here we use it to read in the Berlin52 dataset, a dataset of
-52 locations in Berlin (part of the TSPlib test data).
-
-```python
-    >>> from concorde.tsp import TSPSolver
-    >>> from concorde.tests.data_utils import get_dataset_path
-    >>> fname = get_dataset_path("berlin52")
-    >>> solver = TSPSolver.from_tspfile(fname)
-    Problem Name: berlin52
-    Problem Type: TSP
-    52 locations in Berlin (Groetschel)
-    Number of Nodes: 52
-    Rounded Euclidean Norm (CC_EUCLIDEAN)
-```    
-
-As you can see above, PyConcorde (or rather, Concorde) is somewhat chatty and
-will print various message to the standard output. Now that we have a solver
-instance, let's compute a solution. On my machine this is almost instantaneous.
-   
-```python    
-    >>> solution = solver.solve()
-    (... output snipped for brevity ...)
+    "myprojectapp1",
+    "myprojectapp2",
+    # etc...
+]
 ```
 
-Again, Concorde will display a variety of messages while it's running. The end
-result is a `ComputedTour` object called `solution` with information about the
-tour that we just computed:
+Configure your broker in `settings.py`:
 
-```python
-    
-    >>> solution.found_tour
-    True
-    >>> solution.optimal_value
-    7542.0
-    >>> solution.tour
-    array([ 0, 48, 31, 44, 18, 40,  7,  8,  9, 42, 32, 50, 10, 51, 13, 12, 46,
-           25, 26, 27, 11, 24,  3,  5, 14,  4, 23, 47, 37, 36, 39, 38, 35, 34,
-           33, 43, 45, 15, 28, 49, 19, 22, 29,  1,  6, 41, 20, 16,  2, 17, 30,
-           21], dtype=int32)
-    
+``` python
+DRAMATIQ_BROKER = {
+    "BROKER": "dramatiq.brokers.rabbitmq.RabbitmqBroker",
+    "OPTIONS": {
+        "url": "amqp://localhost:5672",
+    },
+    "MIDDLEWARE": [
+        "dramatiq.middleware.Prometheus",
+        "dramatiq.middleware.AgeLimit",
+        "dramatiq.middleware.TimeLimit",
+        "dramatiq.middleware.Callbacks",
+        "dramatiq.middleware.Retries",
+        "django_dramatiq.middleware.DbConnectionsMiddleware",
+        "django_dramatiq.middleware.AdminMiddleware",
+    ]
+}
+
+# Defines which database should be used to persist Task objects when the
+# AdminMiddleware is enabled.  The default value is "default".
+DRAMATIQ_TASKS_DATABASE = "default"
 ```
 
-Other TSP solvers for Python
-----------------------------
+You may also configure a result backend:
 
-If you are looking for a pure Python TSP implementation, check
-out [tsp-solver](https://github.com/dmishin/tsp-solver). It is not competitive
-with Concorde in terms of speed or memory usage, but has the advantage of being
-written in pure Python, which makes it more readily inspectable.
+``` python
+DRAMATIQ_RESULT_BACKEND = {
+    "BACKEND": "dramatiq.results.backends.redis.RedisBackend",
+    "BACKEND_OPTIONS": {
+        "url": "redis://localhost:6379",
+    },
+    "MIDDLEWARE_OPTIONS": {
+        "result_ttl": 60000
+    }
+}
+```
 
-If you have another TSP algorithm that can be called from within Python, and
-you want to have it added here, please open an issue.
 
-Technical Notes
--------
+## Usage
 
-PyConcorde needs Concorde and QSOpt. Downloading and building these packages
-should happen automatically on Linux/Mac OS, but please file an issue if you
-experience any trouble during this step.
+### Declaring tasks
 
-Note that Windows is currently unsupported. If you get the library to work on
-Windows, please open a ticket to describe any tweaks (or better yet, a Pull
-Request).
+django_dramatiq will auto-discover tasks defined in `tasks` modules in
+each of your installed apps.  For example, if you have an app named
+`customers`, your tasks for that app should live in a module called
+`customers.tasks`:
 
-License
------
+``` python
+import dramatiq
 
-PyConcorde is licensed under the [Modified BSD license](COPYING). Note that
-Concorde and QSOpt are released under different licenses, and that PyConcorde
-does not include any code from these packages.
+from django.core.mail import send_mail
+
+from .models import Customer
+
+@dramatiq.actor
+def email_customer(customer_id, subject, message):
+    customer = Customer.get(pk=customer_id)
+    send_mail(subject, message, "webmaster@example.com", [customer.email])
+```
+
+### Running workers
+
+django_dramatiq comes with a management command you can use to
+auto-discover task modules and run workers:
+
+    python manage.py rundramatiq
+
+If your project for some reason has apps with modules named `tasks` that
+are not intended for use with Dramatiq, you can ignore them:
+
+``` python
+DRAMATIQ_IGNORED_MODULES = (
+    'app1.tasks',
+    'app2.tasks',
+    'app3.tasks.utils',
+    'app3.tasks.utils.*',
+    ...
+)
+```
+
+The wildcard detection will ignore all sub modules from that point on. You
+will need to ignore the module itself if you don't want the `__init__.py` to
+be processed.
+
+### Testing
+
+You should have a separate settings file for test.  In that file,
+overwrite the broker to use Dramatiq's [StubBroker][stubbroker]:
+
+``` python
+DRAMATIQ_BROKER = {
+    "BROKER": "dramatiq.brokers.stub.StubBroker",
+    "OPTIONS": {},
+    "MIDDLEWARE": [
+        "dramatiq.middleware.AgeLimit",
+        "dramatiq.middleware.TimeLimit",
+        "dramatiq.middleware.Callbacks",
+        "dramatiq.middleware.Pipelines",
+        "dramatiq.middleware.Retries",
+        "django_dramatiq.middleware.DbConnectionsMiddleware",
+        "django_dramatiq.middleware.AdminMiddleware",
+    ]
+}
+```
+
+#### Using [pytest-django][pytest-django]
+
+In your `conftest` module set up fixtures for your broker and a
+worker:
+
+``` python
+import dramatiq
+import pytest
+
+@pytest.fixture
+def broker():
+    broker = dramatiq.get_broker()
+    broker.flush_all()
+    return broker
+
+@pytest.fixture
+def worker(broker):
+    worker = dramatiq.Worker(broker, worker_timeout=100)
+    worker.start()
+    yield worker
+    worker.stop()
+```
+
+In your tests, use those fixtures whenever you want background tasks
+to be executed:
+
+``` python
+def test_customers_can_be_emailed(transactional_db, broker, worker, mailoutbox):
+    customer = Customer(email="jim@gcpd.gov")
+    # Assuming "send_welcome_email" enqueues an "email_customer" task
+    customer.send_welcome_email()
+
+    # Wait for all the tasks to be processed
+    broker.join("default")
+    worker.join()
+
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == "Welcome Jim!"
+```
+
+#### Using unittest
+
+A simple test case has been provided that will automatically set up the
+broker and worker for each test, which are accessible as attributes on
+the test case. Note that `DramatiqTestCase` inherits
+[`django.test.TransactionTestCase`][transactiontestcase].
+
+
+```python
+from django.core import mail
+from django.test import override_settings
+from django_dramatiq.test import DramatiqTestCase
+
+
+class CustomerTestCase(DramatiqTestCase):
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_customers_can_be_emailed(self):
+        customer = Customer(email="jim@gcpd.gov")
+        # Assuming "send_welcome_email" enqueues an "email_customer" task
+        customer.send_welcome_email()
+
+        # Wait for all the tasks to be processed
+        self.broker.join(customer.queue_name)
+        self.worker.join()
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Welcome Jim!")
+```
+
+#### Cleaning up old tasks
+
+The `AdminMiddleware` stores task metadata in a relational DB so it's
+a good idea to garbage collect that data every once in a while.  You
+can use the `delete_old_tasks` actor to achieve this on a cron:
+
+``` python
+delete_old_tasks.send(max_task_age=86400)
+```
+
+
+### Middleware
+
+<dl>
+  <dt>django_dramatiq.middleware.DbConnectionsMiddleware</dt>
+  <dd>
+    This middleware is vital in taking care of closing expired
+    connections after each message is processed.
+  </dd>
+
+  <dt>django_dramatiq.middleware.AdminMiddleware</dt>
+  <dd>
+    This middleware stores metadata about tasks in flight to a
+    database and exposes them via the Django admin.
+  </dd>
+</dl>
+
+#### Custom keyword arguments to Middleware
+
+Some middleware classes require dynamic arguments.  An example of this
+would be the backend argument to `dramatiq.middleware.GroupCallbacks`.
+
+To do this, you might add the middleware to your `settings.py`:
+
+```python
+DRAMATIQ_BROKER = {
+    ...
+    "MIDDLEWARE": [
+        ...
+        "dramatiq.middleware.GroupCallbacks",
+        ...
+    ]
+    ...
+}
+```
+
+Next, you need to extend `DjangoDramatiqConfig` to provide the
+arguments for this middleware:
+
+```python
+from django_dramatiq.apps import DjangoDramatiqConfig
+
+
+class CustomDjangoDramatiqConfig(DjangoDramatiqConfig):
+    @classmethod
+    def middleware_groupcallbacks_kwargs(cls):
+        return {"rate_limiter_backend": cls.get_rate_limiter_backend()}
+
+
+CustomDjangoDramatiqConfig.initialize()
+```
+
+Notice the naming convention, to provide arguments to
+`dramatiq.middleware.GroupCallbacks` you need to add a `@classmethod`
+with the name `middleware_<middleware_name>_kwargs`, where
+`<middleware_name>` is the lowercase name of the middleware.
+
+Finally, add the custom app config to your `settings.py`, replacing
+the existing `django_dramatiq` app config:
+
+```python
+INSTALLED_APPS = [
+    ...
+    "yourapp.apps.CustomDjangoDramatiqConfig",
+    ...
+]
+```
+
+
+### Usage with [django-configurations]
+
+To use django_dramatiq together with [django-configurations] you need
+to define your own `rundramatiq` command as a subclass of the one in
+this package.
+
+In `YOURPACKAGE/management/commands/rundramatiq.py`:
+
+``` python
+from django_dramatiq.management.commands.rundramatiq import Command as RunDramatiqCommand
+
+
+class Command(RunDramatiqCommand):
+    def discover_tasks_modules(self):
+        tasks_modules = super().discover_tasks_modules()
+        tasks_modules[0] = "YOURPACKAGE.dramatiq_setup"
+        return tasks_modules
+```
+
+And in `YOURPACKAGE/dramatiq_setup.py`:
+
+``` python
+import django
+
+from configurations.importer import install
+
+install(check_options=True)
+django.setup()
+```
+
+## Running project tests locally
+
+Install the dev dependencies with `pip install -e '.[dev]'` and then run `tox`.
+
+
+## License
+
+django_dramatiq is licensed under Apache 2.0.  Please see
+[LICENSE][license] for licensing details.
+
+[django]: http://djangoproject.com/
+[dramatiq]: https://github.com/Bogdanp/dramatiq
+[example]: https://github.com/Bogdanp/django_dramatiq_example
+[license]: https://github.com/Bogdanp/django_dramatiq/blob/master/LICENSE
+[pytest-django]: https://pytest-django.readthedocs.io/en/latest/index.html
+[stubbroker]: https://dramatiq.io/reference.html#dramatiq.brokers.stub.StubBroker
+[django-configurations]: https://github.com/jazzband/django-configurations/
+[transactiontestcase]: https://docs.djangoproject.com/en/dev/topics/testing/tools/#django.test.TransactionTestCase
