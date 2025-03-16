@@ -1,167 +1,176 @@
-django-zen-queries
-====================
+<p align="center"><img src="logo.svg" align="center" width="100"/></p>
+<h1 align="center">Filestack Python</h1>
+<p align="center">
+  <a href="http://travis-ci.org/filestack/filestack-python">
+    <img src="https://img.shields.io/travis/filestack/filestack-python.svg">
+  </a>
+  <a href="https://pypi.python.org/pypi/filestack-python">
+    <img src="https://img.shields.io/pypi/v/filestack-python.svg">
+  </a>
+    <img src="https://img.shields.io/pypi/pyversions/filestack-python.svg">
+</p>
+This is the official Python SDK for Filestack - API and content management system that makes it easy to add powerful file uploading and transformation capabilities to any web or mobile application.
 
-[![Build Status](https://travis-ci.com/dabapps/django-zen-queries.svg?branch=master)](https://travis-ci.com/dabapps/django-zen-queries)
-[![pypi release](https://img.shields.io/pypi/v/django-zen-queries.svg)](https://pypi.python.org/pypi/django-zen-queries)
+## Resources
 
+To learn more about this SDK, please visit our API Reference
 
-Gives you control over which parts of your code are allowed to run queries, and which aren't.
+* [API Reference](https://filestack-python.readthedocs.io)
 
-Tested against Django 1.8, 1.11, 2.0, 2.1 and 2.2 on Python 2.7, 3.5, 3.6 and 3.7
+## Installing
 
-### Motivation
+Install ``filestack`` with pip
 
-> Explicit is better than implicit
+```shell
+pip install filestack-python
+```
 
-(The [Zen Of Python](https://www.python.org/dev/peps/pep-0020/))
+or directly from GitHub
 
-The greatest strength of Django's ORM is also its greatest weakness. By freeing developers from having to think about when database queries are run, the ORM encourages developers to _not think about when database queries are run!_ This often has great benefits for quick development turnaround, but can have major performance implications in anything other than trivially simple systems.
+```shell
+pip install git+https://github.com/filestack/filestack-python.git
+```
 
-Django's ORM makes queries _implicit_. The Zen of Python tells us that **explicit is better than implicit**, so let's be explicit about which parts of our code are allowed to run queries, and which aren't.
+## Quickstart
 
-Check out [this blog post](https://www.dabapps.com/blog/performance-issues-caused-by-django-implicit-database-queries/) for more background.
+The Filestack SDK allows you to upload and handle filelinks using two main classes: Client and Filelink.
 
-### Example
+### Uploading files with `filestack.Client`
+``` python
+from filestack import Client
+client = Client('<YOUR_API_KEY>')
 
-Imagine a pizza restaurant website with the following models:
+new_filelink = client.upload(filepath='path/to/file')
+print(new_filelink.url)
+```
+
+#### Uploading files using Filestack Intelligent Ingestion
+To upload files using Filestack Intelligent Ingestion, simply add `intelligent=True` argument
+```python
+new_filelink = client.upload(filepath='path/to/file', intelligent=True)
+```
+FII always uses multipart uploads. In case of network issues, it will dynamically split file parts into smaller chunks (sacrificing upload speed in favour of upload reliability).
+
+### Working with Filelinks
+Filelink objects can by created by uploading new files, or by initializing `filestack.Filelink` with already existing file handle
+```python
+from filestack import Filelink, Client
+
+client = Client('<APIKEY>')
+filelink = client.upload(filepath='path/to/file')
+filelink.url  # 'https://cdn.filestackcontent.com/FILE_HANDLE
+
+# work with previously uploaded file
+filelink = Filelink('FILE_HANDLE')
+```
+
+### Basic Filelink Functions
+
+With a Filelink, you can download to a local path or get the content of a file. You can also perform various transformations.
 
 ```python
-class Topping(models.Model):
-    name = models.CharField(max_length=100)
+file_content = new_filelink.get_content()
 
+size_in_bytes = new_filelink.download('/path/to/file')
 
-class Pizza(models.Model):
-    name = models.CharField(max_length=100)
-    toppings = models.ManyToManyField(Topping)
+filelink.overwrite(filepath='path/to/new/file')
+
+filelink.resize(width=400).flip()
+
+filelink.delete()
 ```
 
-And here's the menu view:
+### Transformations
+
+You can chain transformations on both Filelinks and external URLs. Storing transformations will return a new Filelink object.
 
 ```python
-def menu(request):
-    pizzas = Pizza.objects.all()
-    context = {'pizzas': pizzas}
-    return render(request, 'pizzas/menu.html', context)
+transform = client.transform_external('http://<SOME_URL>')
+new_filelink = transform.resize(width=500, height=500).flip().enhance().store()
+
+filelink = Filelink('<YOUR_HANDLE'>)
+new_filelink = filelink.resize(width=500, height=500).flip().enhance().store()
 ```
 
-Finally, the template:
+You can also retrieve the transformation url at any point.
 
-```
-<h1>Pizza Menu</h1>
-
-<ul>
-{% for pizza in pizzas %}
-  <li>{{ pizza.name }}</li>
-{% endfor %}
-</ul>
+ ```python
+transform_candidate = client.transform_external('http://<SOME_URL>')
+transform = transform_candidate.resize(width=500, height=500).flip().enhance()
+print(transform.url)
 ```
 
-How many queries are run here? Well, the answer is easy to see: it's just one! The query emitted by `Pizza.objects.all()` is all you need to get the information to show on the menu.
+### Audio/Video Convert
 
-Now: imagine the client asks for each pizza on the menu to include a count of how many toppings are on the pizza. Easy! Just change the template:
-
-```
-<h1>Pizza Menu</h1>
-
-<ul>
-{% for pizza in pizzas %}
-  <li>{{ pizza.name }} ({{ pizza.toppings.count }})</li>
-{% endfor %}
-</ul>
-```
-
-But how many queries are run now? Well, this is the classic _n queries problem_. We now have one query to get all our pizzas, and then another query _per pizza_ to get the toppings count. The more pizzas we have, the slower the app gets. **And we probably won't discover this until the website is in production**.
-
-If you were reading a Django performance tutorial, the next step would be to tell you how to fix this problem (`.annotate` and `Count` etc). But that's not the point. The example above is just an illustration of how code in different parts of the codebase, at different levels of abstraction, even possibly (in larger projects) the responsibility of different developers, can interact to result in poor performance. Object-oriented design encourages black-box implementation hiding, but hiding the points at which queries are executed is the _worst_ thing you can do if your aim is to build high-performance web applications. So how do we fix this without breaking all our abstractions?
-
-There are two tricks here:
-
-1. Prevent developers from accidentally running queries without realising.
-2. Encourage code design that separates _fetching data_ from _rendering data_.
-
-This package provides three very simple things:
-
-1. A context manager to allow developers to be explicit about where queries are run.
-2. A utility to make querysets less lazy.
-3. Some tools to make it easy to use the context manager with Django templates and Django REST framework serializers.
-
-To be absolutely clear: this package does _not_ give you any tools to actually improve your query patterns. It just tells you when you need to do it!
-
-### Instructions
-
-To demonstrate how to use `django-zen-queries`, let's go back to our example. We want to make it impossible for changes to a template to trigger queries. So, we change our view as follows:
+Audio and video conversion works just like any transformation, except it returns an instance of class AudioVisual, which allows you to check the status of your video conversion, as well as get its UUID and timestamp. 
 
 ```python
-def menu(request):
-    pizzas = Pizza.objects.all()
-    context = {'pizzas': pizzas}
-    with queries_disabled():
-        return render(request, 'pizzas/menu.html', context)
+av_object = filelink.av_convert(width=100, height=100)
+while (av_object.status != 'completed'):
+    print(av_object.status)
+    print(av_object.uuid)
+    print(av_object.timestamp)
 ```
 
-The `queries_disabled` context manager here does one very simple thing: it stops any code inside it from running database queries. At all. If they try to run a query, the application will raise a `QueriesDisabledError` exception and blow up.
-
-That's _almost_ enough to give us what we need, but not quite. The code above will _always_ raise a `QueriesDisabledError`, because the queryset (`Pizza.objects.all()`) is _lazy_. The database query doesn't actually get run until the queryset is iterated - which happens in the template! So, `django-zen-queries` provides a tiny helper function, `fetch`, which forces evaluation of a queryset:
+The status property makes a call to the API to check its current status, and you can call to_filelink() once video is complete (this function checks its status first and will fail if not completed yet).
 
 ```python
-def menu(request):
-    pizzas = Pizza.objects.all()
-    context = {'pizzas': fetch(pizzas)}
-    with queries_disabled():
-        return render(request, 'pizzas/menu.html', context)
+filelink = av_object.to_filelink()
 ```
 
-Now we have exactly what we need: when a developer comes along and adds `{{ pizza.toppings.count }}` in the template, **it just _won't work_**. They will be forced to figure out how to use `annotate` and `Count` in order to get the data they need _up front_, rather than sometime in the future when customers are complaining that the website is getting slower and slower!
+### Security Objects
 
-#### Decorator
+Security is set on Client or Filelink classes upon instantiation and is used to sign all API calls.
 
-You can also use `queries_disabled` as a decorator to prohibit database interactions for a whole function or method:
+```python
+from filestack import Security
+
+policy = {'expiry': 253381964415}  # 'expiry' is the only required key
+security = Security(policy, '<YOUR_APP_SECRET>')
+client = Client('<YOUR_API_KEY', security=security)
+
+# new Filelink object inherits security and will use for all calls
+new_filelink = client.upload(filepath='path/to/file')
+
+# you can also provide Security objects explicitly for some methods
+size_in_bytes = filelink.download(security=security)
 ```
-@queries_disabled()
-def validate_xyz(pizzas):
-    ...
+
+You can also retrieve security details straight from the object:
+```python
+>>> policy = {'expiry': 253381964415, 'call': ['read']}
+>>> security = Security(policy, 'SECURITY-SECRET')
+>>> security.policy_b64
+'eyJjYWxsIjogWyJyZWFkIl0sICJleHBpcnkiOiAyNTMzODE5NjQ0MTV9'
+>>> security.signature
+'f61fa1effb0638ab5b6e208d5d2fd9343f8557d8a0bf529c6d8542935f77bb3c'
 ```
 
-This also works with Django's [`method_decorator`](https://docs.djangoproject.com/en/3.0/topics/class-based-views/intro/#decorating-the-class) utility.
+### Webhook verification
 
-### Extra tools
+You can use `filestack.helpers.verify_webhook_signature` method to make sure that the webhooks you receive are sent by Filestack.
 
-As well as the context managers, the package provides some tools to make it easier to use in common situations:
+```python
+from filestack.helpers import verify_webhook_signature
 
-#### Render shortcut
+# webhook_data is raw content you receive
+webhook_data = b'{"action": "fp.upload", "text": {"container": "some-bucket", "url": "https://cdn.filestackcontent.com/Handle", "filename": "filename.png", "client": "Computer", "key": "key_filename.png", "type": "image/png", "size": 1000000}, "id": 50006}'
 
-If you're using the Django `render` shortcut (as in the example above), to avoid having to add the context manager to every view, you can change your import `from django.shortcuts import render` to `from zen_queries import render`. All the views in that file will automatically be disallowed from running queries during template rendering.
+result, details = verify_webhook_signature(
+    '<YOUR_WEBHOOK_SECRET>',
+    webhook_data,
+    {
+      'FS-Signature': '<SIGNATURE-FROM-REQUEST-HEADERS>',
+      'FS-Timestamp': '<TIMESTAMP-FROM-REQUEST-HEADERS>'
+    }
+)
 
-#### TemplateResponse subclass
+if result is True:
+    print('Webhook is valid and was generated by Filestack')
+else:
+    raise Exception(details['error'])
+```
 
-`TemplateResponse` (and `SimpleTemplateResponse`) objects are lazy, meaning that template rendering happens on the way "out" of the Django stack. `zen_queries.TemplateResponse` and `zen_queries.SimpleTemplateResponse` are subclasses of these with `queries_disabled` applied to the `render` method.
+## Versioning
 
-#### Django REST framework Serializer and View mixins
-
-Django REST framework serializers are another major source of unexpected queries. Adding a field to a serializer (perhaps deep within a tree of nested serializers) can very easily cause your application to suddenly start emitting hundreds of queries. `zen_queries.rest_framework.QueriesDisabledSerializerMixin` can be added to any serializer to wrap `queries_disabled` around the `.data` property, meaning that the serialization phase is not allowed to execute any queries.
-
-You can add this mixin to an existing serializer *instance* with `zen_queries.rest_framework.disable_serializer_queries` like this: `serializer = disable_serializer_queries(serializer)`.
-
-If you're using REST framework generic views, you can also add a view mixin, `zen_queries.rest_framework.QueriesDisabledViewMixin`, which overrides `get_serializer` to mix the `QueriesDisabledSerializerMixin` into your existing serializer. This is useful because you may want to use the same serializer class between multiple views but only disable queries in some contexts, such as in a list view.  Remember that Python MRO is left-right, so the mixin must come before (to the left of) any base classes that implement `get_serializer`. The view mixin only disables queries on `GET` requests, so can safely be used with `ListCreateAPIView` and similar.
-
-#### Escape hatch
-
-If you absolutely definitely can't avoid running a query in a part of your codebase that's being executed under a `queries_disabled` block, there is another context manager called `queries_dangerously_enabled` which allows you to temporarily re-enable database queries.
-
-### Permissions gotcha
-
-Accessing permissions in your templates (via the `{{ perms }}` template variable) can be a source of queries at template-render time. Fortunately, Django's permission checks are [cached by the `ModelBackend`](https://docs.djangoproject.com/en/2.2/topics/auth/default/#permission-caching), which can be pre-populated by calling `request.user.get_all_permissions()` in the view, before rendering the template.
-
-### How does it work?
-
-Probably best not to ask.
-
-### Installation
-
-Install from PyPI
-
-    pip install django-zen-queries
-
-## Code of conduct
-
-For guidelines regarding the code of conduct when contributing to this repository please review [https://www.dabapps.com/open-source/code-of-conduct/](https://www.dabapps.com/open-source/code-of-conduct/)
+Filestack Python SDK follows the [Semantic Versioning](http://semver.org/).
