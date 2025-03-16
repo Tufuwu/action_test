@@ -1,4 +1,12 @@
 [run]
-omit =  opencivicdata/tests/*
-        opencivicdata/*/migrations/*
-        opencivicdata/*/admin/*
+omit =
+    ./tests/*
+    ./venv/*
+    ./docs/*
+    ./examples/*
+    ./demo/*
+    */tests/*
+    setup.py
+[report]
+precision = 2
+show_missing = True
