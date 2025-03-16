@@ -1,5 +1,6 @@
-*.pyc
-profiles/*.pyc
-*~
-*.log
-*.pcap
+.DS_Store/
+
+__pycache__/
+venv/
+
+node_modules/
