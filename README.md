@@ -1,144 +1,107 @@
-# Tooling for devicetree validation using YAML and jsonschema
+<div align="center">
+  <a href="http://pyro.ai"> <img width="220px" height="220px" src="docs/source/_static/img/pyro_logo_with_text.png"></a>
+</div>
 
-This repository contains test code for devicetree schema validation using the
-[json-schema](http://json-schema.org/documentation.html) vocabulary. Schema
-files are written in YAML (a superset of JSON), and operate on the YAML
-encoding of Devicetree data. Devicetree data must be transcoded from DTS to
-YAML before being used by this tool.
+-----------------------------------------
 
-## Data Model
+[![Build Status](https://github.com/pyro-ppl/pyro/workflows/CI/badge.svg)](https://github.com/pyro-ppl/pyro/actions)
+[![Coverage Status](https://coveralls.io/repos/github/pyro-ppl/pyro/badge.svg?branch=dev)](https://coveralls.io/github/pyro-ppl/pyro?branch=dev)
+[![Latest Version](https://badge.fury.io/py/pyro-ppl.svg)](https://pypi.python.org/pypi/pyro-ppl)
+[![Documentation Status](https://readthedocs.org/projects/pyro-ppl/badge/?version=dev)](http://pyro-ppl.readthedocs.io/en/stable/?badge=dev)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3056/badge)](https://bestpractices.coreinfrastructure.org/projects/3056)
 
-To understand how validation works, it is important to understand how schema data is organized and used.
-If you're reading this, I assume you're already familiar with Devicetree and the .dts file format.
+[Getting Started](http://pyro.ai/examples) |
+[Documentation](http://docs.pyro.ai/) |
+[Community](http://forum.pyro.ai/) |
+[Contributing](https://github.com/pyro-ppl/pyro/blob/master/CONTRIBUTING.md)
 
-In this repository you will find three kinds of files; *YAML Devicetrees*, *Schemas* and *Meta-Schemas*.
+Pyro is a flexible, scalable deep probabilistic programming library built on PyTorch.  Notably, it was designed with these principles in mind:
 
-### *YAML Devicetrees*
+- **Universal**: Pyro is a universal PPL - it can represent any computable probability distribution.
+- **Scalable**: Pyro scales to large data sets with little overhead compared to hand-written code.
+- **Minimal**: Pyro is agile and maintainable. It is implemented with a small core of powerful, composable abstractions.
+- **Flexible**: Pyro aims for automation when you want it, control when you need it. This is accomplished through high-level abstractions to express generative and inference models, while allowing experts easy-access to customize inference.
 
-Found under `./test`
+Pyro was originally developed at Uber AI and is now actively maintained by community contributors, including a dedicated team at the [Broad Institute](https://www.broadinstitute.org/).
+In 2019, Pyro [became](https://www.linuxfoundation.org/press-release/2019/02/pyro-probabilistic-programming-language-becomes-newest-lf-deep-learning-project/) a project of the Linux Foundation, a neutral space for collaboration on open source software, open standards, open data, and open hardware.
 
-*YAML Devicetrees* files are regular .dts files transcoded into a YAML
-representation.
-There is no special information in these files.
-They are used as test cases against the validation tooling.
-
-### *Devicetree Schemas*
-
-Found under `./schemas`
-
-*Devicetree Schemas* describe the format of devicetree data.
-The raw Devicetree file format is very open ended and doesn't restrict how
-data is encoded.
-Hence, it is easy to make mistakes when writing a Devicetree.
-Schema files impose constraints on what data can be put into a devicetree.
-As the foundation, a single core schema describes all the common property types
-that every devicetree node must match.
-e.g. In every node the 'compatible' property must be an array of strings.
-However, most devicetree data is heterogeneous as each device binding requires
-a different set of data, therefore multiple schema files are used to capture the
-data format of an entire devicetree.
-
-When validating, the tool will load all the schema files it can find and then
-iterate over all the nodes of the devicetree.
-For each node, the tool will determine which schema(s) are applicable and make sure
-the node data matches the schema constraints.
-Nodes failing a schema test will emit an error.
-Nodes that don't match any schema will emit a warning.
-
-As a developer, you would write a devicetree schema file for each new
-device binding that you create and add it to the `./schemas` directory.
-
-Schema files also have the dual purpose of documenting a binding.
-When you define a new binding, you only have to create one file that contains
-both the machine-verifiable data format and the documentation.
-Documentation generation tools are being written to extract documentation
-from a schema file and emit a format that can be included in the devicetree
-specification documents.
-
-Devicetree Schema files are normal YAML files using the jsonschema vocabulary.
-
-The Devicetree Schema files are simplified to make them more compact.
-
-The default for arrays in json-schema is they are variable sized. This can be
-restricted by defining 'minItems', 'maxItems', and 'additionalItems'. For
-DeviceTree Schemas, a fixed size is desired in most cases, so these properties
-are added based on the size of 'items' list.
-
-The YAML DeviceTree format also makes all string values an array and scalar
-values a matrix (in order to define groupings) even when only a single value
-is present. Single entries in schemas are fixed up to match this encoding.
-
-### *Devicetree Meta-Schemas*
-
-Found in `./meta-schemas`
-
-*Devicetree Meta-Schemas* describe the data format of Devicetree Schema files.
-The Meta-schemas make sure all the binding schemas are in the correct format
-and the tool will emit an error if the format is incorrect.
-
-As a developer you normally will not need to write metaschema files.
-
-Devicetree Meta-Schema files are normal YAML files using the jsonschema vocabulary.
-
-## Usage
-There are several tools available in the *tools/* directory.
-
-tools/dt-doc-validate
-This tool takes a schema file(s) or directory of schema files and validates
-them against the DT meta-schema.
-
-tools/dt-mk-schema
-This tool takes user provided schema file(s) plus the core schema files in this
-repo, removes everything not needed for validation, applies fix-ups to the
-schemas, and outputs a single file with the processed schema. This step is
-done separately to speed up subsequent validation of YAML Devicetrees.
-
-tools/dt-validate
-This tool takes user provided YAML Devicetree(s) and either a schema directory
-or pre-processed schema file and validates the YAML Devicetree against the schema.
-
+For more information about the high level motivation for Pyro, check out our [launch blog post](http://eng.uber.com/pyro).
+For additional blog posts, check out work on [experimental design](https://eng.uber.com/oed-pyro-release/) and
+[time-to-event modeling](https://eng.uber.com/modeling-censored-time-to-event-data-using-pyro/) in Pyro.
 
 ## Installing
-The project and its dependencies can be installed with pip directly from git:
 
-```
-pip3 install git+https://github.com/devicetree-org/dt-schema.git@master
-```
+### Installing a stable Pyro release
 
-All executables will be installed. Ensure ~/.local/bin is in the PATH.
+**Install using pip:**
 
+Pyro supports Python 3.6+.
 
-For development, clone the git repository manually and run pip on local tree::
-
-```
-git clone https://github.com/devicetree-org/dt-schema.git
-cd dt-schema
-pip3 install -e .
+```sh
+pip install pyro-ppl
 ```
 
-## Dependencies
-Note: The above installation instructions handle all of the dependencies
-automatically.
-
-This code depends on Python 3 with the ruamel.yaml, rfc3987, and jsonschema
-libraries.
-
-On Debian/Ubuntu, the dependencies can be installed with apt and/or pip. The
-rfc3987 module is not packaged, so pip must be used:
-
-```
-apt-get install python3 python-ruamel.yaml
-pip3 install rfc3987
+**Install from source:**
+```sh
+git clone git@github.com:pyro-ppl/pyro.git
+cd pyro
+git checkout master  # master is pinned to the latest release
+pip install .
 ```
 
+**Install with extra packages:**
 
-### jsonschema
-This code depends on at least version 3.0.0 of the
-[Python jsonschema](https://github.com/Julian/jsonschema/tree/master)
-library for Draft 6 support.
-
-The module can be installed directly from github with pip:
-
+To install the dependencies required to run the probabilistic models included in the `examples`/`tutorials` directories, please use the following command:
+```sh
+pip install pyro-ppl[extras] 
 ```
-pip3 install git+https://github.com/Julian/jsonschema.git
+Make sure that the models come from the same release version of the [Pyro source code](https://github.com/pyro-ppl/pyro/releases) as you have installed.
+
+### Installing Pyro dev branch
+
+For recent features you can install Pyro from source.
+
+**Install Pyro using pip:**
+
+```sh
+pip install git+https://github.com/pyro-ppl/pyro.git
+```
+or, with the `extras` dependency to run the probabilistic models included in the `examples`/`tutorials` directories:
+```sh
+pip install git+https://github.com/pyro-ppl/pyro.git#egg=project[extras]
+```
+
+**Install Pyro from source:**
+
+```sh
+git clone https://github.com/pyro-ppl/pyro
+cd pyro
+pip install .  # pip install .[extras] for running models in examples/tutorials
+```
+
+## Running Pyro from a Docker Container
+
+Refer to the instructions [here](docker/README.md).
+
+## Citation
+If you use Pyro, please consider citing:
+```
+@article{bingham2019pyro,
+  author    = {Eli Bingham and
+               Jonathan P. Chen and
+               Martin Jankowiak and
+               Fritz Obermeyer and
+               Neeraj Pradhan and
+               Theofanis Karaletsos and
+               Rohit Singh and
+               Paul A. Szerlip and
+               Paul Horsfall and
+               Noah D. Goodman},
+  title     = {Pyro: Deep Universal Probabilistic Programming},
+  journal   = {J. Mach. Learn. Res.},
+  volume    = {20},
+  pages     = {28:1--28:6},
+  year      = {2019},
+  url       = {http://jmlr.org/papers/v20/18-403.html}
+}
 ```
