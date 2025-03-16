@@ -1,81 +1,62 @@
-import io
+# Copyright 2019 Adobe. All rights reserved.
+# This file is licensed to you under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License. You may obtain a copy
+# of the License at http://www.apache.org/licenses/LICENSE-2.0
 
-from setuptools import find_packages, setup
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
 
-version = '1.9.0.dev0'
+import os
+import sys
 
-# Please update tox.ini when modifying dependency version requirements
-install_requires = [
-    # load_pem_private/public_key (>=0.6)
-    # rsa_recover_prime_factors (>=0.8)
-    'cryptography>=0.8',
-    # Connection.set_tlsext_host_name (>=0.13)
-    'PyOpenSSL>=0.13',
-    # For pkg_resources. >=1.0 so pip resolves it to a version cryptography
-    # will tolerate; see #2599:
-    'setuptools>=1.0',
-]
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from distutils.core import setup, find_packages
 
-testing_requires = [
-    'coverage>=4.0',
-    'flake8',
-    'mypy',
-    'pytest-cov',
-    'pytest-flake8>=0.5',
-    'pytest>=2.8.0',
-]
+with open('README.md') as f:
+    _readme = f.read()
 
-dev_extras = [
-    'pytest',
-    'tox',
-]
-
-docs_extras = [
-    'Sphinx>=1.0',  # autodoc_member_order = 'bysource', autodoc_default_flags
-    'sphinx_rtd_theme',
-]
-
-
-with io.open('README.rst', encoding='UTF-8') as f:
-    long_description = f.read()
-
-
+_mydir = os.path.abspath(os.path.dirname(sys.argv[0]))
+_requires = [r for r in open(os.path.sep.join((_mydir, 'requirements.txt')), "r").read().split('\n') if len(r) > 1]
 setup(
-    name='josepy',
-    version=version,
-    description='JOSE protocol implementation in Python',
-    long_description=long_description,
-    url='https://github.com/certbot/josepy',
-    author="Certbot Project",
-    author_email='client-dev@letsencrypt.org',
-    license='Apache License 2.0',
-    python_requires='>=3.6',
+    name='ops-cli',
+    version='2.0.6',
+    description='Ops - wrapper for Terraform, Ansible, and SSH for cloud automation',
+    long_description=_readme + '\n\n',
+    long_description_content_type='text/markdown',
+    url='https://github.com/adobe/ops-cli',
+    python_requires='>=3.5',
+    author='Adobe',
+    author_email='noreply@adobe.com',
+    license='Apache2',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python',
+        'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Topic :: Internet :: WWW/HTTP',
-        'Topic :: Security',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Text Processing :: Markup :: HTML'
     ],
-
-    packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    include_package_data=True,
-    install_requires=install_requires,
-    extras_require={
-        'dev': dev_extras,
-        'docs': docs_extras,
-        'tests': testing_requires,
+    packages=find_packages('src'),
+    package_data={
+        '': ['data/ansible/*', 'data/ansible/tasks/*', 'data/ssh/*', 'data/terraform/*']
     },
+    install_requires=_requires,
     entry_points={
         'console_scripts': [
-            'jws = josepy.jws:CLI.run',
-        ],
-    },
+            'ops = ops.main:run'
+        ]
+    }
 )
