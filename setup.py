@@ -1,33 +1,24 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+""" Setup file. """
+
 from setuptools import find_packages, setup
 
+with open("README.rst", "r") as readme_file:
+    README = readme_file.read()
+
+exec(open("src/matching/version.py", "r").read())
+
 setup(
-    name="py-solc-x",
-    version="0.8.1",
-    description="""Python wrapper around the solc binary with 0.5.x and 0.6.x support""",
-    long_description_markdown_filename="README.md",
-    author="Ben Hauser (forked from py-solc by Piper Merriam)",
-    author_email="ben@hauser.id",
-    url="https://github.com/iamdefinitelyahuman/py-solc-x",
-    include_package_data=True,
-    py_modules=["solcx"],
-    setup_requires=["setuptools-markdown"],
-    python_requires=">=3.4, <4",
-    install_requires=["semantic_version>=2.8.1,<3", "requests>=2.19.0,<3"],
+    name="matching",
+    version=__version__,
+    description="A package for solving matching games.",
+    long_description=README,
+    url="https://github.com/daffidwilde/matching",
+    author="Henry Wilde",
+    author_email="henrydavidwilde@gmail.com",
     license="MIT",
-    zip_safe=False,
-    keywords="ethereum solidity solc",
-    packages=find_packages(exclude=["tests", "tests.*"]),
-    classifiers=[
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-    ],
+    keywords=["game-theory gale-shapley matching-games"],
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    python_requires=">=3.5",
+    tests_require=["pytest", "hypothesis", "numpy"],
 )
