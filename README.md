@@ -1,31 +1,15 @@
-FoxPuppet
-=========
+# sphinx-multiversion [![License][license-badge]][license][![Build][build-badge]][build][![pre-commit.ci][pre-commit-badge]][pre-commit]
 
-FoxPuppet is a library for automating user interactions in `Firefox <https://www.mozilla.org/en-US/firefox/products/>`_ using `Selenium <http://seleniumhq.org/>`_.
+Sphinx extension for building self-hosted versioned docs.
 
-.. image:: https://img.shields.io/badge/license-MPL%202.0-blue.svg
-   :target: https://github.com/mozilla/FoxPuppet/blob/master/LICENSE.txt
-   :alt: License
+This extension aims to provide a clean implementation that tries to avoid
+messing with Sphinx internals as much as possible.
 
-.. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
-   :target: http://foxpuppet.readthedocs.io/en/latest/
-   :alt: Read the Docs
+Documentation can be found at: <https://sphinx-contrib.github.io/multiversion/>
 
-.. image:: https://img.shields.io/travis/mozilla/FoxPuppet.svg
-   :target: https://travis-ci.org/mozilla/FoxPuppet/
-   :alt: Travis
-
-.. image:: https://img.shields.io/coveralls/mozilla/FoxPuppet.svg
-   :target: https://coveralls.io/github/mozilla/FoxPuppet
-   :alt: Coverage
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-  :target: https://github.com/ambv/black
-
-.. image:: https://img.shields.io/github/issues/mozilla/FoxPuppet.svg
-   :target: https://github.com/mozilla/FoxPuppet/issues
-   :alt: Issues
-
-.. image:: https://api.dependabot.com/badges/status?host=github&repo=mozilla/FoxPuppet
-   :target: https://dependabot.com
-   :alt: Dependabot
+[license]: https://github.com/sphinx-contrib/multiversion/blob/main/LICENSE
+[license-badge]: https://img.shields.io/github/license/sphinx-contrib/multiversion
+[build]: https://github.com/sphinx-contrib/multiversion/actions?query=branch%3Amain
+[build-badge]: https://img.shields.io/github/actions/workflow/status/sphinx-contrib/multiversion/build.yml?branch=main
+[pre-commit]: https://results.pre-commit.ci/latest/github/sphinx-contrib/multiversion/main
+[pre-commit-badge]: https://results.pre-commit.ci/badge/github/sphinx-contrib/multiversion/main.svg
