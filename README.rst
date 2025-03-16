@@ -1,73 +1,83 @@
-epydemic: Epidemic simulations on networks in Python
-=====================================================
+CVSS
+====
 
-.. image:: https://badge.fury.io/py/epydemic.svg
-    :target: https://badge.fury.io/py/epydemic
+This Python package contains CVSS v2 and v3 computation utilities and
+interactive calculator compatible with both Python 2 and Python 3.
 
-.. image:: https://readthedocs.org/projects/pyepydemic/badge/?version=latest
-    :target: https://pyepydemic.readthedocs.io/en/latest/index.html
-
-.. image:: https://api.travis-ci.com/simoninireland/epydemic.svg?branch=master
-    :target: http://travis-ci.com/github/simoninireland/epydemic
-
-.. image:: https://coveralls.io/repos/github/simoninireland/epydemic/badge.svg?branch=master
-    :target: https://coveralls.io/github/simoninireland/epydemic?branch=master
-
-
-Overview
---------
-
-``epydemic`` is a Python library that implements simulations of epidemic
-(and other) processes on networks. Epidemic processes are very
-important in both network science and its applications. The most
-common application is to study the ways in which diseases progress in
-different network conditions, depending on their infectiousness and
-other properties.
-
-``epydemic`` provides simulation under synchronous and stochastic (Gillespie) dynamics,
-using the well-known ``networkx`` package to represent and manipulate
-networks. It supports a generic model for compartmented models of
-disease with several standard models provided and which can be
-extended to other, more complex, diseases. It also supports other
-network processes such as addition-deletion networks.
-
-``epydemic`` is built on top of the ``epyc`` experiment management library,
-allowing simulations to be conducted at scale on individual machines,
-multicore machines, and parallel computing clusters.
-
+The library is tested on all currently-supported Python versions available
+via GitHub Actions (with the exception of Python 2.7, which is EOL but
+still tested against), but it is simple enough to run on even older versions.
 
 Installation
 ------------
 
-You can install ``epydemic`` directly from PyPi using ``pip``:
+::
+
+    # pip install cvss
+
+Usage
+-----
+
+Library
+~~~~~~~
+
+.. code-block:: python
+
+    from cvss import CVSS2, CVSS3
+
+
+    vector = 'AV:L/AC:L/Au:M/C:N/I:P/A:C/E:U/RL:W/RC:ND/CDP:L/TD:H/CR:ND/IR:ND/AR:M'
+    c = CVSS2(vector)
+    print(vector)
+    print(c.clean_vector())
+    print(c.scores())
+
+    print()
+
+    vector = 'CVSS:3.0/S:C/C:H/I:H/A:N/AV:P/AC:H/PR:H/UI:R/E:H/RL:O/RC:R/CR:H/IR:X/AR:X/MAC:H/MPR:X/MUI:X/MC:L/MA:X'
+    c = CVSS3(vector)
+    print(vector)
+    print(c.clean_vector())
+    print(c.scores())
+    print(c.severities())
+
+Sample output:
 
 ::
 
-   pip install epydemic
+   AV:L/AC:L/Au:M/C:N/I:P/A:C/E:U/RL:W/RC:ND/CDP:L/TD:H/CR:ND/IR:ND/AR:M
+   AV:L/AC:L/Au:M/C:N/I:P/A:C/E:U/RL:W/CDP:L/TD:H/AR:M
+   (5.0, 4.0, 4.6)
 
-The master distribution of ``epydemic`` is hosted on GitHub. To obtain a
-copy, just clone the repo:
+   CVSS:3.0/S:C/C:H/I:H/A:N/AV:P/AC:H/PR:H/UI:R/E:H/RL:O/RC:R/CR:H/IR:X/AR:X/MAC:H/MPR:X/MUI:X/MC:L/MA:X
+   CVSS:3.0/AV:P/AC:H/PR:H/UI:R/S:C/C:H/I:H/A:N/E:H/RL:O/RC:R/CR:H/MAC:H/MC:L
+   (6.5, 6.0, 5.3)
+   ('Medium', 'Medium', 'Medium')
+
+Interactive calculator
+~~~~~~~~~~~~~~~~~~~~~~
+
+For interactive calculator run the following:
 
 ::
-   
-    git clone git@github.com:simoninireland/epydemic.git
-    cd epydemic
-    python setup.py install
 
+    $ cvss_calculator
 
-   
-Documentation
--------------
+For help on the calculator options run:
 
-API documentation for `epydemic` is available on `ReadTheDocs <https://pyepydemic.readthedocs.io/en/latest/>`_
-(please note the slightly different project name).
+::
 
+    $ cvss_calculator --help
 
+Testing
+-------
 
-Author and license
-------------------
+For extensive testing, the test vectors were generated using official
+JavaScript generators and `cvsslib <https://github.com/ctxis/cvsslib>`_.
 
-Copyright (c) 2017-2020, Simon Dobson <simoninireland@gmail.com>
+To run all tests use the following script on a system with both Python 2 and Python 3 installed:
 
-Licensed under the `GNU General Public License v2 or later (GPLv2+) <http://www.gnu.org/licenses/gpl.html>`_.
+::
 
+    $ cd tests
+    $ bash run_tests.sh
