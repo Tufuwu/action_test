@@ -1,62 +1,43 @@
-from setuptools import setup, find_packages
-import os
-import version
+# Use the newer `setuptools.setup()`, if available.
+try:
+    from setuptools import setup
+    kw = {
+        'test_suite': 'tests',
+        'tests_require': ['astunparse'],
+    }
+except ImportError:
+    from distutils.core import setup
+    kw = {}
 
+setup(name='gast',  # gast, daou naer!
+      version='0.4.0',
+      packages=['gast'],
+      description='Python AST that abstracts the underlying Python version',
+      long_description='''
+A generic AST to represent Python2 and Python3's Abstract Syntax Tree(AST).
 
-readme_path = os.path.join(os.path.dirname(__file__), "README.rst")
-with open(readme_path, "r") as fp:
-    readme_text = fp.read()
-
-
-version_for_setup_py = version.get_project_version("pghoard/version.py")
-version_for_setup_py = ".dev".join(version_for_setup_py.split("-", 2)[:2])
-
-
-setup(
-    name="pghoard",
-    version=version_for_setup_py,
-    zip_safe=False,
-    packages=find_packages(exclude=["test"]),
-    install_requires=[
-        "cryptography",
-        "psycopg2 >= 2.0.0",
-        "pydantic",
-        "python-dateutil",
-        "python-snappy >= 0.5",
-        "requests >= 1.2.0",
-        "zstandard >= 0.11.1",
-    ],
-    extras_require={},
-    dependency_links=[],
-    package_data={},
-    entry_points={
-        "console_scripts": [
-            "pghoard = pghoard.pghoard:main",
-            "pghoard_archive_cleanup = pghoard.archive_cleanup:main",
-            "pghoard_archive_sync = pghoard.archive_sync:main",
-            "pghoard_create_keys = pghoard.create_keys:main",
-            "pghoard_gnutaremu = pghoard.gnutaremu:main",
-            "pghoard_postgres_command = pghoard.postgres_command:main",
-            "pghoard_restore = pghoard.restore:main",
-        ],
-    },
-    author="Hannu Valtonen",
-    author_email="hannu.valtonen@ohmu.fi",
-    license="Apache 2.0",
-    platforms=["POSIX", "MacOS"],
-    description="PostgreSQL automatic backup/restore service daemon",
-    long_description=readme_text,
-    url="https://github.com/aiven/pghoard/",
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: System Administrators",
-        "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Topic :: Database :: Database Engines/Servers",
-        "Topic :: Software Development :: Libraries",
-    ],
-)
+GAST provides a compatibility layer between the AST of various Python versions,
+as produced by ``ast.parse`` from the standard ``ast`` module.''',
+      author='serge-sans-paille',
+      author_email='serge.guelton@telecom-bretagne.eu',
+      url='https://github.com/serge-sans-paille/gast/',
+      license="BSD 3-Clause",
+      classifiers=['Development Status :: 4 - Beta',
+                   'Environment :: Console',
+                   'Intended Audience :: Developers',
+                   'License :: OSI Approved :: BSD License',
+                   'Natural Language :: English',
+                   'Programming Language :: Python :: 2',
+                   'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.4',
+                   'Programming Language :: Python :: 3.5',
+                   'Programming Language :: Python :: 3.6',
+                   'Programming Language :: Python :: 3.7',
+                   'Programming Language :: Python :: 3.8',
+                   'Programming Language :: Python :: 3.9',
+                   'Programming Language :: Python :: 3.10',
+                   ],
+      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+      **kw
+      )
