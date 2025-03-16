@@ -1,90 +1,242 @@
-# Spotify Lyrics
-[![Build Status](https://travis-ci.com/SimonIT/spotifylyrics.svg?branch=master)](https://travis-ci.com/SimonIT/spotifylyrics)
-[![Current Release](https://img.shields.io/github/release/SimonIT/spotifylyrics.svg)](https://github.com/SimonIT/spotifylyrics/releases)
-[![License](https://img.shields.io/github/license/SimonIT/spotifylyrics.svg)](https://github.com/SimonIT/spotifylyrics/blob/master/LICENSE)
-[![GitHub All Releases](https://img.shields.io/github/downloads/SimonIT/spotifylyrics/total)](https://github.com/SimonIT/spotifylyrics/releases)
+# Nautilus Terminal 3
 
-Fetches and displays lyrics to currently playing song in the Spotify desktop client.
+[![Build Status](https://travis-ci.org/flozz/nautilus-terminal.svg?branch=master)](https://travis-ci.org/flozz/nautilus-terminal)
+[![PYPI Version](https://img.shields.io/pypi/v/nautilus_terminal.svg)](https://pypi.python.org/pypi/nautilus_terminal)
+[![License](https://img.shields.io/pypi/l/nautilus_terminal.svg)](https://github.com/flozz/nautilus-terminal/blob/master/COPYING)
+[![Gitter](https://badges.gitter.im/gitter.svg)](https://gitter.im/nautilus-terminal/Lobby)
+
+> A terminal embedded in Nautilus, the GNOME's file browser
+
+**Nautilus Terminal** is a terminal embedded into Nautilus, the GNOME's file
+browser. It is always opened in the current folder, and follows the navigation
+(the `cd` command is automatically executed when you navigate to another
+folder).
+
+**NOTE:** This is a complete re-implementation of [my previous Nautilus
+Terminal plugin][old-nterm].
+
+**NOTE²:** This is an early development version, some feature are missing (see
+below).
+
+**Features:**
+
+* Embed a Terminal in each Nautilus tab / window,
+* Follow the navigation: if you navigate in Nautilus, the `cd` command is
+  automatically executed in the terminal,
+* Detects running process: if something is running in the terminal, the `cd`
+  command is not send to the shell,
+* Automatically respawn the shell if it exits,
+* Supports copy / paste from / to the terminal using
+  `Ctrl+Shift+C` / `Ctrl+Shift+V`,
+* Can be displayed / hidden using the `F4` key,
+* Supports drag & drop of file on the terminal,
+* Uses the default shell for the user.
+* ~~Allows to configure the terminal appearance (colors, font,...).~~ **TODO**
+
+**Requirements:**
+
+* [nautilus-python][] (`python-nautilus` or `python3-nautilus` package on Debian / Ubuntu)
+* [psutil][]
+
+![Nautilus Terminal Screenshot](./screenshot.png)
+
+If you want to read more about this project and its history, I wrote an article on my blog (it is in French, but Google Translate should help) : [Nautilus Terminal: The story of a complicated project](https://blog.flozz.fr/2018/12/17/nautilus-terminal-lhistoire-dun-projet-complique/).
 
 
-The lyrics are fetched from these sites:
+## Installing Nautilus Terminal
 
-rentanadviser.com (synchronized)
+### Fedora Package
 
-megalobiz.com (synchronized)
+    dnf copr enable tomaszgasior/mushrooms
+    dnf install nautilus-terminal
 
-syair.info (synchronized)
+### Ubuntu
 
-musixmatch.com
+We do not provide specific package for Ubuntu so you will have to install it from PYPI or from sources.... But first you will have to install some dependencies depending of your Ubuntu version.
 
-songmeanings.com
+#### Ubuntu 20.04 and later
 
-songlyrics.com
+Install dependencies:
 
-genius.com
+    sudo apt install python3-nautilus python3-pip
 
-versuri.ro
+Then, follow the instructions to install it from PYPI or from sources, but replace the `pip` command by `pip3`.
 
-AZLyrics.com
 
-# How to
+#### Ubuntu 19.10 and earlier
 
-You can grab the latest release in the [release section](https://github.com/SimonIT/spotifylyrics/releases).
+Install dependencies:
 
-## Windows
+    sudo apt install python-nautilus python-pip
 
-Download the .exe file.
+Then follow the instructions to install it from PYPI or from sources.
 
-Just double click and start playing songs in spotify.
 
-It is possible that a warning of windows smartscreen appears. It's because the exe is unsigned (see [#22](https://github.com/SimonIT/spotifylyrics/issues/22)). You can allow the program to open by clicking on "More info" and "Run anyway".
+### From PYPI
 
-If you get an error about api-ms-win-crt-runtime-l1-1-0.dll missing, you need this:
+User install:
 
-https://www.microsoft.com/en-us/download/details.aspx?id=48145
+    pip install --user nautilus_terminal
 
-If the window opens and closes immidiatly, feel free to help fxing the problem in [#21](https://github.com/SimonIT/spotifylyrics/issues/21).
+System-wide install:
 
-## Linux
+    sudo pip install nautilus_terminal
 
-Download the file without any file ending.
+Then kill Nautilus to allow it to load the new extension:
 
-Make it executable via terminal with `chmod +x SpotifyLyrics` or via you file manager.
+    nautilus -q
 
-Now you can double click the executable and start playing songs in spotify.
+If it does not work, try using the following command (from this repository):
 
-## MacOS
+    sudo tools/update-extension-user.sh install    # for a user install
+    sudo tools/update-extension-system.sh install  # for a system-wide install
 
-Download the .app.zip file.
 
-Extract the zip so you got a SpotifyLyrics.app directory.
+### From sources
 
-Make a right click on the SpotifyLyrics.app. Click on open and and you can bypass the warning. The program should open and you can play your songs in spotify.
+Clone the repositiory:
 
-# Running from source
-If you want to run from source you need:
+    git clone git@github.com:flozz/nautilus-terminal.git
+    cd nautilus-terminal
 
-* Python 3.6 (probably any version greater than Python 3.6)
-* pip install -r requirements.txt
+To install into your personal Python lib and your personal Nautilus python
+extension folders, run the following from your normal unprivileged account. Pip
+will select the `--user` scheme.
 
-## Ubuntu/Debian example:
-```
-sudo apt install python3-pip
-git clone https://github.com/SimonIT/spotifylyrics.git
-cd spotifylyrics/
-sudo pip3 install -r requirements.txt
-chmod +x SpotifyLyrics.pyw
-./SpotifyLyrics.pyw
-```
+    pip install .
 
-# How to load lyrics from hard drive
-You can store lyrics on you hard drive which can automatically loaded.
+To install for all users, run the command as root instead. Pip will select the
+`--system` scheme if you install this way. This drops everything into
+`/usr/local` instead, but nautilus-python doesn't look there for extensions
+(see upstream [bug 781232][]). So for the foreseeable future, system-wide
+installs need an extra step to make the extension available for all users.
 
-You have to put them on windows in `C:\Users\<User>\AppData\Roaming\SpotifyLyrics\lyrics` and on the other OS's in `/home/<User>/.SpotifyLyrics/lyrics`. Replace `<User>` with your username.
-  
-There you can put `.lrc` files with synced text (You can make them for example on [lrcgenerator.com](https://lrcgenerator.com/) or [www.megalobiz.com](https://www.megalobiz.com/lrc/maker)) or simple `.txt` files with non-synced text.
- 
-**Important: The file names must include the artist and the name of the song**
+    sudo pip install .
+    sudo tools/update-extension-system.sh install
 
-# Screenshot
-![example-img](https://i.imgur.com/2dUN17q.png)
+Then kill Nautilus to allow it to load the new extension:
+
+    nautilus -q
+
+
+## Uninstalling (source or PYPI packages)
+
+To uninstall the package, run:
+
+    pip uninstall nautilus-terminal
+
+If you installed it for all users:
+
+    sudo pip uninstall nautilus-terminal
+    sudo tools/update-extension-system.sh uninstall   # foreseeable future
+
+
+## Configuring
+
+Nautilus Terminal can be configured, but there is no GUI to configure it yet.
+Currently, configuration can be done through the **DConf Editor** tool: `dconf-editor /org/flozz/nautilus-terminal`
+
+![dconf-editor](./dconf-editor.png)
+
+
+## Hacking and Debug
+
+If you want work on this software, you will first have to install the
+[nautilus-python][] and [psutil][] packages. On Debian / Ubuntu, you will find
+it in the `python-nautilus` and `python-psutil` packages:
+
+    sudo apt install python-nautilus python-psutil
+
+This extension comes in two parts: a conventional Python module
+(`nautilus_terminal`), and a small bit of bootstrap code that's loaded by
+`python-nautilus` when Nautilus starts up (`nautilus_terminal_extension.py`).
+The bootstrap code must be installed where `python-nautilus` can find it before
+you can start making changes and testing them:
+
+    tools/update-extension-user.sh install         # Current user only…
+    sudo tools/update-extension-system.sh install  # … or, system-wide.
+
+When the bootstrap is loaded into Nautilus, it imports the Python module from
+either the normal `PYTHONPATH`, or from your working copy of this repository if
+the right debug environment is set.
+
+With the bootstrap installed, you can use the following script to test new code
+in Nautilus without having to reinstall the module:
+
+    tools/debug-in-nautilus.sh
+    tools/debug-in-nautilus.sh --no-bg  # keep Nautilus attached to the console
+
+When you start working on this extension, you will have to compile the
+GSettings schema (and you will have to recompile it each time you modify the
+`nautilus_terminal/schemas/org.flozz.nautilus-terminal.gschema.xml` file):
+
+    glib-compile-schemas nautilus_terminal/schemas
+
+Running lint and tests:
+
+    pip3 install nox
+    python3 -m nox --session lint
+    python3 -m nox --session test
+
+Happy hacking! :)
+
+
+## Release
+
+Things to do before releasing a new version:
+
+* Update version number in `nautilus_terminal/__init__.py`
+* Generate `README.rst` (requires pandoc): `tools/readme-to-rst.sh`
+* Compile GSetting schema: `glib-compile-schemas nautilus_terminal/schemas`
+
+
+## Changelog
+
+* **3.4.0:**
+    * Allows to configure the terminal toggle shortcut (#50, #43)
+    * Allows to configure terminal background and text color (#32)
+* **3.3.0:**
+    * New option to have the terminal at the bottom of the window (#35)
+* **3.2.3:**
+    * Fixes encoding with Python 3 (#29)
+* **3.2.2:**
+    * Fixes `VteTerminal.feed_child()` call (#12)
+    * Improves child process searching (@l-deniau, #14)
+* **3.2.1:** Add a missing dependency in setup.py
+* **3.2.0:** Add settings to Nautilus Terminal (#3)
+* **3.1.1:**
+    * Allow user install instead of system-wide (#1)
+    * Use the user's default shell instead of the hardcoded zsh (#2)
+    * Focus the terminal after drag & drop of file on it (#4)
+* **3.1.0:**
+    * File drag & drop support
+    * Hide the terminal in virtual emplacements (trash,...)
+    * Optimizations (do not spawn the shell / no "cd" if the shell is not
+      visible)
+* **3.0.1:** Script to convert the README to reStructuredText for PYPI
+* **3.0.0:** Initial Nautilus Terminal 3 release (early development version)
+
+
+## License GPLv3
+
+    Nautilus Terminal - A terminal embedded in the Nautilus file browser
+    Copyright (C) 2010-2020  Fabien LOISON <http://www.flozz.fr/>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+[old-nterm]: https://launchpad.net/nautilus-terminal
+[nautilus-python]: https://wiki.gnome.org/Projects/NautilusPython/
+[psutil]: https://pypi.python.org/pypi/psutil/
+[bug 781232]: https://bugzilla.gnome.org/show_bug.cgi?id=781232
