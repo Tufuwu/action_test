@@ -1,99 +1,93 @@
-# ALF
-<p align="center">
-    <img src="docs/images/logo.png" width = "500" alt="ALF-logo"/>
-</p>
+# Pjuu
 
-[![Build Status](https://api.travis-ci.org/HorizonRobotics/alf.svg?branch=master)](https://travis-ci.org/HorizonRobotics/alf)
+An open-source social networking application which runs https://pjuu.com
 
-Agent Learning Framework (ALF) is a reinforcement learning framework emphasizing on the flexibility and easiness of implementing complex algorithms involving many different components. ALF is built on [Tensorflow 2.1](https://www.tensorflow.org/).
+![](https://github.com/pjuu/pjuu/workflows/main/badge.svg?branch=master) [![codecov.io](http://codecov.io/github/pjuu/pjuu/coverage.svg?branch=master)](http://codecov.io/github/pjuu/pjuu?branch=master) [![Requirements Status](https://requires.io/github/pjuu/pjuu/requirements.svg?branch=master)](https://requires.io/github/pjuu/pjuu/requirements/?branch=master) [![License](https://img.shields.io/badge/license-AGPLv3-brightgreen.svg)](http://www.gnu.org/licenses/agpl-3.0.en.html)
 
-## Algorithms
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pjuu/pjuu?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-* [A2C](alf/algorithms/actor_critic_algorithm.py): [OpenAI Baselines: ACKTR & A2C](https://openai.com/blog/baselines-acktr-a2c/)
-* [DDPG](alf/algorithms/ddpg_algorithm.py): Lillicrap et al. "Continuous control with deep reinforcement learning" [arXiv:1509.02971](https://arxiv.org/abs/1509.02971)
-* [PPO](alf/algorithms/ppo_algorithm.py): Schulman et al. "Proximal Policy Optimization Algorithms" [arXiv:1707.06347](https://arxiv.org/abs/1707.06347)
-* [SAC](alf/algorithms/sac_algorithm.py): Haarnoja et al. "Soft Actor-Critic Algorithms and Applications" [arXiv:1812.05905](https://arxiv.org/abs/1812.05905)
-* [ICM](alf/algorithms/icm_algorithm.py): Pathak et al. "Curiosity-driven Exploration by Self-supervised Prediction" [arXiv:1705.05363](https://arxiv.org/abs/1705.05363)
-* [MERLIN](alf/algorithms/merlin_algorithm.py): Wayne et al. "Unsupervised Predictive Memory in a Goal-Directed Agent"[arXiv:1803.10760](https://arxiv.org/abs/1803.10760)
-* [Amortized SVGD](alf/algorithms/generator.py): Feng et al "Learning to Draw Samples with Amortized Stein Variational Gradient Descent"[arXiv:1707.06626](https://arxiv.org/abs/1707.06626)
-* [RND](alf/algorithms/rnd_algorithm.py): Burda et al "Exploration by Random Network Distillation" [arXiv:1810.12894](https://arxiv.org/abs/1810.12894)
-* [MINE](alf/algorithms/mi_estimator.py): Belghazi et al "Mutual Information Neural Estimation" [arXiv:1801.04062](https://arxiv.org/abs/1801.04062)
-* [DIAYN](alf/algorithms/diayn_algorithm.py): Eysenbach et al "Diversity is All You Need: Learning Diverse Skills without a Reward Function" [arXiv:1802.06070](https://arxiv.org/abs/1802.06070)
 
-## Installation
+This is an open source project released under the GNU AGPLv3 license. See LICENSE for more details or visit the official GNU page at http://www.gnu.org/licenses/agpl-3.0.html.
 
-You can run the following commands to install ALF
+### About
+
+This is the primary code base for https://pjuu.com, the website is deployed directly from this respository.
+
+The main goal of Pjuu as an application is privacy.
+
+Pjuu is written in Python3/Flask and uses Redis and MongoDB as the data stores.
+
+### Getting started
+
+Getting started with Pjuu or deploying it yourself is quite easy if you are familiar with Python. We will only cover development here and the following documentation is for Debian 9 (Stretch) Linux (we are big fans). Pjuu should work with and any other Linux distribution, however you will need to change the commands to fit your envionment. It has also been tested with FreeBSD, but this is beyond the scope of the README.
+
+For a fresh installation these commands will setup the environment:
+
 ```
-git clone https://github.com/HorizonRobotics/alf
-cd alf
-pip install -e .
-```
+$ sudo apt-get update
 
-## Examples
+$ sudo apt-get install build-essential python3-dev python-virtualenv python-setuptools libmagickwand-dev redis-server mongodb
 
-All the examples below are trained on a single machine Intel(R) Core(TM) i9-7960X CPU @ 2.80GHz with 32 CPUs and one RTX 2080Ti GPU.
+$ git clone https://github.com/pjuu/pjuu.git
 
-You can train model of the examples using the following command:
-```bash
-python -m alf.bin.train --gin_file=GIN_FILE --root_dir=LOG_DIR
-```
-GIN_FILE is the file of [gin configuration](https://github.com/google/gin-config).
-You can find sample gin configuration files for different tasks under directory
-[alf/examples](alf/examples). LOG_DIR is the directory when you want to store
-the training results.
+$ cd pjuu
 
-During training, you can use tensorboard to show the progress of training:
-```bash
-tensorboard --logdir=LOG_DIR
+$ virtualenv -p python3 venv
+
+$ source venv/bin/activate
+
+$ pip install -r requirements-dev.txt
 ```
 
-After training, you can visualize the trained model using the following command:
-```bash
-python -m alf.bin.play --root_dir=LOG_DIR
+#### Testing
+
+To run the unit tests with coverage the following commands can be used:
+
+```
+$ make test
 ```
 
-### A2C
-* [Cart pole](alf/examples/ac_cart_pole.gin). The training score took only 30 seconds to reach 200, using 8 environments.
+To obtain a code coverage report
 
-  <img src="alf/examples/ac_cart_pole.png" width="300" height="200" alt="breakout-training-curve"/> <img src="alf/examples/ac_cart_pole.gif" height="200" alt="cartpole-video"/>
+```
+$ make coverage
+```
 
-* [Atari games](alf/examples/ac_breakout.gin). Need to install python package atari-py for atari game environments. The evaluation score (by taking argmax of the policy) took 1.5 hours to reach 800 on Breakout, using 64 environments.
+Checking code quality and PEP8 compliance:
 
-  <img src="alf/examples/ac_breakout.png" width="300" height="200" alt="breakout-training-curve"/> <img src="alf/examples/ac_breakout.gif" width="150" height="200" alt="breakout-playing-screen"/>
+```
+$ make flake
+```
 
-* [Simple navigation with visual input](alf/examples/ac_simple_navigation.gin). Follow the instruction at [SocialRobot](https://github.com/HorizonRobotics/SocialRobot) to install the environment.
+#### Development server
 
-  <img src="alf/examples/ac_simple_navigation.png" width="300" height="200" alt="simple-navigation-curve"/> <img src="alf/examples/ac_simple_navigation.gif" height="200" alt="simple0navigation-video"/>
+To Run the development server (Gunicorn with Gevent) type the following command:
 
-### PPO
-* [PR2 grasping state only](alf/examples/ppo_pr2.gin). Follow the instruction at [SocialRobot](https://github.com/HorizonRobotics/SocialRobot) to install the environment.
+```
+$ make run
+```
 
-  <img src="alf/examples/ppo_pr2.png" width="300" height="200" alt="ppo-pr2-curve"/> <img src="alf/examples/ppo_pr2.gif" height="200" alt="pr2-video"/>
+You can then view the site by visiting: http://localhost:5000
 
+You can now play with the code base :)
 
-* [Humonoid](alf/examples/async_ppo_bullet_humanoid.gin). Learning to walk using the pybullet Humanoid environment. Need to install python pybullet>=2.5.0 for the environment. The training score took [1 hour 40 minutes](docs/async_training.md) to reach 2k, using asynchronous training with 2 actors (192 environments).
+#### Creating test accounts
 
-  <img src="alf/examples/async_ppo_bullet_humanoid.png" width = "300" height ="200" alt="Humanoid-training-curve"/> <img src="alf/examples/async_ppo_bullet_humanoid.gif" width = "300" height ="200" alt="Humanoid-video"/>
+**IMPORTANT Note:**
+While testing You do NOT need to setup an SMTP server. To activate your account you can look in the response header for X-Pjuu-Token. If you copy this and visit `/activate/<token>` that will have the same effect as clicking the link in the activate account email. The same applies for any other action requiring confirmation (forgotten password), it will however be a different URL you need to append the token to.
 
-### SAC
-* [Bipedal Walker](alf/examples/sac_bipedal_walker.gin).
+This only works if `TESTING = True` in your settings.
 
-  <img src="alf/examples/sac_bipedal_walker.png" width = "300" height ="200" alt="bipedal-walker-training-curve"/> <img src="alf/examples/sac_bipedal_walker.gif" width = "300" height ="200" alt="bipedal-walker-video"/>
+### Contributing
 
-### ICM
-* [Super Mario](alf/examples/icm_super_mario_intrinsic_only.gin). Playing Super Mario only using intrinsic reward.
-  Python package gym-retro>=0.7.0 is required for this experiment and also a suitable `SuperMarioBros-Nes` rom should be obtained and imported (roms are not included in gym-retro). See [this doc](https://retro.readthedocs.io/en/latest/getting_started.html#importing-roms) on how to import roms.
+We are open to all pull requests. Spend some time taking a look around, locate a bug, design issue or spelling mistake then send us a pull request :)
 
-  <img src="alf/examples/icm_super_mario_intrinsic_only.png" width = "300" height ="200" alt="super-mario-training-curve"/> <img src="alf/examples/icm_super_mario_intrinsic_only.gif" width = "300" height ="200" alt="super-mario-video"/>
+### Security
 
-### DIAYN
-* [Pendulum](alf/examples/diayn_pendulum.gin). Learning diverse skills without external reward.
+All software has bugs in and Pjuu is no different. These may have security implications. If you find one that you suspect could allow you to do something you shouldn't be able to please do not post it as an issue on Github. We would really appreciate it if you could send an e-mail to security@pjuu.com with the relevant details.
 
-  <img src="alf/examples/diayn_pendulum.gif" width = "600" alt="Skills learned with DIAYN"/>
+### Credits
 
+James Rand - illustrating the original Otter logo.
 
-### Merlin
-* [Collect Good Objects](alf/examples/merlin_dmlab_collect_good_objects.gin). Learn to collect good objects and avoid bad objects.
-  `DeepmindLab` is required,  Follow the instruction at [DeepmindLab](https://github.com/deepmind/lab/blob/master/python/pip_package/README.md) to install the environment.
-
-  <img src="alf/examples/merlin_dmlab_collect_good_objects.png" width = "300" height ="200" alt="room-collect-good-objects-training-curve"/> <img src="alf/examples/merlin_dmlab_collect_good_objects.gif" width = "300" height ="200" alt="room-collect-good-objects"/>
+Jonathan Trengrove - modernizing the Otter logo.
