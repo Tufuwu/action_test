@@ -1,228 +1,391 @@
-# django-prometheus
+# pynytimes
 
-Export Django monitoring metrics for Prometheus.io
+[<img src="https://raw.githubusercontent.com/michadenheijer/pynytimes/main/.github/poweredby_nytimes.png" height="20px">](https://developer.nytimes.com/) [![Build Status](https://travis-ci.com/michadenheijer/pynytimes.svg?token=8nhCHVYqgufX65p8PRDx&branch=main)](https://travis-ci.com/michadenheijer/pynytimes) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pynytimes)](https://pypi.org/project/pynytimes/) [![PyPI](https://img.shields.io/pypi/v/pynytimes)](https://pypi.org/project/pynytimes/) [![Downloads](https://pepy.tech/badge/pynytimes)](https://pepy.tech/project/pynytimes) [![Maintainability](https://api.codeclimate.com/v1/badges/7a5ad012587ba707271c/maintainability)](https://codeclimate.com/github/michadenheijer/pynytimes/maintainability)
 
-[![Join the chat at https://gitter.im/django-prometheus/community](https://badges.gitter.im/django-prometheus/community.svg)](https://gitter.im/django-prometheus/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Use all (actually most) New York Times APIs, get all the data you need from the Times!
 
-[![PyPI version](https://badge.fury.io/py/django-prometheus.svg)](http://badge.fury.io/py/django-prometheus)
-[![Build Status](https://github.com/korfuri/django-prometheus/actions/workflows/ci.yml/badge.svg)](https://github.com/korfuri/django-prometheus/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/korfuri/django-prometheus/badge.svg?branch=master)](https://coveralls.io/github/korfuri/django-prometheus?branch=master)
-[![PyPi page link -- Python versions](https://img.shields.io/pypi/pyversions/django-prometheus.svg)](https://pypi.python.org/pypi/django-prometheus)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+## Installation
 
-## Features
+There are multiple options to install and ugprade pynytimes, but the easiest is by just installing it using ```pip``` (or ```pip3```).
+### Linux and Mac
 
-This library provides Prometheus metrics for Django related operations:
+```bash
+pip install --upgrade pynytimes
+```
 
-* Requests & Responses
-* Database access done via [Django ORM](https://docs.djangoproject.com/en/3.0/topics/db/)
-* Cache access done via [Django Cache framework](https://docs.djangoproject.com/en/3.0/topics/cache/)
+### Windows
+
+```shell
+python -m pip install --upgrade pynytimes
+```
+
+### Development
+
+You can also install ```pynytimes``` manually from GitHub itself. This can be done by cloning this repository first, and then installing it using Python. *This might install an unreleased version, installation using this method is only advised if you want to modify the code or help maintain this library.*
+
+```bash
+git clone https://github.com/michadenheijer/pynytimes.git
+cd pynytimes
+python setup.py install
+```
+
+### Older Python versions
+
+The current version of ```pynytimes``` only supports the most recent Python versions (3.8, 3.9, and 3.10) however you still might be running older versions of Python. Luckily most of ```pynytimes``` features are still available. In the table below you can see which version of ```pynytimes``` still supports your Python version.
+
+| Python version | ```pynytimes``` version | Missing features                             |
+|----------------|-------------------------|----------------------------------------------|
+| 3.7            | ```0.7.0```             | Some type hints, small bugfixes              |
+| 3.6            | ```0.6.1```             | Type hints, small bugfixes, ```with``` usage |
+| 3.5            | ```0.4.2```             | Times Tags, no date parsing                  |
+
+You can install an older version by ```pip install --upgrade pynytimes==0.7.0```.
 
 ## Usage
 
-### Requirements
-
-* Django >= 2.2
-
-### Installation
-
-Install with:
-
-```shell
-pip install django-prometheus
-```
-
-Or, if you're using a development version cloned from this repository:
-
-```shell
-python path-to-where-you-cloned-django-prometheus/setup.py install
-```
-
-This will install [prometheus_client](https://github.com/prometheus/client_python) as a dependency.
-
-### Quickstart
-
-In your settings.py:
+You can easily import this library using:
 
 ```python
-INSTALLED_APPS = [
-   ...
-   'django_prometheus',
-   ...
-]
-
-MIDDLEWARE = [
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
-    # All your other middlewares go here, including the default
-    # middlewares like SessionMiddleware, CommonMiddleware,
-    # CsrfViewmiddleware, SecurityMiddleware, etc.
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
-]
+from pynytimes import NYTAPI
 ```
 
-In your urls.py:
+Then you can simply add your API key (get your API key from [The New York Times Dev Portal](https://developer.nytimes.com/)):
 
 ```python
-urlpatterns = [
-    ...
-    path('', include('django_prometheus.urls')),
-]
+nyt = NYTAPI("Your API key", parse_dates=True)
 ```
 
-### Configuration
+**Make sure that if you commit your code to GitHub you [don't accidentially commit your API key](https://towardsdatascience.com/how-to-hide-your-api-keys-in-python-fb2e1a61b0a0).**
 
-Prometheus uses Histogram based grouping for monitoring latencies. The default
-buckets are here: https://github.com/prometheus/client_python/blob/master/prometheus_client/core.py
+| Variables        | Description                                                           | Data type                       | Required | Default                   |
+|------------------|-----------------------------------------------------------------------|---------------------------------|----------|---------------------------|
+| ```key```        | The API key from [The New York Times](https://developer.nytimes.com/) | ```str```                       | True     | ```None```                |
+| ```https```      | Use [HTTPS](https://en.wikipedia.org/wiki/HTTPS)                      | ```bool```                      | False    | ```True```                |
+| ```session```    | Optionally set your own ```request.session```                         | ```requests.sessions.Session``` | False    | ```requests.Session()```  |
+| ```backoff```    | Enable [exponential backoff](https://en.wikipedia.org/wiki/Exponential_backoff) | ```bool```            | False    | ```True```                |
+| ```user_agent``` | Set the [User Agent](https://en.wikipedia.org/wiki/User_agent)        | ```str```                       | False    | ```pynytimes/[version]``` |
+| ```parse_dates```| Enable the parsing of dates into ```datetime.datetime``` or ```datetime.date``` objects | ```bool```    | False    | ```False```               |
 
-You can define custom buckets for latency, adding more buckets decreases performance but
-increases accuracy: https://prometheus.io/docs/practices/histograms/
+### Supported APIs
+
+When you have imported this library you can use the following features from the New York Times API.
+
+- [Top stories](#top-stories)
+- [Most viewed articles](#most-viewed-articles)
+- [Most shared articles](#most-shared-articles)
+- [Article search](#article-search)
+- [Book reviews](#book-reviews)
+- [Movie reviews](#movie-reviews)
+- [Best sellers lists](#best-sellers-lists)
+- [Article metadata (Times Wire)](#article-metadata)
+- [Load latest articles (Times Wire)](#load-latest-articles)
+- [Tag query (TimesTags)](#tag-query)
+- [Archive metadata](#archive-metadata)
+
+### Top stories
+
+You can request the top stories from the New York Times. You can also get the top stories from a specific section.
 
 ```python
-PROMETHEUS_LATENCY_BUCKETS = (.1, .2, .5, .6, .8, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 9.0, 12.0, 15.0, 20.0, 30.0, float("inf"))
+top_stories = nyt.top_stories()
+
+# Get all the top stories from a specific category
+top_science_stories = nyt.top_stories(section = "science")
 ```
 
-### Monitoring your databases
+| Variables       | Description                             | Data type       | Required |
+|-----------------|-----------------------------------------|-----------------|----------|
+| ```section```   | Get Top Stories from a specific section | ```str```       | False    |
 
-SQLite, MySQL, and PostgreSQL databases can be monitored. Just
-replace the `ENGINE` property of your database, replacing
-`django.db.backends` with `django_prometheus.db.backends`.
+The possible sections are: ```arts```, ```automobiles```, ```books```, ```business```, ```fashion```, ```food```, ```health```, ```home```, ```insider```, ```magazine```, ```movies```, ```national```, ```nyregion```, ```obituaries```, ```opinion```, ```politics```, ```realestate```, ```science```, ```sports```, ```sundayreview```, ```technology```, ```theater```, ```tmagazine```, ```travel```, ```upshot```, and ```world```.
+
+### Most viewed articles
+
+The New York Times API can provide the most popular articles from the last day, week or month.
 
 ```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django_prometheus.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+most_viewed = nyt.most_viewed()
+
+# Get most viewed articles of last 7 or 30 days
+most_viewed = nyt.most_viewed(days = 7)
+most_viewed = nyt.most_viewed(days = 30)
+```
+
+| Variables       | Description                                                              | Data type       | Required | Default |
+|-----------------|--------------------------------------------------------------------------|-----------------|----------|---------|
+| ```days```      | Get most viewed articles over the last ```1```, ```7``` or ```30``` days | ```int```       | False    | ```1``` |
+
+### Most shared articles
+
+Not only can you request the most viewed articles from the New York Times API, you can also request the most shared articles. You can even request the articles that are most shared by email and Facebook. You can get the most shared articles per day, week or month.
+
+```python
+most_shared = nyt.most_shared()
+
+# Get most emailed articles of the last day
+most_shared = myt.most_shared(
+    days = 1,
+    method = "email"
+)
+
+# Get most shared articles to Facebook of the last 7 days
+most_shared = nyt.most_shared(
+    days = 7,
+    method = "facebook"    
+)
+
+# Get most shared articles to Facebook of the last 30 days
+most_shared = nyt.most_shared(
+    days = 30,
+    method = "facebook"
+)
+```
+
+| Variables       | Description                                                              | Data type       | Required | Default       |
+|-----------------|--------------------------------------------------------------------------|-----------------|----------|---------------|
+| ```days```      | Get most viewed articles over the last ```1```, ```7``` or ```30``` days | ```int```       | False    | ```1```       |
+| ```method```    | Method of sharing (```email``` or ```facebook```)                        | ```str```       | False    | ```"email"``` |
+
+### Article search
+
+You can also search all New York Times articles. Optionally you can define your search query (using the ```query``` option), the amount of results (using ```results```) and the amount of results you'd like. You can even add more options so you can filter the results.
+
+```python
+import datetime
+
+articles = nyt.article_search(
+    query = "Obama",
+    results = 30,
+    dates = {
+        "begin": datetime.datetime(2019, 1, 31),
+        "end": datetime.datetime(2019, 2, 28)
     },
-}
-```
-
-### Monitoring your caches
-
-Filebased, memcached, redis caches can be monitored. Just replace
-the cache backend to use the one provided by django_prometheus
-`django.core.cache.backends` with `django_prometheus.cache.backends`.
-
-```python
-CACHES = {
-    'default': {
-        'BACKEND': 'django_prometheus.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/django_cache',
+    options = {
+        "sort": "oldest",
+        "sources": [
+            "New York Times",
+            "AP",
+            "Reuters",
+            "International Herald Tribune"
+        ],
+        "news_desk": [
+            "Politics"
+        ],
+        "type_of_material": [
+            "News Analysis"
+        ]
     }
-}
+)
 ```
 
-### Monitoring your models
+| Variables                   | Description                                                                           | Data type       | Required |
+|-----------------------------|---------------------------------------------------------------------------------------|-----------------|----------|
+| ```query```                 | What you want to search for                                                           | ```str```       | False    |
+| ```results```               | The amount of results that you want to receive (returns a multiple of 10)             | ```int```       | False    |
+| [```dates```](#dates)       | A dictionary of the dates you'd like the results to be between                        | ```dict```      | False    |
+| [```options```](#options)   | A dictionary of additional options                                                    | ```dict```      | False    |
 
-You may want to monitor the creation/deletion/update rate for your
-model. This can be done by adding a mixin to them. This is safe to do
-on existing models (it does not require a migration).
+#### ```dates```
 
-If your model is:
+| Variables       | Description                                        | Data type                                      | Required |
+|-----------------|----------------------------------------------------|------------------------------------------------|----------|
+| ```begin```     | Results should be published at or after this date  | ```datetime.datetime``` or ```datetime.date``` | False    |
+| ```end```       | Results should be published at or before this date | ```datetime.datetime``` or ```datetime.date``` | False    |
+
+#### ````options````
+
+| Variables               | Description                                                                                                     | Data type       | Required |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------|-----------------|----------|
+| ```sort```              | How you want the results to be sorted (```oldest```, ```newest``` or ```relevance```)                           | ```str```       | False    |
+| ```sources```           | Results should be from one of these sources                                                                     | ```list```      | False    |
+| ```news_desk```         | Results should be from one of these news desks ([valid options](VALID_SEARCH_OPTIONS.md#news-desk-values))      | ```list```      | False    |
+| ```type_of_material```  | Results should be from this type of material ([valid options](VALID_SEARCH_OPTIONS.md#type-of-material-values)) | ```list```      | False    |
+| ```section_name```      | Results should be from this section ([valid options](VALID_SEARCH_OPTIONS.md#section-name-values))              | ```list```      | False    |
+
+### Book reviews
+
+You can easily find book reviews for every book you've read. You can find those reviews by searching for the author, ISBN or title of the book.
 
 ```python
-class Dog(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    breed = models.CharField(max_length=100, blank=True, null=True)
-    age = models.PositiveIntegerField(blank=True, null=True)
+# Get reviews by author (first and last name)
+reviews = nyt.book_reviews(author = "George Orwell")
+
+# Get reviews by ISBN
+reviews = nyt.book_reviews(isbn = 9780062963673)
+
+# Get book reviews by title
+reviews = nyt.book_reviews(title = "Becoming")
 ```
 
-Just add the `ExportModelOperationsMixin` as such:
+| Variables     | Description                       | Data type | Required           |
+|---------------|-----------------------------------|-----------|--------------------|
+| ```author```  | Reviews of books from this author | ```str``` | One of these three |
+| ```isbn```    | Reviews of books with this ISBN   | ```str``` | One of these three |
+| ```title```   | Reviews of books with this title  | ```str``` | One of these three |
+
+### Movie reviews
+
+You can not only get the book reviews, but the movie reviews too.
 
 ```python
-from django_prometheus.models import ExportModelOperationsMixin
+import datetime
 
-class Dog(ExportModelOperationsMixin('dog'), models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    breed = models.CharField(max_length=100, blank=True, null=True)
-    age = models.PositiveIntegerField(blank=True, null=True)
+reviews = nyt.movie_reviews(
+    keyword = "Green Book",
+    options = {
+        "order": "by-opening-date",
+        "reviewer": "A.O. Scott",
+        "critics_pick": False
+    },
+    dates = {
+        "opening_date_start": datetime.datetime(2017, 1, 1),
+        "opening_date_end": datetime.datetime(2019, 1, 1),
+        "publication_date_start": datetime.datetime(2017, 1, 1),
+        "publication_date_end": datetime.datetime(2019, 1, 1)
+})
 ```
 
-This will export 3 metrics, `django_model_inserts_total{model="dog"}`,
-`django_model_updates_total{model="dog"}` and
-`django_model_deletes_total{model="dog"}`.
+| Variables     | Description                          | Data type  | Required           |
+|---------------|--------------------------------------|------------|--------------------|
+| ```keyword``` | Reviews of movies with this keyword  | ```str```  | False              |
+| ```options``` | Dictionary of search options         | ```dict``` | False              |
+| ```dates```   | Dictionary of dates about the review | ```dict``` | False              |
 
-Note that the exported metrics are counters of creations,
-modifications and deletions done in the current process. They are not
-gauges of the number of objects in the model.
+#### ```options```
 
-Starting with Django 1.7, migrations are also monitored. Two gauges
-are exported, `django_migrations_applied_by_connection` and
-`django_migrations_unapplied_by_connection`. You may want to alert if
-there are unapplied migrations.
+| Variables          | Description                                                                                 | Data type   | Required |
+|--------------------|---------------------------------------------------------------------------------------------|-------------|----------|
+| ```order```        | How to sort the results (```by-title```, ```by-publication-date```or ```by-opening-date```) | ```str```   | False    |
+| ```reviewer```     | Name of the reviewer                                                                        | ```str```   | False    |
+| ```critics_pick``` | Only return critics' pick if ```True```                                                     | ```bool```  | False    |
 
-If you want to disable the Django migration metrics, set the
-`PROMETHEUS_EXPORT_MIGRATIONS` setting to False.
+#### ```dates```
 
-### Monitoring and aggregating the metrics
+| Variables                    | Description                                           | Data type                | Required |
+|------------------------------|-------------------------------------------------------|--------------------------|----------|
+| ```opening_date_start```     | Reviews about movies released at or after this date   | ```datetime.datetime```  | False    |
+| ```opening_date_end```       | Reviews about movies released at or before this date  | ```datetime.datetime```  | False    |
+| ```publication_date_start``` | Reviews released at or after this date                | ```datetime.datetime```  | False    |
+| ```publication_date_end```   | Reviews released at or before this date               | ```datetime.datetime```  | False    |
 
-Prometheus is quite easy to set up. An example prometheus.conf to
-scrape `127.0.0.1:8001` can be found in `examples/prometheus`.
+### Best sellers lists
 
-Here's an example of a PromDash displaying some of the metrics
-collected by django-prometheus:
-
-![Example dashboard](https://raw.githubusercontent.com/korfuri/django-prometheus/master/examples/django-promdash.png)
-
-## Adding your own metrics
-
-You can add application-level metrics in your code by using
-[prometheus_client](https://github.com/prometheus/client_python)
-directly. The exporter is global and will pick up your metrics.
-
-To add metrics to the Django internals, the easiest way is to extend
-django-prometheus' classes. Please consider contributing your metrics,
-pull requests are welcome. Make sure to read the Prometheus best
-practices on
-[instrumentation](http://prometheus.io/docs/practices/instrumentation/)
-and [naming](http://prometheus.io/docs/practices/naming/).
-
-## Importing Django Prometheus using only local settings
-
-If you wish to use Django Prometheus but are not able to change
-the code base, it's possible to have all the default metrics by
-modifying only the settings.
-
-First step is to inject prometheus' middlewares and to add
-django_prometheus in INSTALLED_APPS
+The New York Times has multiple best sellers lists. You can easily request those lists using this library.
 
 ```python
-MIDDLEWARE = \
-    ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + \
-    MIDDLEWARE + \
-    ['django_prometheus.middleware.PrometheusAfterMiddleware']
+# Get all the available New York Times best sellers lists
+lists = nyt.best_sellers_lists()
 
-INSTALLED_APPS += ['django_prometheus']
+# Get fiction best sellers list
+books = nyt.best_sellers_list()
+
+# Get non-fiction best sellers list
+books = nyt.best_sellers_list(
+    name = "combined-print-and-e-book-nonfiction"
+)
+
+# Get best sellers lists from other date
+import datetime
+
+books = nyt.best_sellers_list(
+    name = "combined-print-and-e-book-nonfiction",
+    date = datetime.datetime(2019, 1, 1)
+)
 ```
 
-Second step is to create the /metrics end point, for that we need
-another file (called urls_prometheus_wrapper.py in this example) that
-will wraps the apps URLs and add one on top:
+| Variables   | Description               | Data type               | Required | Default                                   |
+|-------------|---------------------------|-------------------------|----------|-------------------------------------------|
+| ```name```  | Name of best sellers list | ```str```               | False    | ```"combined-print-and-e-book-fiction"``` |
+| ```date```  | Date of best sellers list | ```datetime.datetime``` | False    | Today                                     |
+
+### Article metadata
+
+With an URL from a New York Times article you can easily get all the metadata you need from it.
 
 ```python
-from django.conf.urls import include, url
-
-
-urlpatterns = []
-
-urlpatterns.append(url('prometheus/', include('django_prometheus.urls')))
-urlpatterns.append(url('', include('myapp.urls')))
+metadata = nyt.article_metadata(
+    url = "https://www.nytimes.com/2019/10/20/world/middleeast/erdogan-turkey-nuclear-weapons-trump.html"
+)
 ```
 
-This file will add a "/prometheus/metrics" end point to the URLs of django
-that will export the metrics (replace myapp by your project name).
+| Variables | Description        | Data type  | Required |
+|-----------|--------------------|------------|----------|
+| ```url``` | URL of the article | ```str```  | True     |
 
-Then we inject the wrapper in settings:
+### Load latest articles
+
+You can easily load the latest articles published by the New York Times.
 
 ```python
-ROOT_URLCONF = "graphite.urls_prometheus_wrapper"
+latest = nyt.latest_articles(
+    source = "nyt",
+    section = "books"
+)
 ```
 
-## Adding custom labels to middleware (request/response) metrics
+| Variables     | Description                                              | Data type  | Required | Default     |
+|---------------|----------------------------------------------------------|------------|----------|-------------|
+| ```source```  | Source of article (```all```, ```nyt``` and ```inyt```)  | ```str```  | False    | ```"all"``` |
+| ```section``` | Section of articles                                      | ```str```  | False    |             |
 
-You can add application specific labels to metrics reported by the django-prometheus middleware.
-This involves extending the classes defined in middleware.py.
+You can find all possible sections using:
 
-* Extend the Metrics class and override the `register_metric` method to add the application specific labels.
-* Extend middleware classes, set the metrics_cls class attribute to the the extended metric class and override the label_metric method to attach custom metrics.
+```python
+sections = nyt.section_list()
+```
 
-See implementation example in [the test app](django_prometheus/tests/end2end/testapp/test_middleware_custom_labels.py#L19-L46)
+### Tag query
+
+The New York Times has their own tags library. You can query this library with this API.
+
+```python
+tags = nyt.tag_query(
+    "pentagon",
+    max_results = 20
+)
+```
+
+| Variables            | Description                | Data type  | Required | Default  |
+|----------------------|----------------------------|------------|----------|----------|
+| ```query```          | Tags you're looking for    | ```str```  | True     |          |
+| ```max_results```    | Maximum results you'd like | ```int```  | False    | ```20``` |
+| ```filter_options``` | Filter options             | ```list``` | False    |          |
+
+### Archive metadata
+
+If you want to load all the metadata from a specific month, then this API makes that possible. Be aware you'll download a big JSON file (about 20 Mb), so it can take a while.
+
+```python
+import datetime
+
+data = nyt.archive_metadata(
+    date = datetime.datetime(2019, 1, 1)
+)
+```
+
+| Variables  | Description                       | Data type               | Required |
+|------------|-----------------------------------|-------------------------|----------|
+| ```date``` | Date of month of all the metadata | ```datetime.datetime``` | True     |
+
+### Close session
+
+Optionally you close the ```requests.Session()``` connection with the New York Times server.
+
+```python
+nyt.close()
+```
+
+### ```with``` usage
+
+If you want to auto close the connection then usage using the ```with``` statement is supported.
+
+```python
+with NYTAPI("Your API Key", parse_dates=True) as nyt:
+    nyt.most_viewed()
+```
+
+## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Disclaimer**: *This project is not made by anyone from the New York Times, nor is it affiliated with The New York Times Company.*
