@@ -1,49 +1,56 @@
-# -*- coding: utf-8 -*-
+# Copyright 2017-2021 Lawrence Livermore National Security, LLC and other
+# Hatchet Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
 
-import codecs
+from setuptools import setup
+from setuptools import Extension
+from codecs import open
+from os import path
 
-from setuptools import find_packages, setup
+here = path.abspath(path.dirname(__file__))
 
+# Get the long description from the README file
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
-def long_description():
-    with codecs.open('README.rst', encoding='utf8') as f:
-        return f.read()
+# Get the version in a safe way which does not refrence hatchet `__init__` file
+# per python docs: https://packaging.python.org/guides/single-sourcing-package-version/
+version = {}
+with open("./hatchet/version.py") as fp:
+    exec(fp.read(), version)
 
 
 setup(
-    name="django-allauth-2fa",
-    version="0.8",
-    packages=find_packages('.', include=('allauth_2fa', 'allauth_2fa.*')),
-    include_package_data=True,
-    install_requires=[
-        "django>=1.11",
-        "qrcode>=5.3",
-        "django-allauth>=0.25",
-        "django-otp>=0.3.12",
-    ],
-    author="Víðir Valberg Guðmundsson",
-    author_email="valberg@orn.li",
-    description="Adds two factor authentication to django-allauth",
-    license="Apache 2.0",
-    keywords=['otp', 'auth', 'two factor authentication', 'allauth', 'django', '2fa'],
-    url="https://github.com/percipient/django-allauth-2fa",
-    long_description=long_description(),
+    name="hatchet",
+    version=version["__version__"],
+    description="A Python library for analyzing hierarchical performance data",
+    url="https://github.com/hatchet/hatchet",
+    author="Abhinav Bhatele",
+    author_email="bhatele@cs.umd.edu",
+    license="MIT",
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Environment :: Web Environment',
-        'Topic :: Internet',
-        'Framework :: Django',
-        'Framework :: Django :: 1.11',
-        'Framework :: Django :: 2.2',
-        'Framework :: Django :: 3.0',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'License :: OSI Approved :: Apache Software License',
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: MIT License",
     ],
-    python_requires=">=3.6",
+    keywords="",
+    packages=[
+        "hatchet",
+        "hatchet.readers",
+        "hatchet.util",
+        "hatchet.external",
+        "hatchet.tests",
+        "hatchet.cython_modules.libs",
+    ],
+    install_requires=["pydot", "PyYAML", "matplotlib", "numpy", "pandas"],
+    ext_modules=[
+        Extension(
+            "hatchet.cython_modules.libs.reader_modules",
+            ["hatchet/cython_modules/reader_modules.c"],
+        ),
+        Extension(
+            "hatchet.cython_modules.libs.graphframe_modules",
+            ["hatchet/cython_modules/graphframe_modules.c"],
+        ),
+    ],
 )

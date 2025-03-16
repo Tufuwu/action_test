@@ -1,13 +1,11 @@
+# -*- conf -*-
+# flake8 settings for hatchet
+#
+# These are the flake8 settings recommended by Black
+# See https://github.com/psf/black
+#
 [flake8]
-ignore =
-    # We put new lines between different packages for imports.
-    I202
-exclude =
-    .git,
-    .tox,
-    __pycache__,
-    # The * import causes lots of false positives.
-    tests/run_settings.py
-max-line-length = 150
-application-import-names = allauth_2fa, manage, tests
-import-order-style = appnexus
+max-line-length = 88
+select = C,E,F,W,B,B950
+ignore = E501,W503,E203
+builtins = IPython
