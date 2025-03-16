@@ -1,113 +1,78 @@
-from setuptools import setup, find_packages, Extension
-import sys
-import numpy
-import os
-import os.path as path
-import multiprocessing
+#! /usr/bin/env/python
+# vim:sw=4 ts=4 et:
+#
+# Copyright (c) 2015 Torchbox Ltd.
+# felicity@torchbox.com 2015-09-14
+#
+# Permission is granted to anyone to use this software for any purpose,
+# including commercial applications, and to alter it and redistribute it
+# freely. This software is provided 'as-is', without any express or implied
+# warranty.
+#
 
-use_cython = True
-force = False
-profile = False
-line_profile = False
-install_rates = False
+import subprocess
 
-if "--skip-cython" in sys.argv:
-    use_cython = False
-    del sys.argv[sys.argv.index("--skip-cython")]
+from setuptools import find_packages, setup
 
-if "--force" in sys.argv:
-    force = True
-    del sys.argv[sys.argv.index("--force")]
 
-if "--profile" in sys.argv:
-    profile = True
-    del sys.argv[sys.argv.index("--profile")]
+def get_git_revision_hash():
+    try:
+        git_hash = subprocess.check_output(["git", "rev-parse", "HEAD"])
+    except subprocess.CalledProcessError:
+        return 'main'
+    else:
+        return git_hash.decode("ascii").splitlines()[0]
 
-if "--line-profile" in sys.argv:
-    line_profile = True
-    del sys.argv[sys.argv.index("--line-profile")]
 
-if "--install-rates" in sys.argv:
-    install_rates = True
-    del sys.argv[sys.argv.index("--install-rates")]
+README = "https://github.com/torchbox/wagtail-markdown/blob/{hash}/README.md"
+README = README.format(hash=get_git_revision_hash())
 
-source_paths = ['cherab', 'demos']
-compilation_includes = [".", numpy.get_include()]
-compilation_args = []
-cython_directives = {
-    'language_level': 3
-}
-setup_path = path.dirname(path.abspath(__file__))
 
-if line_profile:
-    compilation_args.append("-DCYTHON_TRACE=1")
-    compilation_args.append("-DCYTHON_TRACE_NOGIL=1")
-    cython_directives["linetrace"] = True
+INSTALL_REQUIRES = [
+    'Markdown>=3,<4',
+    'bleach>=3.3.0,<4',
+    'Wagtail>=2.0',
+]
 
-if use_cython:
 
-    from Cython.Build import cythonize
+TESTING_REQUIRES = [
+    "dj_database_url==0.5.0",
+]
 
-    # build .pyx extension list
-    extensions = []
-    for package in source_paths:
-        for root, dirs, files in os.walk(path.join(setup_path, package)):
-            for file in files:
-                if path.splitext(file)[1] == ".pyx":
-                    pyx_file = path.relpath(path.join(root, file), setup_path)
-                    module = path.splitext(pyx_file)[0].replace("/", ".")
-                    extensions.append(Extension(module, [pyx_file], include_dirs=compilation_includes, extra_compile_args=compilation_args),)
 
-    if profile:
-        cython_directives["profile"] = True
+CLASSIFIERS = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: zlib/libpng License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Framework :: Django",
+    "Framework :: Django :: 2.2",
+    "Framework :: Django :: 3.0",
+    "Framework :: Django :: 3.1",
+    "Framework :: Wagtail",
+    "Framework :: Wagtail :: 2",
+]
 
-    # generate .c files from .pyx
-    extensions = cythonize(extensions, nthreads=multiprocessing.cpu_count(), force=force, compiler_directives=cython_directives)
-
-else:
-
-    # build .c extension list
-    extensions = []
-    for package in source_paths:
-        for root, dirs, files in os.walk(path.join(setup_path, package)):
-            for file in files:
-                if path.splitext(file)[1] == ".c":
-                    c_file = path.relpath(path.join(root, file), setup_path)
-                    module = path.splitext(c_file)[0].replace("/", ".")
-                    extensions.append(Extension(module, [c_file], include_dirs=compilation_includes, extra_compile_args=compilation_args),)
-
-# parse the package version number
-with open(path.join(path.dirname(__file__), 'cherab/core/VERSION')) as version_file:
-    version = version_file.read().strip()
 
 setup(
-    name="cherab",
-    version=version,
-    license="EUPL 1.1",
-    namespace_packages=['cherab'],
-    description='Cherab spectroscopy framework',
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Science/Research",
-        "Intended Audience :: Education",
-        "Intended Audience :: Developers",
-        "Natural Language :: English",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Cython",
-        "Programming Language :: Python :: 3",
-        "Topic :: Scientific/Engineering :: Physics"
-    ],
-    install_requires=['numpy>=1.14', 'scipy', 'matplotlib', 'raysect>=0.7.1', 'cython>=0.28'],
+    name="wagtail-markdown",
+    version="0.7.0-alpha",
+    description="Markdown support for Wagtail",
+    long_description="Provides Markdown page field and streamfield block for "
+    "Wagtail. More info: {}".format(README),
+    author="Felicity Tarnell",
+    author_email="felicity@torchbox.com",
+    url="https://github.com/torchbox/wagtail-markdown",
+    project_urls={
+        "Changelog": "https://github.com/torchbox/wagtail-markdown/blob/main/CHANGELOG.md",
+    },
+    install_requires=INSTALL_REQUIRES,
+    license="zlib",
     packages=find_packages(),
     include_package_data=True,
-    zip_safe=False,
-    ext_modules=extensions
+    classifiers=CLASSIFIERS,
+    extras_require={"testing": TESTING_REQUIRES},
 )
-
-# setup a rate repository with common rates
-if install_rates:
-    try:
-        from cherab.openadas import repository
-        repository.populate()
-    except ImportError:
-        pass

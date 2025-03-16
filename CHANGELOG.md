@@ -1,62 +1,38 @@
-Project Changelog
-=================
+# 0.7.0 - UNRELEASED
 
-Release 1.2.1 (TBD)
--------------------
+- Switched to using [EasyMDE](https://github.com/Ionaru/easy-markdown-editor) - @StefanUlbrich
+- Added support for extensions config via `WAGTAILMARKDOWN_EXTENSIONS_CONFIG` - @StefanUlbrich
+- Removed deprecations
+- Added [pre-commit](https://pre-commit.com/) support
+- Switched to [SemVer](https://semver.org/) and GitHub Actions
 
-Bug fixes:
-* Fixed OpenADAS repository populate() method failing with the pure python interpreter but working in ipython. 
+# 0.6 - 12th February 2020
 
+- Dropped Python 2.7 support
+- Fixed requirements to support Wagtail >2.0
+- Allow superscript HTML tags
+- Improved README
 
-Release 1.2.0 (24 Nov 2019)
----------------------------
+# 0.5 - 13th July 2018
 
-API changes:
-* AxisymmetricVoxel vertices initialisation switched to Nx2 numpy array.
-* Raysect VolumeTransforms used to handle shifts in coordinate systems rather than material specific offsets.
-* Numerous minor changes (see commit history).
+- Adjust dependency of Wagtail to < 2.3
+- Fix support of Wagtail 2 #46 - @johnfraney
+- Fix example in the README #42 - @benjaoming
+- Change TODO #42 - @benjaoming
 
-New:
-* Merged cherab-openadas package into the core cherab package to simplify installation.
-* Beam object uses a cone primitive instead of a cylinder for the bounding volume of divergent beams. 
-* Added Clamp functions.
-* Added ThermalCXRate.
-* Added optimised ray transfer grid calculation tools.
-* Added opencl optimised SART inversion to tools.
-* Numerous improvements to bolometry tool chain (see commit history).
+# 0.5a3 - 26th March 2018
 
-Bug fixes:
-* Equilibrium normalised psi clamped to prevent negative values (occasionally caused by numerical precision issues at the core).
-* trace_sightline() bug that caused repeated reintersection has been fixed.
-* Numerous samller issues addressed throughout the framework (see commit history).
+- Whitelist `<hr>` and `<br>` tags #33 - @tm-kn
+- Fix compatibility for markdown panel in Wagtail 2.0 #37 - @rspeed
 
+# 0.5a2 - 14th February 2018
 
-Release 1.1.0 (6 Mar 2019)
---------------------------
+- Update simplemde to 1.11.2 #31 - @stuaxo
+- Update imports to work with Wagtail 2.0 #31 - @stuaxo
+- Fix packaging issues so static files are included in PyPI
 
-New:
-* Added EFITEquilibrium class to cherab.tools.equilibrium.
-* Added voxel handling utilities to cherab.tools
-* Added differentials to interpolator functions.
-* Added Slice2D and 3D functions to reduce the dimensions of a function object.
-* Expanded list of isotopes and elements, nearly all elements/stable isotopes are now available.
-* Can now look up element/isotope objects by name and/or atomic number/mass.
-* Significantly expanded documentation and demos.
-* Added Multiplet line-shape.
+# 0.5a1 - 7th December 2017
 
-Bug fixes:
-* Improved handling on non c-order arrays in various methods.
-* Numerous minor bug fixes (see commit history) 
-
-
-Release 1.0.1 (1 Oct 2018)
---------------------------
-
-Bug fixes:
-* Cherab package would fail if Raysect structures were altered due to using prebuilt c files. Cython is now always used to rebuild against the installed version of raysect. Cython is therefore now a dependency.
-
-
-Release 1.0.0 (28 Sept 2018)
-----------------------------
-
-Initial public release.
+- Fix problem with app loading
+- Make it compatible with newer versions of Wagtail that require `context` parameters in blocks' `render_basic` method.
+- Restructure app, refactor code. Add depreciation warnings.
