@@ -1,9 +1,4 @@
-*.egg-info/
-.coverage
-.eggs/
-.pytest_cache/
-__pycache__/
-build/
-dist/
-htmlcov/
-venv/
+*~
+*.py[co]
+*.egg-info
+__pycache__
