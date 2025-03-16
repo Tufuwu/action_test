@@ -1,31 +1,52 @@
-# soft-webauthn changelog
+# Change Log
+All notable changes to this project will be documented in this file.
+This project adheres to [Semantic Versioning](http://semver.org/).
 
-## 0.1.3
+## [Unreleased]
 
-* fixed: fido2 version dependency (upper limit)
+*Nothing here yet*
 
-## 0.1.2
+## [v0.4.0]
+- Discover command if not in entry_points
 
-* fixed challenge attribute in clientDataJSON (PR#9 thanks to @kverdecia)
+## [v0.3.0]
+- Make compatible with click >= 7.0
 
-## 0.1.1
+## [v0.2.2]
+- Release
 
-* fix sign_count (PR#6 thanks to @sstoel)
-* fix attestation format (PR#4 thanks to @sstoel)
+## [v0.2.1]
+### Added
+- Add information to man page for commands. Refs #3
 
-## 0.1.0
+### Fixed
+- Use hyphens to split words in a command. Refs #2
 
-* update fido2 library and adapt to API breaking changes
+## [v0.2.0]
+### Added
+- Allow to specify version via command line
+- Proof-of-concept for debian packaging
 
-## 0.0.3
+## [v0.1.1]
+### Fixed
 
-* fix fido2 package version pinning
-* started changelog
+- Several small bugs
+- Improved README
 
-## 0.0.2
+## [v0.1.0]
+### Added
+- Initial release
 
-* documentation update
 
-## 0.0.1
+## Info
 
-* initial implementation
+Please also see `git log`
+
+[Unreleased]: https://github.com/click-contrib/click-man/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/click-contrib/click-man/compare/v0.3.0...v0.4.0
+[v0.3.0]: https://github.com/click-contrib/click-man/compare/v0.2.2...v0.3.0
+[v0.2.2]: https://github.com/click-contrib/click-man/compare/v0.2.1...v0.2.2
+[v0.2.1]: https://github.com/click-contrib/click-man/compare/v0.2.0...v0.2.1
+[v0.2.0]: https://github.com/click-contrib/click-man/compare/v0.1.1...v0.2.0
+[v0.1.1]: https://github.com/click-contrib/click-man/compare/v0.1.0...v0.1.1
+[v0.1.0]: https://github.com/click-contrib/click-man/compare/30626839cc048856f799eb0bcd9e731fff4221dc...v0.1.0

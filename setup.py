@@ -1,24 +1,38 @@
-import setuptools
+import os
+from setuptools import setup, find_packages
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
 
-setuptools.setup(
-    name='soft-webauthn',
-    version='0.1.3',
-    author='Radoslav Bodó',
-    author_email='bodik@cesnet.cz',
-    description='Python webauthn software authenticator',
-    long_description=long_description,
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+setup(
+    name='click-man',
+    version='0.4.2',
+    url='https://github.com/click-contrib/click-man',
+    license='MIT',
+    description='Generate man pages for click based CLI applications',
+    long_description=read('README.md'),
     long_description_content_type='text/markdown',
-    url='https://github.com/bodik/soft-webauthn',
-    py_modules=['soft_webauthn'],
+    author='Timo Furrer',
+    author_email='tuxtimo@gmail.com',
     install_requires=[
-        'fido2>=0.8,<1.0.0',
-        'cryptography'
+        'click',
+        'setuptools',
     ],
+    packages=find_packages(exclude=('tests', )),
+    entry_points={
+        'console_scripts': [
+            'click-man = click_man.__main__:cli',
+        ]
+    },
     classifiers=[
-        'Programming Language :: Python :: 3',
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Topic :: Documentation',
     ],
 )
