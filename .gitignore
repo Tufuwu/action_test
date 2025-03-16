@@ -1,46 +1,15 @@
-*.py[co]
-
-# Packages
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-var
-sdist
-develop-eggs
-.installed.cfg
-
-# Installer logs
-pip-log.txt
-
-# Unit test / coverage reports
-.coverage
-.tox
-
-#Translations
-*.mo
-
-#Mr Developer
-.mr.developer.cfg
-
-# rope
-.ropeproject
-
-# data files
-*.json.gz
-*.flent
-/*.flent.gz
-*.flent.bz2
-*.csv
-*.pdf
-/*.png
-*.svg
-data/
-
-# distutils gerated
-MANIFEST
-
-.dir-locals.el
+/.vagrant
+/wagtaildemo/settings/local.py
+/static
+*.pyc
+/media
+/Vagrantfile.local
+openstax/settings/local.py
 *.log
+/.idea
+/htmlcov
+/.coverage
+.DS_STORE
+
+*.bk
+admin_templates/templates/wagtailadmin/login.html*
