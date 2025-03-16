@@ -1,18 +1,31 @@
-import os
+import sys
+
 import pytest
+
+import semver
+
+sys.path.insert(0, "docs")
+
+from coerce import coerce  # noqa:E402
+from semverwithvprefix import SemVerWithVPrefix  # noqa:E402
+
+
+@pytest.fixture(autouse=True)
+def add_semver(doctest_namespace):
+    doctest_namespace["Version"] = semver.version.Version
+    doctest_namespace["semver"] = semver
+    doctest_namespace["coerce"] = coerce
+    doctest_namespace["SemVerWithVPrefix"] = SemVerWithVPrefix
 
 
 @pytest.fixture
-def os_environ(monkeypatch):
-    mock_environ = dict(os.environ)
-    monkeypatch.setattr(os, 'environ', mock_environ)
-    return mock_environ
+def version():
+    """
+    Creates a version
 
-
-def pytest_generate_tests(metafunc):
-    if hasattr(metafunc.function, "pytestmark"):
-        for mark in metafunc.function.pytestmark:
-            if mark.name == "all_locales":
-                from babel.localedata import locale_identifiers
-                metafunc.parametrize("locale", list(locale_identifiers()))
-                break
+    :return: a version type
+    :rtype: Version
+    """
+    return semver.Version(
+        major=1, minor=2, patch=3, prerelease="alpha.1.2", build="build.11.e0f985a"
+    )

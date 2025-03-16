@@ -1,10 +1,9 @@
-include Makefile CHANGES LICENSE AUTHORS
-include conftest.py tox.ini
-include babel/global.dat
-include babel/locale-data/*.dat
-recursive-include docs *
-recursive-exclude docs/_build *
-include scripts/*
-recursive-include tests *
-recursive-exclude tests *.pyc
-recursive-exclude tests *.pyo
+include *.rst
+include *.txt
+include test_*.py
+
+exclude .travis.yml
+prune docs/_build
+recursive-exclude .github  *
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib

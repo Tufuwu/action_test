@@ -1,47 +1,39 @@
-.. -*- mode: rst; encoding: utf-8 -*-
+Semver |version| -- Semantic Versioning
+=======================================
 
-Babel
-=====
+.. include:: readme.rst
 
-Babel is an integrated collection of utilities that assist in
-internationalizing and localizing Python applications, with an emphasis on
-web-based applications.
 
-User Documentation
-------------------
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents
+   :hidden:
 
-The user documentation explains some core concept of the library and gives
-some information about how it can be used.
+   install
+   usage
+   migratetosemver3
+   development
+   api
+
+.. toctree::
+   :maxdepth: 2
+   :caption: CLI
+   :hidden:
+
+   pysemver
+
 
 .. toctree::
    :maxdepth: 1
+   :caption: Changelogs
+   :hidden:
 
-   intro
-   installation
-   locale
-   dates
-   numbers
-   messages
-   cmdline
-   setup
-   support
-
-API Reference
--------------
-
-The API reference lists the full public API that Babel provides.
-
-.. toctree::
-   :maxdepth: 2
-
-   api/index
-
-Additional Notes
-----------------
-
-.. toctree::
-   :maxdepth: 2
-
-   dev
    changelog
-   license
+   changelog-semver2
+
+Indices and Tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
