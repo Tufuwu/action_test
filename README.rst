@@ -1,43 +1,49 @@
-luddite
-=======
+================================
+QEMU test provider for virt-test
+================================
 
-|actions|_ |codecov|_ |pypi|_ |pyversions|_
+This is the official [1] test provider for the following
+subtest types:
 
-.. |actions| image:: https://github.com/jumptrading/luddite/actions/workflows/tests.yml/badge.svg
-.. _actions: https://github.com/jumptrading/luddite/actions/workflows/tests.yml/
+* QEMU
+* Generic (Virtualization backend agnostic)
+* OpenVSwitch
 
-.. |codecov| image:: https://codecov.io/gh/jumptrading/luddite/branch/master/graph/badge.svg
-.. _codecov: https://codecov.io/gh/jumptrading/luddite
+Really quick start guide
+------------------------
 
-.. |pypi| image:: https://img.shields.io/pypi/v/luddite.svg
-.. _pypi: https://pypi.org/project/luddite/
+1) Fork this repo on github
+2) Create a new topic branch for your work
+3) Create a new test provider file in your virt test repo,
+   like:
 
-.. |pyversions| image:: https://img.shields.io/pypi/pyversions/luddite.svg
-.. _pyversions: 
+::
 
+    cp io-github-autotest-qemu.ini myprovider.ini
+::
 
-``luddite`` checks if pinned versions in your ``requirements.txt`` file have newer versions in the package index. It's great to be near the cutting edge, but not so close that you get cut! This tool will help you keep things up to date manually.
+    [provider]
+    uri: file:///home/foo/Code/tp-qemu
+    [generic]
+    subdir: generic/
+    [qemu]
+    subdir: qemu/
+    [openvswitch]
+    subdir: openvswitch/
+You can optionally delete temporarily the
+`io-github-autotest-qemu.ini` file, just so you don't have test
+conflicts. Then you can develop your new test code, run it
+using virt test, and commit your changes.
 
-There are `many ways to specify requirements <https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format>`_ in those files, but luddite's parsing is pretty dumb and simple: we're only looking for ``package==version`` pins. It won't break on lines that aren't fitting this format, but you'll have to check them manually.
+4) Make sure you have `inspektor installed. <https://github.com/autotest/inspektor#inspektor>`_
+5) Run:
 
-``luddite`` works on both Python 2 and Python 3.
+::
 
+    inspekt checkall --disable-style E501,E265,W601,E402,E722,E741 --no-license-check
 
-Installation
-------------
+6) Fix any problems
+7) Push your changes and submit a pull request
+8) That's it.
 
-``pip install luddite``
-
-
-Usage
------
-
-``luddite /path/to/requirements.txt``
-
-If you are in the same directory as the ``requirements.txt`` file, you can just type ``luddite``.
-
-
-Example output
---------------
-
-.. image:: https://user-images.githubusercontent.com/6615374/43939075-feec4530-9c2c-11e8-9770-6f7f762c72e4.png
+[1] You can always create your own test provider, if you have special purposes, or just want to develop your work independently.
