@@ -1,45 +1,47 @@
-from codecs import open
-from os import path
+#!/usr/bin/env python
+import os, sys
+from setuptools import setup, find_packages
 
-from setuptools import find_packages, setup
+if sys.argv[-1] == 'publish':
+    os.system('python setup.py sdist upload')
+    sys.exit(0)
 
-here = path.abspath(path.dirname(__file__))
-
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
+with open('README.rst', 'r') as f:
     long_description = f.read()
 
-__version__ = None
-with open("sendgrid_backend/version.py") as f:
-    exec(f.read())
+# Dynamically calculate the version based on swingtime.VERSION.
+version=__import__('swingtime').get_version()
 
 setup(
-    name="django-sendgrid-v5",
-    version=str(__version__),
-    description="An implementation of Django's EmailBackend compatible with sendgrid-python v5+",
+    name='django-swingtime',
+    url='https://github.com/dakrauth/django-swingtime',
+    author='David A Krauth',
+    author_email='dakrauth@gmail.com',
+    description='A Django calendaring application.',
+    version=version,
     long_description=long_description,
-    url="https://github.com/sklarsa/django-sendgrid-v5",
-    license="MIT",
-    author="Steven Sklar",
-    author_email="sklarsa@gmail.com",
+    long_description_content_type='text/x-rst',
+    platforms=['any'],
+    license='MIT License',
+    python_requires='>=3.6, <4',
+    install_requires=['Django>=2.2,<4.0', 'python-dateutil==2.8.0'],
     classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Developers",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Framework :: Django :: 2.2',
+        'Framework :: Django :: 3.0',
+        'Framework :: Django :: 3.1',
+        'Framework :: Django :: 3.2',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Topic :: Office/Business :: Scheduling',
     ],
-    keywords="django email sendgrid backend",
-    packages=find_packages(
-        exclude=[
-            "test",
-        ]
-    ),
-    install_requires=[
-        "django >=1.8",
-        "sendgrid >=5.0.0",
-        "python-http-client >=3.0.0",
-    ],
+    packages=find_packages(),
+    package_data={'swingtime': ['locale/*/*/*.*',]},
+    zip_safe=False,
 )
