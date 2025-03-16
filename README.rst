@@ -1,128 +1,112 @@
-.. image:: https://img.shields.io/pypi/v/jsonpickle.svg
-   :target: `PyPI link`_
+.. image:: https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png
 
-.. image:: https://img.shields.io/pypi/pyversions/jsonpickle.svg
-   :target: `PyPI link`_
-
-.. _PyPI link: https://pypi.org/project/jsonpickle
-
-.. image:: https://dev.azure.com/jaraco/jsonpickle/_apis/build/status/jaraco.jsonpickle?branchName=master
-   :target: https://dev.azure.com/jaraco/jsonpickle/_build/latest?definitionId=1&branchName=master
-
-.. image:: https://readthedocs.org/projects/jsonpickle/badge/?version=latest
-   :target: https://jsonpickle.readthedocs.io/en/latest/?badge=latest
-
-.. image:: https://travis-ci.org/jsonpickle/jsonpickle.svg?branch=master
-   :target: https://travis-ci.org/jsonpickle/jsonpickle
-   :alt: travis
-
-.. image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
-   :target: https://github.com/jsonpickle/jsonpickle/blob/master/COPYING
-   :alt: BSD
+|build-status| |coverage| |docs| |status| |license| |python-versions|
 
 
-jsonpickle
-==========
-jsonpickle is a library for the two-way conversion of complex Python objects
-and `JSON <http://json.org/>`_.  jsonpickle builds upon the existing JSON
-encoders, such as simplejson, json, and demjson.
-
-For complete documentation, please visit the
-`jsonpickle documentation <http://jsonpickle.readthedocs.io/>`_.
-
-Bug reports and merge requests are encouraged at the
-`jsonpickle repository on github <https://github.com/jsonpickle/jsonpickle>`_.
-
-jsonpickle supports Python 2.7 and Python 3.4 or greater.
-
-    **WARNING**:
-    jsonpickle can execute arbitrary Python code. Do not load jsonpickles from untrusted / unauthenticated sources.
-
-Why jsonpickle?
-===============
-Data serialized with python's pickle (or cPickle or dill) is not easily readable outside of python. Using the json format, jsonpickle allows simple data types to be stored in a human-readable format, and more complex data types such as numpy arrays and pandas dataframes, to be machine-readable on any platform that supports json. E.g., unlike pickled data, jsonpickled data stored in an Amazon S3 bucket is indexible by Amazon's Athena.
-
-Install
-=======
-
-Install from pip for the latest stable release:
-
-::
-
-    pip install jsonpickle
-
-Install from github for the latest changes:
-
-::
-
-    pip install git+https://github.com/jsonpickle/jsonpickle.git
-
-If you have the files checked out for development:
-
-::
-
-    git clone https://github.com/jsonpickle/jsonpickle.git
-    cd jsonpickle
-    python setup.py develop
+A pure Python scannerless LR/GLR parser.
 
 
-Numpy Support
-=============
-jsonpickle includes a built-in numpy extension.  If would like to encode
-sklearn models, numpy arrays, and other numpy-based data then you must
-enable the numpy extension by registering its handlers::
+For more information see `the docs <http://www.igordejanovic.net/parglare/>`_.
 
-    >>> import jsonpickle.ext.numpy as jsonpickle_numpy
-    >>> jsonpickle_numpy.register_handlers()
 
-Pandas Support
-==============
-jsonpickle includes a built-in pandas extension.  If would like to encode
-pandas DataFrame or Series objects then you must enable the pandas extension
-by registering its handlers::
+Quick intro
+-----------
 
-    >>> import jsonpickle.ext.pandas as jsonpickle_pandas
-    >>> jsonpickle_pandas.register_handlers()
+This is just a small example to get the general idea. This example shows how to
+parse and evaluate expressions with 5 operations with different priority and
+associativity. Evaluation is done using semantic/reduction actions.
 
-jsonpickleJS
-============
-`jsonpickleJS <https://github.com/cuthbertLab/jsonpickleJS>`_
-is a javascript implementation of jsonpickle by Michael Scott Cuthbert.
-jsonpickleJS can be extremely useful for projects that have parallel data
-structures between Python and Javascript.
+The whole expression evaluator is done in under 30 lines of code!
+
+.. code:: python
+
+    from parglare import Parser, Grammar
+
+    grammar = r"""
+    E: E '+' E  {left, 1}
+     | E '-' E  {left, 1}
+     | E '*' E  {left, 2}
+     | E '/' E  {left, 2}
+     | E '^' E  {right, 3}
+     | '(' E ')'
+     | number;
+
+    terminals
+    number: /\d+(\.\d+)?/;
+    """
+
+    actions = {
+        "E": [lambda _, n: n[0] + n[2],
+              lambda _, n: n[0] - n[2],
+              lambda _, n: n[0] * n[2],
+              lambda _, n: n[0] / n[2],
+              lambda _, n: n[0] ** n[2],
+              lambda _, n: n[1],
+              lambda _, n: n[0]],
+        "number": lambda _, value: float(value),
+    }
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g, debug=True, actions=actions)
+
+    result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
+
+    print("Result = ", result)
+
+    # Output
+    # -- Debugging/tracing output with detailed info about grammar, productions,
+    # -- terminals and nonterminals, DFA states, parsing progress,
+    # -- and at the end of the output:
+    # Result = 700.8
+
+
+Installation
+------------
+
+- Stable version:
+
+.. code:: shell
+
+    $ pip install parglare
+
+- Development version:
+
+.. code:: shell
+
+    $ git clone git@github.com:igordejanovic/parglare.git
+    $ pip install -e parglare
+
 
 License
-=======
-Licensed under the BSD License. See COPYING for details.
-See jsonpickleJS/LICENSE for details about the jsonpickleJS license.
+-------
 
-Development
-===========
+MIT
 
-Use `make` to run the unit tests::
+Python versions
+---------------
 
-        make test
+Tested with 3.6-3.9
 
-`pytest` is used to run unit tests internally.
+Credits
+-------
 
-A `tox` target is provided to run tests using tox.
-Setting ``multi=1`` tests using all installed and supported Python versions::
+Initial layout/content of this package was created with `Cookiecutter
+<https://github.com/audreyr/cookiecutter>`_ and the
+`audreyr/cookiecutter-pypackage <https://github.com/audreyr/cookiecutter-pypackage>`_ project template.
 
-        make tox
-        make tox multi=1
 
-`jsonpickle` itself has no dependencies beyond the Python stdlib.
-`tox` is required for testing when using the `tox` test runner only.
+.. |build-status| image:: https://github.com/igordejanovic/parglare/actions/workflows/ci-linux-ubuntu.yml/badge.svg
+   :target: https://github.com/igordejanovic/parglare/actions
 
-The testing requirements are specified in `requirements-dev.txt`.
-It is recommended to create a virtualenv and run tests from within the
-virtualenv, or use a tool such as `vx <https://github.com/davvid/vx/>`_
-to activate the virtualenv without polluting the shell environment::
+.. |coverage| image:: https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master
+   :target: https://coveralls.io/github/igordejanovic/parglare?branch=master
 
-        python3 -mvenv env3x
-        vx env3x pip install --requirement requirements-dev.txt
-        vx env3x make test
+.. |docs| image:: https://img.shields.io/badge/docs-latest-green.svg
+   :target: http://igordejanovic.net/parglare/latest/
 
-`jsonpickle` supports multiple Python versions, so using a combination of
-multiple virtualenvs and `tox` is useful in order to catch compatibility
-issues when developing.
+.. |status| image:: https://img.shields.io/pypi/status/parglare.svg
+
+.. |license| image:: https://img.shields.io/badge/License-MIT-blue.svg
+   :target: https://opensource.org/licenses/MIT
+
+.. |python-versions| image:: https://img.shields.io/pypi/pyversions/parglare.svg
