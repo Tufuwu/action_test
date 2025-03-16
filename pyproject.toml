@@ -1,20 +1,22 @@
 [build-system]
-requires = ["setuptools>=51", "wheel>=0.36"]
-build-backend = "setuptools.build_meta"
+requires = ["flit"]
+build-backend = "flit.buildapi"
 
-[tool.black]
-exclude = '''
-/(
-      \.git
-    | venv
-    | __pycache__
-    | \.tox
-)/
-'''
+[tool.flit.metadata]
+module = "cherry_picker"
+author = "Mariatta Wijaya"
+author-email = "mariatta@python.org"
+maintainer = "Python Core Developers"
+maintainer-email = "core-workflow@python.org"
+home-page = "https://github.com/python/cherry_picker"
+requires = ["click>=6.0", "gidgethub", "requests", "toml"]
+description-file = "readme.rst"
+classifiers = ["Programming Language :: Python :: 3.6", "Intended Audience :: Developers", "License :: OSI Approved :: Apache Software License"]
+requires-python = ">=3.6"
 
-[tool.towncrier]
-package = "aiohttp_sse"
-filename = "CHANGES.rst"
-directory = "CHANGES/"
-title_format = "{version} ({project_date})"
-issue_format = "`#{issue} <https://github.com/aio-libs/aiohttp-sse/issues/{issue}>`_"
+
+[tool.flit.scripts]
+cherry_picker = "cherry_picker.cherry_picker:cherry_pick_cli"
+
+[tool.flit.metadata.requires-extra]
+dev = ["pytest"]
