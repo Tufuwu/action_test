@@ -1,0 +1,12 @@
+black
+flake8
+hypothesis
+matplotlib
+mypy
+pip-tools
+pytest
+coverage
+tox
+sympy
+pylint
+isort
