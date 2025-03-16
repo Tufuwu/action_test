@@ -1,252 +1,62 @@
-=============
-API Reference
-=============
+.. _pyramid_debugtoolbar_api:
 
-flask_appbuilder
-====================
+:mod:`pyramid_debugtoolbar` API
+-------------------------------
 
-AppBuilder
-----------
+.. automodule:: pyramid_debugtoolbar
 
-.. automodule:: flask_appbuilder.base
+.. autofunction:: includeme
 
-    .. autoclass:: AppBuilder
-        :members:
-        
-        .. automethod:: __init__
+.. autofunction:: toolbar_tween_factory
 
-flask_appbuilder.security.decorators
-========================================
+.. automodule:: pyramid_debugtoolbar.toolbar_app
 
-.. automodule:: flask_appbuilder.security.decorators
+.. autofunction:: add_debugtoolbar_panel
 
-    .. autofunction:: protect
-    .. autofunction:: has_access
-    .. autofunction:: permission_name
+.. autofunction:: inject_parent_action
 
-flask_appbuilder.models.decorators
-========================================
+.. automodule:: pyramid_debugtoolbar.panels
 
-.. automodule:: flask_appbuilder.models.decorators
+.. autoclass:: DebugPanel
+   :members:
+   :exclude-members: pluralize
 
-    .. autofunction:: renders
+   .. automethod:: __init__
 
-flask_appbuilder.api
-==============================
+.. automodule:: pyramid_debugtoolbar.panels.sqla
 
-.. automodule:: flask_appbuilder.api
+.. autoclass:: SQLADebugPanel
 
-    .. autofunction:: expose
-    .. autofunction:: rison
-    .. autofunction:: safe
+.. automodule:: pyramid_debugtoolbar.panels.versions
 
-BaseApi
--------
+.. autoclass:: VersionDebugPanel
 
-.. autoclass:: BaseApi
-    :members:
+.. automodule:: pyramid_debugtoolbar.panels.settings
 
-ModelRestApi
-------------
+.. autoclass:: SettingsDebugPanel
 
-.. autoclass:: ModelRestApi
-    :members:
+.. automodule:: pyramid_debugtoolbar.panels.routes
 
-flask_appbuilder.baseviews
-==============================
+.. autoclass:: RoutesDebugPanel
 
-.. automodule:: flask_appbuilder.baseviews
+.. automodule:: pyramid_debugtoolbar.panels.request_vars
 
-    .. autofunction:: expose
+.. autoclass:: RequestVarsDebugPanel
 
-BaseView
---------
+.. automodule:: pyramid_debugtoolbar.panels.renderings
 
-.. autoclass:: BaseView
-    :members:
+.. autoclass:: RenderingsDebugPanel
 
-BaseFormView
-------------
+.. automodule:: pyramid_debugtoolbar.panels.performance
 
-.. autoclass:: BaseFormView
-    :members:
+.. autoclass:: PerformanceDebugPanel
 
-BaseModelView
--------------
+.. automodule:: pyramid_debugtoolbar.panels.logger
 
-.. autoclass:: BaseModelView
-    :members:
+.. autoclass:: LoggingPanel
 
-BaseCRUDView
-------------
+.. automodule:: pyramid_debugtoolbar.panels.headers
 
-.. autoclass:: BaseCRUDView
-    :members:
+.. autoclass:: HeaderDebugPanel
 
-flask_appbuilder.views
-==========================
 
-.. automodule:: flask_appbuilder.views
-
-IndexView
----------
-
-.. autoclass:: IndexView
-    :members:
-
-SimpleFormView
---------------
-
-.. autoclass:: SimpleFormView
-    :members:
-
-PublicFormView
---------------
-
-.. autoclass:: PublicFormView
-    :members:
-
-ModelView
------------
-
-.. autoclass:: ModelView
-    :members:
-
-MultipleView
-----------------
-
-.. autoclass:: MultipleView
-    :members:
-
-MasterDetailView
-----------------
-
-.. autoclass:: MasterDetailView
-    :members:
-
-CompactCRUDMixin
-----------------
-
-.. autoclass:: CompactCRUDMixin
-    :members:
-
-flask_appbuilder.actions
-============================
-
-.. automodule:: flask_appbuilder.actions
-
-    .. autofunction:: action
-
-flask_appbuilder.security
-=============================
-
-.. automodule:: flask_appbuilder.security.manager
-
-BaseSecurityManager
--------------------
-
-.. autoclass:: BaseSecurityManager
-    :members:
-
-BaseRegisterUser
-----------------
-
-.. automodule:: flask_appbuilder.security.registerviews
-
-    .. autoclass:: BaseRegisterUser
-        :members:
-
-flask_appbuilder.filemanager
-================================
-
-.. automodule:: flask_appbuilder.filemanager
-
-    .. autofunction:: get_file_original_name
-
-Aggr Functions for Group By Charts
-==================================
-
-.. automodule:: flask_appbuilder.models.group
-
-    .. autofunction:: aggregate_count
-    .. autofunction:: aggregate_avg
-    .. autofunction:: aggregate_sum
-
-flask_appbuilder.charts.views
-=================================
-
-.. automodule:: flask_appbuilder.charts.views
-
-BaseChartView
--------------
-
-.. autoclass:: BaseChartView
-    :members:
-
-DirectByChartView
------------------
-
-.. autoclass:: DirectByChartView
-    :members:
-
-GroupByChartView
-----------------
-
-.. autoclass:: GroupByChartView
-    :members:
-
-(Deprecated) ChartView
-----------------------
-
-.. autoclass:: ChartView
-    :members:
-
-(Deprecated) TimeChartView
---------------------------
-
-.. autoclass:: TimeChartView
-    :members:
-
-(Deprecated) DirectChartView
-----------------------------
-
-.. autoclass:: DirectChartView
-    :members:
-
-
-flask_appbuilder.models.mixins
-==================================
-
-.. automodule:: flask_appbuilder.models.mixins
-
-    .. autoclass:: BaseMixin
-        :members:
-
-    .. autoclass:: AuditMixin
-        :members:
-
-Extra Columns
--------------
-
-.. autoclass:: FileColumn
-    :members:
-
-.. autoclass:: ImageColumn
-    :members:
-
-Generic Data Source (Beta)
---------------------------
-
-flask_appbuilder.models.generic
-===================================
-
-.. automodule:: flask_appbuilder.models.generic
-
-    .. autoclass:: GenericColumn
-        :members:
-
-    .. autoclass:: GenericModel
-        :members:
-
-    .. autoclass:: GenericSession
-        :members:
