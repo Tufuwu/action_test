@@ -1,1 +1,2 @@
-include LICENSE LONG_DESCRIPTION.rst setup.cfg
+graft metaworld/envs/assets_v1
+graft metaworld/envs/assets_v2

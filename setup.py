@@ -1,37 +1,32 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
-with open('LONG_DESCRIPTION.rst') as f:
-    long_description = f.read()
+
+# Required dependencies
+required = [
+    # Please keep alphabetized
+    'gym>=0.15.4',
+    'mujoco-py<2.1,>=2.0',
+    'numpy>=1.18',
+]
+
+
+# Development dependencies
+extras = dict()
+extras['dev'] = [
+    # Please keep alphabetized
+    'ipdb',
+    'memory_profiler',
+    'pylint',
+    'pyquaternion==0.9.5',
+    'pytest>=4.4.0',  # Required for pytest-xdist
+    'pytest-xdist',
+]
+
 
 setup(
-    name='ably',
-    version='1.1.1',
-    classifiers=[
-        'Development Status :: 6 - Mature',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-    ],
-    packages=['ably', 'ably.http', 'ably.rest', 'ably.transport',
-              'ably.types', 'ably.util'],
-    install_requires=['methoddispatch>=3.0.2,<4',
-                      'msgpack>=1.0.0,<2',
-                      'requests>=2.7.0,<3'],
-    extras_require={
-        'oldcrypto': ['pycrypto>=2.6.1'],
-        'crypto': ['pycryptodome'],
-    },
-    author="Ably",
-    author_email='support@ably.io',
-    url='https://github.com/ably/ably-python',
-    description="A Python client library for ably.io realtime messaging",
-    long_description=long_description,
+    name='metaworld',
+    packages=find_packages(),
+    include_package_data=True,
+    install_requires=required,
+    extras_require=extras,
 )
