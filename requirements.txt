@@ -1,0 +1,4 @@
+pytest
+pytest-coverage
+coveralls
+maya; python_version >= '3.7'

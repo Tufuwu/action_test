@@ -1,10 +1,9 @@
-*.pyc
-quantities.egg-info
 build
-_build
+.coverage
+*.egg-info
+*.tox
 dist
-.project
-.pydevproject
-.settings
+*.pyc
+venv/
 .idea
-.*cache/
+htmlcov/
