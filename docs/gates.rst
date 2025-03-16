@@ -1,5 +1,0 @@
-=====
-Gates
-=====
-
-.. automodule :: quantumflow.gates

@@ -1,5 +1,0 @@
-========
-Cirq
-========
-
-.. automodule :: quantumflow.xcirq
