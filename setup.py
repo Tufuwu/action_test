@@ -1,23 +1,77 @@
-from distutils.core import setup
-import sys
-
-import fitparse
+import os
+from setuptools import setup, find_packages
 
 
-requires = None
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    sys.exit("Python 2.7 or Python 3.3+ are required.")
+def read(*rnames):
+    return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 
-setup(
-    name='fitparse',
-    version=fitparse.__version__,
-    description='Python library to parse ANT/Garmin .FIT files',
-    author='David Cooper',
-    author_email='dave@kupesoft.com',
-    url='https://www.github.com/dtcooper/python-fitparse',
-    license=open('LICENSE').read(),
-    packages=['fitparse'],
-    scripts=['scripts/fitdump'],  # Don't include generate_profile.py
-    install_requires=requires,
-)
+version = '1.6.2.dev0'
+
+long_description = (
+    read('README.rst') + '\n\n' +
+    read('CHANGES.rst') + '\n\n'
+    )
+
+
+setup(name='plone.rest',
+      version=version,
+      description="Plone support for HTTP verbs.",
+      long_description=long_description,
+      # Get more strings from
+      # https://pypi.org/classifiers/
+      classifiers=[
+          "Development Status :: 5 - Production/Stable",
+          "Environment :: Web Environment",
+          "Framework :: Plone",
+          "Framework :: Plone :: 4.3",
+          "Framework :: Plone :: 5.0",
+          "Framework :: Plone :: 5.1",
+          "Framework :: Plone :: 5.2",
+          "Framework :: Plone :: Core",
+          "Framework :: Zope2",
+          "Framework :: Zope :: 4",
+          "License :: OSI Approved :: GNU General Public License (GPL)",
+          "Operating System :: OS Independent",
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
+          "Programming Language :: Python :: 3.8",
+      ],
+      keywords='rest http',
+      author='Plone Foundation',
+      author_email='plone-developers@lists.sourceforge.net',
+      url='https://github.com/plone/plone.rest/',
+      license='GPL version 2',
+      packages=find_packages('src'),
+      package_dir={'': 'src'},
+      namespace_packages=['plone'],
+      include_package_data=True,
+      zip_safe=False,
+      extras_require=dict(
+          test=[
+              'plone.app.testing[robot]>=4.2.2',
+              'plone.app.robotframework',
+              'plone.dexterity',
+              'Products.CMFCore',
+              'requests',
+          ]
+      ),
+      install_requires=[
+          'setuptools',
+          'collective.monkeypatcher',
+          'zope.component',
+          'zope.interface',
+          'zope.publisher',
+          'zope.traversing',
+          'Products.CMFCore',
+          'Zope2',
+          'six',
+      ],
+      entry_points="""
+      # -*- Entry points: -*-
+      [z3c.autoinclude.plugin]
+      target = plone
+      """,
+      )
