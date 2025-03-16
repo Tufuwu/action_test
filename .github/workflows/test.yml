@@ -1,66 +1,54 @@
-name: "Build Conda Packages"
+name: CI
 
 on:
-  pull_request:
-    branches:
-      - "*"
-  push:
-    branches:
-      - "main"
-
-defaults:
-  run:
-    shell: bash -l {0}
+  - push
+  - pull_request
 
 jobs:
-  build:
-    name: conda build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+  test:
     strategy:
+      fail-fast: false
       matrix:
-          os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.9", "3.10"]
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - python-version: 3.9
+            py: py37
+          - python-version: 3.9
+            py: py38
+          - python-version: 3.9
+            py: py39
+          - python-version: '3.9'
+            py: py310
+          - python-version: '3.9'
+            py: py311
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Dump env
-        run: |
-            printenv
-            echo "USER_ID=$(id -u)" >> $GITHUB_ENV
-      - name: Setup miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v3
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
-          auto-update-conda: false
-          conda-build-version: 3
-          auto-activate-base: true
-          activate-environment: ""
-      - name: Setup Xcode and SDK on macOS
-        if: runner.os == 'macOS'
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
         run: |
-            MACOS_SDK=MacOSX10.9.sdk
-            curl -OL https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/${MACOS_SDK}.tar.xz
-            sudo tar xf ${MACOS_SDK}.tar.xz -C /opt
-            printf "CONDA_BUILD_SYSROOT:\n    - /opt/${MACOS_SDK}\n" >> conda-recipe/conda_build_config.yaml
-      - name: Build macOS
-        if: runner.os == 'macOS'
+          python -m pip install --upgrade hatch
+      - name: Run tests
         run: |
-            mkdir packages
-            conda config --add channels paulscherrerinstitute
-            conda build --output-folder packages conda-recipe
-      - name: Build Linux
-        if: runner.os == 'linux'
-        uses: docker://condaforge/linux-anvil-comp7:latest
+          hatch run test.py${{ matrix.python-version }}:run
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          args: bash -c "conda config --add channels paulscherrerinstitute;conda info;cd /github/workspace;mkdir packages;conda build --output-folder packages conda-recipe"
-        env:
-          HOST_USER_ID: ${{ env.USER_ID }}
-      - name: Upload Anaconda
+          python-version: '3.9'
+      - name: Install Python dependencies
         run: |
-            conda install anaconda-client
-            [[ -z ${MY_CONDA_TOKEN} ]] || anaconda -v -t ${MY_CONDA_TOKEN} upload --force packages/*/*.tar.bz2
-        env:
-          MY_CONDA_TOKEN: ${{ secrets.MY_CONDA_TOKEN }}
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          path: packages/*/*.tar.bz2
-          retention-days: 1
+          python -m pip install --upgrade hatch
+      - name: Check with black
+        if: always()
+        run: hatch run style:format && git diff --exit-code
+      - name: Check with flake8
+        if: always()
+        run: hatch run style:check
