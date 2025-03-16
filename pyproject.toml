@@ -1,8 +1,0 @@
-[tool.pytest.ini_options]
-addopts = [
-    "--cov=click_repl"
-]
-
-testpaths = [
-    "tests",
-]

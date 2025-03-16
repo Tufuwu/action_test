@@ -1,2 +1,4 @@
-global-exclude *.py[cdo] __pycache__ *.so *.pyd
+include README.md
 include LICENSE
+include MANIFEST.in
+include requirements.txt
