@@ -1,105 +1,91 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import os
-import pkgutil
-import re
-import shutil
-import sys
-from codecs import open
-
 from setuptools import setup, find_packages
-from setuptools.command.develop import develop
-from setuptools.command.install import install
+from codecs import open
+from os import path, environ
+import sys
 
-requires = ["mesa >= 0.8.6", "geopandas", "libpysal", "rtree"]
+here = path.abspath(path.dirname(__file__))
 
-version = ""
-with open("mesa_geo/__init__.py", "r") as fd:
-    version = re.search(
-        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE
-    ).group(1)
+# Get the long description from the relevant file
+with open(path.join(here, 'docs/description.rst'), encoding='utf-8') as f:
+        long_description = f.read()
 
-with open("README.md", "r") as f:
-    readme = f.read()
-
-
-class DevelopCommand(develop):
-    """Pre-installation for development mode."""
-
-    def run(self):
-        get_mesa_viz_files()
-        develop.run(self)
-
-
-class InstallCommand(install):
-    """Pre-installation for installation mode."""
-
-    def run(self):
-        get_mesa_viz_files()
-        install.run(self)
-
-
-def get_mesa_viz_files():
-    get_viz_server_file(
-        package="mesa", server_file="visualization/ModularVisualization.py"
-    )
-    get_mesa_templates(package="mesa", template_dir="visualization/templates")
-
-
-def get_viz_server_file(package, server_file):
-    viz_server_file = pkgutil.get_data(package, server_file)
-    with open(os.path.join("mesa_geo", server_file), "wb") as server_file:
-        server_file.write(viz_server_file)
-
-
-def get_mesa_templates(package, template_dir):
-    pkg_dir = sys.modules[package].__path__[0]
-    for subdir in os.listdir(os.path.join(pkg_dir, template_dir)):
-        # do not copy modular_template.html to avoid being overwritten
-        if os.path.isdir(os.path.join(pkg_dir, template_dir, subdir)):
-            shutil.copytree(
-                os.path.join(pkg_dir, template_dir, subdir),
-                os.path.join("mesa_geo", template_dir, subdir),
-                dirs_exist_ok=True,
-            )
-
+with open(path.join(here, 'VERSION'), mode='r', encoding='utf-8') as version_file:
+        version = version_file.read().strip()
 
 setup(
-    name="mesa-geo",
+    name='pyeapi',
+
+    # Versions should comply with PEP440.  For a discussion on single-sourcing
+    # the version across setup.py and the project code, see
+    # https://packaging.python.org/en/latest/single_source_version.html
     version=version,
-    description="Agent-based modeling (ABM) in Python 3+",
-    long_description=readme,
-    long_description_content_type="text/markdown",
-    author="Project GeoMesa Team",
-    author_email="",
-    url="https://github.com/projectmesa/mesa-geo",
-    packages=find_packages(),
-    package_data={
-        "mesa_geo": [
-            "visualization/templates/*.html",
-            "visualization/templates/css/*",
-            "visualization/templates/js/*",
-            "visualization/templates/external/**/**/*",
-        ],
-    },
-    include_package_data=True,
-    install_requires=requires,
-    keywords="agent based modeling model ABM simulation multi-agent",
-    license="Apache 2.0",
-    zip_safe=False,
+
+    description='Python Client for eAPI',
+    long_description=long_description,
+
+    # The project's main homepage.
+    url='https://github.com/arista-eosplus/pyeapi',
+
+    # Author details
+    author='Arista EOS+ CS',
+    author_email='eosplus-dev@arista.com',
+
+    # Choose your license
+    license='BSD-3',
+
+    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Artificial Life",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Intended Audience :: Science/Research",
-        "Programming Language :: Python :: 3 :: Only",
-        "License :: OSI Approved :: Apache Software License",
-        "Operating System :: OS Independent",
-        "Development Status :: 3 - Alpha",
-        "Natural Language :: English",
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 4 - Beta',
+
+        'Intended Audience :: System Administrators',
+        'Topic :: System :: Networking',
+
+        'License :: OSI Approved :: BSD License',
+
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
     ],
-    cmdclass={
-        "develop": DevelopCommand,
-        "install": InstallCommand,
+
+    keywords='networking arista eos eapi',
+
+    # You can just specify the packages manually here if your project is
+    # simple. Or you can use find_packages().
+    packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
+
+    # List run-time dependencies here.  These will be installed by pip when your
+    # project is installed. For an analysis of "install_requires" vs pip's
+    # requirements files see:
+    # https://packaging.python.org/en/latest/requirements.html
+    install_requires=['netaddr'],
+
+    # List additional dependencies here (e.g. development dependencies).
+    # You can install these using the following syntax, for example:
+    # $ pip install -e .[dev,test]
+    extras_require={
+        'dev': ['check-manifest', 'pep8', 'pyflakes', 'twine'],
+        'test': ['coverage', 'mock'],
     },
 )
+
+def install():
+    if "install" in sys.argv:
+        return True
+    else:
+        return False
+
+# Use the following to dynamically build pyeapi module documentation
+if install() and environ.get('READTHEDOCS'):
+    print('This method is only called by READTHEDOCS.')
+    from subprocess import Popen
+    proc = Popen(['make', 'modules'], cwd='docs/')
+    (_, err) = proc.communicate()
+    return_code = proc.wait()
+
+    if return_code or err:
+        raise ('Failed to make modules.(%s:%s)' % (return_code, err))

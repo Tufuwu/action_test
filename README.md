@@ -1,121 +1,75 @@
-# mesa-geo - a GIS extension to Mesa Agent-Based Modeling
+# Arista eAPI Python Library
 
-mesa-geo implements a `GeoSpace` that can host GIS-based `GeoAgents`, which are like normal Agents, except they have a `shape` attribute that is a [Shapely object](https://shapely.readthedocs.io/en/latest/manual.html). You can use `Shapely` directly to create arbitrary shapes, but in most cases you will want to import your shapes from a file. Mesa-geo allows you to create GeoAgents from any vector data file (e.g. shapefiles), valid GeoJSON objects or a GeoPandas GeoDataFrame.
+[![Build Status](https://travis-ci.org/arista-eosplus/pyeapi.svg?branch=develop)](https://travis-ci.org/arista-eosplus/pyeapi) [![Coverage Status](https://coveralls.io/repos/github/arista-eosplus/pyeapi/badge.svg?branch=develop)](https://coveralls.io/github/arista-eosplus/pyeapi?branch=develop) [![Documentation Status](https://readthedocs.org/projects/pyeapi/badge/?version=latest)](http://readthedocs.org/docs/pyeapi/en/latest/?badge=latest)
 
-This is the first release of mesa-geo. No functionality guaranteed, bugs included.
+The Python library for Arista's eAPI command API implementation provides a
+client API work using eAPI and communicating with EOS nodes.  The Python
+library can be used to communicate with EOS either locally (on-box) or remotely
+(off-box).  It uses a standard INI-style configuration file to specify one or
+more nodes and connection properties.
 
-## Installation
+The pyeapi library also provides an API layer for building native Python
+objects to interact with the destination nodes. The API layer is a convenient
+implementation for working with the EOS configuration and is extensible for
+developing custom implementations.
 
-To install mesa-geo on linux or macOS run
+This library is freely provided to the open source community for building
+robust applications using Arista EOS.  Support is provided as best effort
+through Github issues.
 
-```shell
-pip install mesa-geo
-```
+## Documentation
 
-On windows you should first use Anaconda to install some of the requirements with
+* [Quickstart] [quickstart]
+* [Installation] [install]
+* [Modules] [modules]
+* [Release Notes] [rns]
+* [Contribute] [contribute]
 
-```shell
-conda install fiona pyproj rtree shapely
-pip install mesa-geo
-```
+### Building Local Documentation
 
-Since mesa-geo is in early development you could also install the latest version directly from Github via
+If you cannot access readthedocs.org you have the option of building the
+documentation locally.
 
-```shell
-pip install -e git+https://github.com/projectmesa/mesa-geo.git#egg=mesa-geo
-```
+1. ``pip install -r dev-requirements.txt``
+2. ``cd docs``
+3. ``make html``
+4. ``open _build/html/index.html``
 
-## Getting started
+# License
 
-You should be familiar with how [mesa](https://github.com/projectmesa/mesa) works.
+Copyright (c) 2015, Arista Networks EOS+
+All rights reserved.
 
-So let's get started with some shapes! We will work with [records of US states](http://eric.clst.org/Stuff/USGeoJSON). We use the `requests` library to retrieve the data, but of course you can work with local data.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-```python
-from mesa_geo import GeoSpace, GeoAgent, AgentCreator
-from mesa import Model
-import requests
-url = 'http://eric.clst.org/assets/wiki/uploads/Stuff/gz_2010_us_040_00_20m.json'
-r = requests.get(url)
-geojson_states = r.json()
-```
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-First we create a `State` Agent and a `GeoModel`. Both should look familiar if you have worked with mesa before.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-```python
-class State(GeoAgent):
-    def __init__(self, unique_id, model, shape):
-        super().__init__(unique_id, model, shape)
+* Neither the name of the Arista nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
 
-class GeoModel(Model):
-    def __init__(self):
-        self.space = GeoSpace()
-        
-        state_agent_kwargs = dict(model=self)
-        AC = AgentCreator(agent_class=State, agent_kwargs=state_agent_kwargs)
-        agents = AC.from_GeoJSON(GeoJSON=geojson_states, unique_id="NAME")
-        self.space.add_agents(agents)
-```
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-In the `GeoModel` we first create an instance of AgentCreator, where we provide the Agent class (State) and its required arguments, except shape and unique_id. We then use the `.from_GeoJSON` function to create our agents from the shapes in the GeoJSON file. We provide the feature "name" as the key from which the agents get their unique_ids.
-Finally, we add the agents to the GeoSpace
 
-Let's instantiate our model and look at one of the agents:
-
-```python
-m = GeoModel()
-
-agent = m.space.agents[0]
-print(agent.unique_id)
-agent.shape
-```
-
-If you work in the Jupyter Notebook your output should give you the name of the state and a visual representation of the shape.
-
-    Arizona
-
-!['Arizona state borders'](output_3_1.svg)
-
-By default the AgentCreator also sets further agent attributes from the Feature properties.
-
-```python
-agent.CENSUSAREA
-```
-
-    113594.084
-
-Let's start to do some spatial analysis. We can use usual Mesa function names to get neighboring states
-
-```python
-neighbors = m.space.get_neighbors(agent)
-print([a.unique_id for a in neighbors])
-```
-
-    California
-    Colorado
-    New Mexico
-    Utah
-    Nevada
-
-To get a list of all states within a certain distance you can use the following
-
-```python
-[a.unique_id for a in m.space.get_neighbors_within_distance(agent, 600000)]
-```
-
-    ['California',
-    'Colorado',
-    'New Mexico',
-    'Oklahoma',
-    'Wyoming',
-    'Idaho',
-    'Utah',
-    'Nevada']
-
-The unit for the distance depends on the coordinate reference system (CRS) of the GeoSpace. Since we did not specify the CRS, mesa-geo defaults to the 'Web Mercator' projection (in meters). If you want to do some serious measurements you should always set an appropriate CRS, since the accuracy of Web Mercator declines with distance from the equator.  We can achieve this by initializing the AgentCreator and the GeoSpace with the `crs` keyword  `crs="epsg:2163"`. Mesa-geo then transforms all coordinates from the GeoJSON geographic coordinates into the set crs.
-
-## Going further
-
-To get a deeper understanding of mesa-geo you should checkout the GeoSchelling example. It implements a Leaflet visualization which is similar to use as the CanvasGridVisualization of Mesa.
-
-To add further functionality, I need feedback on which functionality is desired by users. Please post a message [here](https://groups.google.com/forum/#!topic/projectmesa-dev/qEf2XBFZYnI) or open an issue if you have any ideas or recommendations.
+[pyeapi]: https://github.com/arista-eosplus/pyeapi
+[quickstart]: http://pyeapi.readthedocs.org/en/master/quickstart.html
+[install]: http://pyeapi.readthedocs.org/en/master/install.html
+[contribute]: http://pyeapi.readthedocs.org/en/master/contribute.html
+[modules]: http://pyeapi.readthedocs.org/en/master/modules.html
+[support]: http://pyeapi.readthedocs.org/en/master/support.html
+[rns]: http://pyeapi.readthedocs.org/en/master/release-notes.html
