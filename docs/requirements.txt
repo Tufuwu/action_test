@@ -1,5 +1,1 @@
-sphinx
-sphinx_gallery
-sphinx_rtd_theme
-sphinx-copybutton
-numpydoc
+m2r2
