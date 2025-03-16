@@ -1,0 +1,57 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2017, linuxmuster.net
+# This file is distributed under the same license as the linuxmuster.net package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: linuxmuster.net 6.2\n"
+"Report-Msgid-Bugs-To: \n"
+<<<<<<< Updated upstream
+"POT-Creation-Date: 2017-09-29 05:50+0700\n"
+=======
+"POT-Creation-Date: 2018-01-02 10:28+0700\n"
+>>>>>>> Stashed changes
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Language-Team: English (https://www.transifex.com/linuxmusternet/teams/62586/en/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../../source/index.rst:3
+msgid "linuxmuster.net 6.2 Dokumentation"
+msgstr ""
+
+#: ../../source/index.rst:5
+msgid ""
+"Herzlich Willkommen zur Dokumentation von linuxmuster.net! Diese "
+"Dokumentation beschreibt alle wichtigen Schritte von der Installation, der "
+"Einrichtung von Windows- und Ubuntu-Rechnern, der Verwaltung von Nutzern bis"
+" hin zu individuellen Anpassungen."
+msgstr ""
+
+#: ../../source/index.rst:7
+msgid ""
+"Neben dieser Dokumentation steht Ihnen unsere Community und unser Telefon-"
+"Support helfend Seite. Weiter Informationen dazu finden sie auf der `Website"
+" von Linuxmuster.net <http://linuxmuster.net/about/hilfsbereit/>`_."
+msgstr ""
+
+#: ../../source/index.rst:9
+msgid ""
+"Zum einen dient die Dokumentation als Schritt-für-Schritt Anleitung für die "
+"Einrichtungs- und Administrationsaufgaben, zum anderen als Referenz für die "
+"Möglichkeiten der freien Musterlösung linuxmuster.net."
+msgstr ""
+
+#: ../../source/index.rst:11
+msgid ""
+"Dabei richtet sich die Dokumentation an verschiedene Zielgruppen. Das "
+"Handbuch für Netzwerkbetreuer beschreibt die Installation und Konfiguration "
+"von Linuxmuster.net. Die Handbücher für Lehrkräfte und SchülerInnen haben "
+"vor allem die pädagogischen Funktionen der Musterlösung (Funktionen für den "
+"Unterricht, Klassenarbeitsmodus, Dateien austeilen und einsammeln, etc.)."
+msgstr ""
