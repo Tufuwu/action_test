@@ -1,78 +1,62 @@
-Lux is a project undergoing active development. If you are interested in contributing to Lux, the open tasks on [GitHub issues](https://github.com/lux-org/lux/issues), esp. issues labelled with the tag [`easy`](https://github.com/lux-org/lux/labels/easy), are good places for newcomers to contribute. This guide contains information on the workflow for contributing to the Lux codebase. For more information on the Lux architecture, see this [documentation page](https://lux-api.readthedocs.io/en/latest/source/advanced/architecture.html). 
+:tada: Welcome to the open-source impedance analysis community! :tada:
 
+Everyone is welcome to contribute.
+We value all forms of contributions including code reviews, bug fixes, new features, examples, documentation, community participation, etc.
 
-# Setting up Build and Installation Process
+This document outlines the guidelines for contributing to the various aspects of the project.
 
-To setup Lux manually for development purposes, you should [fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the Github repo and clone the forked version.
+# Contributing
 
-```bash
-git clone https://github.com/USERNAME/lux.git
-```
+If you find a bug in the code or a mistake in the [documentation](https://impedancepy.readthedocs.io/en/latest/?badge=latest) or want a new feature, you can help us by creating [an issue in our repository](https://github.com/ECSHackWeek/impedance.py/issues), or even submit a pull request.
 
-You can install Lux by building from the source code in your fork directly:
+# Development Guide
 
-```bash
-cd lux/
-pip install --user -r requirements.txt
-pip install --user -r requirements-dev.txt
-python setup.py install
-```
+## Repository Setup
 
-When you make a change to the source code in the `lux/` folder, you can rebuild by doing this: 
+1.  To work on the impedance.py package, you should first fork the repository on GitHub using the button on the top right of the ECSHackWeek/impedance.py repository.
+
+2.  You can then clone the fork to your computer
 
 ```bash
-python setup.py install
+git clone https://github.com/<GitHubUsername>/impedance.py
 ```
 
-# Debugging and Testing with Jupyter
+3.  Make your changes and commit them to your fork (for an introduction to git, checkout the [tutorial from the ECS Hack Week](https://github.com/ECSHackWeek/ECSHackWeek_Dallas/blob/master/Version_Control.pptx))
 
-It is often useful to test your code changes via Jupyter notebook. To debug your code changes, you can import a "local" copy of Lux without having to rebuild the changes everytime.
-
-For example, you can have a test notebook `test.ipynb` that imports. Note that when you do `import lux` at this path, it imports the local lux/ module instead of your global installation (either system-wide or in your virtual environment).
-
-```
-lux/
-    - test.ipynb
-    - lux/
-```
-
-# Code Formatting
-In order to keep our codebase clean and readible, we are using PEP8 guidelines. To help us maintain and check code style, we are using [black](https://github.com/psf/black). Simply run `black .` before commiting. Failure to do so may fail the tests run on Travis. This package should have been installed for you as part of [requirements-dev](https://github.com/lux-org/lux/blob/master/requirements-dev.txt). 
-
-# Running the Test Suite
-
-There is a suite of test files for ensuring that Lux is working correctly. These tests are triggered to run via [Travis CI](https://travis-ci.com/lux-org/lux) whenever there is a commit made to the lux repository. You can run them locally to make sure that your changes are working and do not break any of the existing tests.
-
-To run all the tests, including checking for code formatting, run:
-
-```
-make test
-```
-
-To run a single test file, run:
-
-```
-python -m pytest tests/<test_file_name>.py
-```
-
-
-
-# Submitting a Pull Request
-
- You can commit your code and push to your forked repo. Once all of your local changes have been tested and formatted, you are ready to submit a PR. For Lux, we use the "Squash and Merge" strategy to merge in PR, which means that even if you make a lot of small commits in your PR, they will all get squashed into a single commit associated with the PR. Please make sure that comments and unnecessary file changes are not committed as part of the PR by looking at the "File Changes" diff view on the pull request page.
-    
-Once the pull request is submitted, the maintainer will get notified and review your pull request. They may ask for additional changes or comment on the PR. You can always make updates to your pull request after submitting it.
-
-# Building Documentation
-
-Lux uses [Sphinx](https://www.sphinx-doc.org/en/master/) to generate the documentations, which contains both the docstring and the written documentation in the `doc/` folder. To build the documentation in HTML, you can run this command locally in the `doc/` folder:
-
+For example,
 ```bash
-make html
+git add changedfiles
+git commit
+git push
 ```
 
-This generates all the HTML documentation files in `doc/_build/html/`. The configuration file `conf.py` contains information related to Sphinx settings. The Sphinx documentations are written as ReStructuredText (`*.rst` files) and mostly stored in the `source/` folder. The documentation inside `source/reference` is auto-generated by Sphinx. The repository is linked with [ReadTheDocs](https://readthedocs.org/projects/lux-api/), which triggers the build for the latest documentation based on the most recent commit. As a result, we do not commit anything inside `doc/_build` in the Github repository.
+4.  [Submit a Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) (make sure to write a good message so the reviewer can understand what you're adding!) via GitHub.
 
-# Updating the Conda Recipe
+5.  Add yourself to the list of collaborators (you can use the [all-contributors bot](https://allcontributors.org/docs/en/bot/usage))! You rock!
 
-In order to update the conda recipe on conda forge, you can follow the steps [here](https://conda-forge.org/#update_recipe). The conda recipe needs to be updated when either a new dependency is added or when the version number needs to be updated in the case of a new release. 
+## Continuous Integration
+
+`impedance.py` uses [Travis CI](https://travis-ci.org/ECSHackWeek/impedance.py) for Continuous Integration testing. This means that every time you submit a pull request, a series of tests will be run to make sure the changes don’t accidentally introduce any bugs :bug:. *Your PR will not be accepted until it passes all of these tests.* While you can certainly wait for the results of these tests after submitting a PR, you can also run them locally to speed up the review process.
+
+We use flake8 to test for PEP 8 conformance. [PEP 8](https://www.python.org/dev/peps/pep-0008/) is a series of style guides for Python that provide suggestions for everything from variable naming to indentation. 
+To run the flake8 (PEP8) code style checker:
+
+```
+conda install flake8
+cd impedance.py/
+flake8
+```
+:warning: if there is any output here, fix the errors and try running flake8 again.
+
+To run the tests using py.test:
+
+```
+conda install pytest
+cd impedance.py/
+pytest
+```
+:warning: you should see all tests pass, if not try fixing the error or file an issue.
+
+### Unit Tests
+
+`impedance.py` aims to have complete test coverage of our package code. If you're adding a new feature, consider writing the test first and then the code to ensure it passes. PRs which decrease code coverage will need to add tests before they can be merged.
