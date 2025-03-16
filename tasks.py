@@ -13,7 +13,7 @@ from functools import partial
 from invoke import Exit, UnexpectedExit, run as _run, task
 
 
-PACKAGE_SOURCE = "src/sqlservice"
+PACKAGE_SOURCE = "src/cacheout"
 TEST_TARGETS = f"{PACKAGE_SOURCE} tests"
 LINT_TARGETS = f"{TEST_TARGETS} tasks.py"
 EXIT_EXCEPTIONS = (Exit, UnexpectedExit, SystemExit)
@@ -118,10 +118,7 @@ def docs(ctx, serve=False, bind="127.0.0.1", port=8000):
 
     if serve:
         print(f"Serving docs on {bind} port {port} (http://{bind}:{port}/) ...")
-        run(
-            f"python -m http.server -b {bind} --directory docs/_build/html {port}",
-            hide=True,
-        )
+        run(f"python -m http.server -b {bind} --directory docs/_build/html {port}", hide=True)
 
 
 @task

@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath('..'))
 from email import message_from_string
 from pkg_resources import get_distribution
 
-dist = get_distribution('sqlservice')
+dist = get_distribution('cacheout')
 
 if hasattr(dist, '_parsed_pkg_info'):
     pkg_info = dict(dist._parsed_pkg_info)
@@ -111,7 +111,7 @@ else:
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
     def setup(app):
-        app.add_css_file('theme_override.css')
+        app.add_stylesheet('theme_override.css')
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

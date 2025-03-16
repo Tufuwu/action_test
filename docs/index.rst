@@ -1,4 +1,4 @@
-.. sqlservice documentation master file
+.. cacheout documentation master file
 
 .. include:: ../README.rst
 
@@ -9,10 +9,15 @@ Guide
     :maxdepth: 3
 
     installation
-    model
-    event
-    client
-    api
+    cache
+    fifo
+    lifo
+    lru
+    mru
+    lfu
+    rr
+    memoization
+    manager
 
 
 Project Info

@@ -12,7 +12,7 @@ Types of Contributions
 Report Bugs
 +++++++++++
 
-Report bugs at https://github.com/dgilland/sqlservice.
+Report bugs at https://github.com/dgilland/cacheout.
 
 If you are reporting a bug, please include:
 
@@ -36,13 +36,13 @@ Look through the GitHub issues for features. Anything tagged with "enhancement" 
 Write Documentation
 +++++++++++++++++++
 
-SQLService could always use more documentation, whether as part of the official SQLService docs, in docstrings, or even on the web in blog posts, articles, and such.
+cacheout could always use more documentation, whether as part of the official cacheout docs, in docstrings, or even on the web in blog posts, articles, and such.
 
 
 Submit Feedback
 +++++++++++++++
 
-The best way to send feedback is to file an issue at https://github.com/dgilland/sqlservice.
+The best way to send feedback is to file an issue at https://github.com/dgilland/cacheout.
 
 If you are proposing a feature:
 
@@ -54,16 +54,16 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up ``sqlservice`` for local development.
+Ready to contribute? Here's how to set up ``cacheout`` for local development.
 
-1. Fork the ``sqlservice`` repo on GitHub.
+1. Fork the ``cacheout`` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/sqlservice.git
+    $ git clone git@github.com:your_username_here/cacheout.git
 
 3. Install Python dependencies into a virtualenv::
 
-    $ cd sqlservice
+    $ cd cacheout
     $ pip install -r requirements.txt
 
 4. Create a branch for local development::
@@ -72,11 +72,11 @@ Ready to contribute? Here's how to set up ``sqlservice`` for local development.
 
    Now you can make your changes locally.
 
-5. Autoformat code::
+5. Autoformat code using `black <https://github.com/ambv/black>`_::
 
-    $ inv fmt
+    $ tox -e black
 
-6. When you're done making changes, check that your changes pass all unit tests by testing with ``tox`` across all supported Python versions::
+6. When you're done making changes, check that your changes pass linting and all unit tests by testing with tox across all supported Python versions::
 
     $ tox
 
@@ -85,8 +85,8 @@ Ready to contribute? Here's how to set up ``sqlservice`` for local development.
 8. Commit your changes and push your branch to GitHub::
 
     $ git add .
-    $ git commit -m "<Detailed description of your changes>"
-    $ git push origin name-of-your-bugfix-or-feature-branch
+    $ git commit -m "Detailed description of your changes."
+    $ git push origin name-of-your-bugfix-or-feature
 
 9. Submit a pull request through GitHub.
 
@@ -97,4 +97,5 @@ Pull Request Guidelines
 Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
-2. The pull request should work for all versions Python that this project supports.
+2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring, and add the feature to the README.rst.
+3. The pull request should work for all versions Python that this project supports. Check https://travis-ci.org/dgilland/cacheout/pull_requests and make sure that the all environments pass.

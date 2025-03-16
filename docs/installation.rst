@@ -1,10 +1,10 @@
 Installation
 ============
 
-sqlservice requires Python >= 3.6.
+cacheout requires Python >= 3.4.
 
-To install from `PyPI <https://pypi.python.org/pypi/sqlservice>`_:
+To install from `PyPI <https://pypi.python.org/pypi/cacheout>`_:
 
 ::
 
-    pip install sqlservice
+    pip install cacheout
