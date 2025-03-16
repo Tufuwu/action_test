@@ -1,57 +1,60 @@
-# Copyright (C) 2018 Lukas Vrabec, <lvrabec@redhat.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from setuptools import setup
 
-import setuptools
-from setuptools.command.install import install
-import os
 
-from udica.version import version
+with open('README.rst') as readme:
+    long_description = readme.read()
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-setuptools.setup(
-    name="udica",
-    version=version,
-    author="Lukas Vrabec",
-    author_email="lvrabec@redhat.com",
-    description="A tool for generating SELinux security policies for containers",
-    license="GPLv3+",
+setup(
+    name='edx-repo-tools',
+    version='0.2.1',
+    description="This repo contains a number of tools Open edX uses for working with GitHub repositories.",
     long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/containers/udica",
-    packages=["udica"],
-    python_requires=">=3.4, <4",
-    data_files=[
-        ("/usr/share/licenses/udica", ["LICENSE"]),
-        ("/usr/share/udica/ansible", ["udica/ansible/deploy-module.yml"]),
-        ("/usr/share/udica/templates", ["udica/templates/base_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/config_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/home_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/log_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/net_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/tmp_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/tty_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/virt_container.cil"]),
-        ("/usr/share/udica/templates", ["udica/templates/x_container.cil"]),
-    ],
-    # scripts=["bin/udica"],
-    entry_points={"console_scripts": ["udica=udica.__main__:main"]},
+    license='Apache',
+    keywords='edx repo tools',
+    url='https://github.com/edx/repo-tools',
+    author='edX',
+    author_email='oscm@edx.org',
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-        "Operating System :: OS Independent",
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License'
     ],
+    packages=[
+        'edx_repo_tools',
+        'edx_repo_tools.dev',
+        'edx_repo_tools.oep2',
+        'edx_repo_tools.oep2.checks',
+        'edx_repo_tools.oep2.report',
+        'edx_repo_tools.ospr',
+        'edx_repo_tools.release',
+        'edx_repo_tools.drip_survey',
+    ],
+    install_requires=[
+        'appdirs',
+        'click',
+        'lazy',
+        'github3.py',
+        'pytest',
+        'pytest-xdist',
+        'pyyaml',
+        'ruamel.yaml'
+    ],
+    entry_points={
+        'console_scripts': [
+            'clone_org = edx_repo_tools.dev.clone_org:main',
+            'show_hooks = edx_repo_tools.dev.show_hooks:main',
+            'oep2 = edx_repo_tools.oep2:_cli',
+            'sync_labels = edx_repo_tools.ospr.sync_labels:sync_labels',
+            'no_yaml = edx_repo_tools.ospr.no_yaml:no_yaml',
+            'tag_release = edx_repo_tools.release.tag_release:main',
+            'drip = edx_repo_tools.drip_survey:cli',
+            'get_org_repo_urls = edx_repo_tools.dev.get_org_repo_urls:main',
+            'modernize_travis = django3_codemods.config_tools.travis_modernizer:main',
+            'modernize_tox = django3_codemods.config_tools.tox_modernizer:main',
+            'modernize_openedx_yaml = edx_repo_tools.modernize_openedx_yaml:main',
+        ],
+    },
+    package_data={
+        'edx_repo_tools.oep2.report': ['oep2-report.ini'],
+    }
 )
