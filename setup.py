@@ -1,55 +1,83 @@
-from setuptools import find_packages, setup
+#!/usr/bin/env python3
 
-with open("README.rst") as f:
-    long_description = f.read()
+import sys
+import re
 
-setup(
-    name="PyFeeds",
-    version="2020.5.16",
-    description="DIY Atom feeds in times of social media and paywalls",
-    long_description=long_description,
-    long_description_content_type="text/x-rst",
-    author="Florian Preinstorfer, Lukas Anzinger",
-    author_email="florian@nblock.org, lukas@lukasanzinger.at",
-    url="https://github.com/PyFeeds/PyFeeds",
-    packages=find_packages(exclude=["tests"]),
-    include_package_data=True,
+from distutils.core import setup
+from setuptools import (
+    setup as install,
+    find_packages,
+    Extension
+)
+
+# Parses version number: https://stackoverflow.com/a/7071358
+VERSIONFILE = 'learn2learn/_version.py'
+verstrline = open(VERSIONFILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    VERSION = mo.group(1)
+else:
+    raise RuntimeError('Unable to find version string in %s.' % (VERSIONFILE,))
+
+# Compile with Cython
+# https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html
+# https://github.com/FedericoStra/cython-package-example/blob/master/setup.py
+extension_type = '.c'
+cmd_class = {}
+use_cython = 'develop' in sys.argv or 'build_ext' in sys.argv
+if use_cython:
+    from Cython.Build import cythonize
+    from Cython.Distutils import build_ext
+    extension_type = '.pyx'
+    cmd_class = {'build_ext': build_ext}
+
+extensions = [
+    Extension(name='learn2learn.data.meta_dataset',
+              sources=['learn2learn/data/meta_dataset' + extension_type]), 
+    Extension(name='learn2learn.data.task_dataset',
+              sources=['learn2learn/data/task_dataset' + extension_type]), 
+    Extension(name='learn2learn.data.transforms',
+              sources=['learn2learn/data/transforms' + extension_type]), 
+]
+
+if use_cython:
+    compiler_directives = {'language_level': 3,
+                           'embedsignature': True,
+    #                       'profile': True,
+    #                       'binding': True,
+    }
+    extensions = cythonize(extensions, compiler_directives=compiler_directives)
+
+# Installs the package
+install(
+    name='learn2learn',
+    packages=find_packages(),
+    ext_modules=extensions,
+    cmdclass=cmd_class,
+    zip_safe=False,  # as per Cython docs
+    version=VERSION,
+    description='PyTorch Library for Meta-Learning Research',
+    long_description=open('README.md', encoding='utf8').read(),
+    long_description_content_type='text/markdown',
+    author='Debajyoti Datta, Ian bunner, Seb Arnold, Praateek Mahajan',
+    author_email='smr.arnold@gmail.com',
+    url='https://github.com/learnables/learn2learn',
+    download_url='https://github.com/learnables/learn2learn/archive/' + str(VERSION) + '.zip',
+    license='MIT',
+    classifiers=[],
+    scripts=[],
+    setup_requires=['cython>=0.28.5',],
     install_requires=[
-        "Click>=6.6",
-        "Scrapy>=2.2",
-        "bleach>=1.4.3",
-        "dateparser>=0.5.1",
-        "feedparser",
-        "lxml>=3.5.0",
-        "python-dateutil>=2.7.3",
-        "pyxdg>=0.26",
-        "readability-lxml>=0.7",
-        "scrapy-inline-requests",
-        "itemloaders",  # explicit dependency of Scrapy > 2.2.1
-    ],
-    extras_require={
-        "docs": ["sphinx", "sphinx_rtd_theme"],
-        "style": [
-            "black",
-            "doc8",
-            "flake8",
-            "isort>=5",
-            "pygments",
-            "restructuredtext_lint",
-        ],
-        "test": ["pytest"],
-    },
-    entry_points={"console_scripts": ["feeds=feeds.cli:main"]},
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Environment :: Console",
-        "Framework :: Scrapy",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU Affero General Public License v3",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Topic :: Internet :: WWW/HTTP",
+        'numpy>=1.15.4',
+        'gym>=0.14.0',
+        'torch>=1.1.0',
+        'torchvision>=0.3.0',
+        'pandas',
+        'requests',
+        'gsutil',
+        'tqdm',
+        'qpth>=0.0.15',
+        'pytorch_lightning>=1.0.2',
     ],
 )
