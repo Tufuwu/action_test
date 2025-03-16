@@ -1,9 +1,6 @@
-include uwsift/data/shadedrelief.jpg
-include uwsift/data/ne_50m_admin_0_countries/*
-include uwsift/data/ne_110m_admin_0_countries/*
-include uwsift/data/ne_50m_admin_1_states_provinces_lakes/*
-recursive-include uwsift/data/fonts *.ttf
-recursive-include uwsift/data/colormaps *.cmap
-recursive-include uwsift/data/grib_definitions *.def
-include uwsift/ui/*.ui
-include LICENSE.txt
+include LICENSE
+include AUTHORS
+include README.rst
+recursive-include import_export/templates *
+recursive-include import_export/locale *
+recursive-include import_export/static *
