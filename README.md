@@ -1,268 +1,65 @@
-# amitools - various AmigaOS tools for other platforms
+# full-offline-backup-for-todoist
 
-- written by Christian Vogelgsang <chris@vogelgsang.org>
-- under the GNU Public License V2
+[![Build Status](https://github.com/joanbm/full-offline-backup-for-todoist/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/joanbm/full-offline-backup-for-todoist/actions/workflows/run-tests.yml)
 
-## Introduction
+[![Coverage Status](https://coveralls.io/repos/github/joanbm/full-offline-backup-for-todoist/badge.svg)](https://coveralls.io/github/joanbm/full-offline-backup-for-todoist)
 
-`amitools` is a collection of Python 3 tools that I've written to work with
-*Amiga OS* binaries and files on macOS and all other *nix-like platforms
-supporting Python. Windows might work as
-well, but is heavily untested. However, patches are welcome.
+## Quick description
 
-I focus with my tools on classic Amiga setups, i.e. a 680x0 based system with
-Amiga OS 1.x - 3.x running on it. However, this is an open project, so you can
-provide other Amiga support, too.
+It is a utility that allows you to download a complete backup of your Todoist tasks, including all attachments, to your local computer, so you remain in control of all your data.
 
-The tools are mostly developer-oriented, so a background in Amiga programming
-will be very helpful.
+## What is the main aim of this tool?
 
-## Prerequisites
+With Todoist Premium, you can **attach files or photos to tasks as comments**, which is can be very convenient for everyday use, e.g. you can attach a photo of a bill to a task about paying it.
 
-- Python >= ```3.6```
-- pip
+Furthermore, Todoist has a **backup functionality**, which allows exporting the task data to a local computer in the form of a ZIP file, e.g. for offline usage or in the event of an incident with Todoist servers.
 
-### Optional Packages
+Unfortunately, the two don't mix: **The backup functionality doesn't back up any of the attachments assigned to tasks**. Instead, only an URL to download the attachments is included in the backup, which isn't useful or ideal for most scenarios.
 
-- [lhafile - FS Edition][1]: required to use ```.lha``` file scanner
-- [cython][7]: (version >= **0.25**) required to rebuild the native module
+This tool aims to allow you to make a complete backup, including all attachments, so you can easily keep all your task data secure on your own computer.
 
-### Install pip
+## Full feature list
 
-First make sure to have the Python 3 package installer ```pip3```:
+* Can downloads the backups from Todoist's servers through the Todoist API.
 
-#### macOS
+* Can download all attachments of the tasks associated to your Todoist backup.
 
-On macOS you have multiple ways of installing ```pip3```:
+* Can be easily automated to download your backups periodically.
 
-#### System Python
+## Status
 
-```bash
-sudo easy_install pip
-```
+Stable, but not tested under every possible scenario under the sun.
 
-#### Homebrew Package Manager
+## Requirements
 
-With the [Homebrew][3] package manager (```pip3``` is included in the ```python3``` package):
+* Python 3 (tested with Python 3.6.4+). No additional dependencies needed.
 
-```bash
-brew install python3
-```
+## Usage examples
 
-#### Linux/Ubuntu
+Download the repository and open a terminal at the root folder.
 
-On Linux Ubuntu use the provided packages ```python3-pip```
+To create a backup from Todoist's servers, without including attachments (you will be asked for your Todoist API Token through the command line):
 
-```bash
-sudo apt-get install python3-pip
-```
+``python3 -m full_offline_backup_for_todoist download``
 
-#### Centos
+To create a backup from Todoist's servers, including attachments, and with tracing/progress info:
 
-To get pip run:
+``python3 -m full_offline_backup_for_todoist --verbose download --with-attachments``
 
-```bash
-curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
-python3 get-pip.py
-```
+**NOTE:** You will also be asked to for you Todoist email and password. This is **required** to download the attachments, as a workaround due to security restriction introduced by Todoist in 2018 (see [issue #1](https://github.com/joanbm/full-offline-backup-for-todoist/issues/1)). As of today, there is no official way provided by Todoist to automate attachment download, and the current workaround may break at any time.
 
-#### Windows with Visual Studio
+Print full help:
 
-- Install the latest native Windows Python >= 3.6 from [python.org][6]
-- There is a special Edition for Visual Studio available that allows
-  to compile Python 3.x modules: Install [VCpython3][5]
-- Open the Command Shell of the Compiler and run
+``python3 -m full_offline_backup_for_todoist -h``
 
-```bash
-cd C:\Python3x\Scripts
-pip install amitools
-```
+## How to get my Todoist API token?
 
-#### Windows with MSYS2
+The easiest way to get one is to open the **web version of Todoist**, go to the **Settings** section, then to the **Integrations** sections and you will see a API token there in the **"Token API"** section.
 
-- (I use the mingw gcc compiler here to build the extension)
-- On Windows with [MSYS2][4] (use x86_64 version if possible):
-  - Install with exe installer
-  - Initial update is done with: (Open shell first)
+## How can I automate the backup process?
 
-```bash
-pacman -Sy
-pacman --needed -S bash pacman msys2-runtime
-```
+To automate the backup process, you can use any automation tool you want (e.g. cron, Jenkins) that can run the utility. In order to pass the credentials non-interactively, you can set the `TODOIST_TOKEN`, `TODOIST_EMAIL` and `TODOIST_PASSWORD` environment variables before running it from your automation tool.
 
-- Now close shell and re-open a new dev shell (```MinGW-w64 Win64 Shell```)
+# Disclaimer
 
-```bash
-pacman -Su
-pacman -S mingw-w64-x86_64-python2-pip mingw-w64-x86_64-gcc git make
-```
-
-[1]: https://github.com/FrodeSolheim/python-lhafile
-[2]: https://www.macports.org
-[3]: https://brew.sh
-[4]: https://github.com/msys2/msys2/wiki
-[5]: https://www.microsoft.com/en-gb/download/details.aspx?id=44266
-[6]: https://www.python.org
-[7]: https://cython.org
-
-## Installation
-
-### The Easy Way for Users
-
-#### Release Version
-
-```bash
-pip3 install amitools
-```
-
-Note:
-
-- on Linux/macOS may use ``sudo`` to install for all users
-- requires a host C compiler to compile the extension.
-
-#### Current Version from GitHub
-
-```bash
-pip3 install -U  git+https://github.com/cnvogelg/amitools.git
-```
-
-This will install the latest version found in the github repository.
-You find the latest features but it may also be unstable from time to time.
-
-### Developers
-
-- Follow this route if you want to hack around with the amitools codebase
-- Clone the Git repo: [amitools@git](https://github.com/cnvogelg/amitools)
-- Ensure to have Cython (version >= **0.25**) installed:
-
-```bash
-sudo pip3 install cython
-```
-
-You have multiple variants to install the tools with Python's `setuptools`:
-
-- **Global Install** is available for all users of your system and needs root privileges
-
-```bash
-sudo python3 setup.py install
-```
-
-- **User Install** is available for your user only but does not require special privileges
-
-```bash
-python3 setup.py install --user
-```
-
-- **Developer Setup** only links this code into your installation and allows
-   you to change/develop the code and test it immediately. (I prefer user install here)
-
-```bash
-python3 setup.py develop --user
-```
-
-- **Run In Place** allows you to run the binaries directly from the `bin` directory
-   without any installation. You need `make` only to build the native library
-   of vamos:
-
-```bash
-python3 setup.py build_ext -i
-```
-
-or if you have installed `GNU make` simply use:
-
-```bash
-make init       # global or virtualenv setup
-make init_user  # user setup
-```
-
-For more help on the `make` targets run:
-
-```bash
-make help
-```
-
-## Contents
-
-The new Documentation of `amitools` is hosted on [readthedocs][8]
-
-### Tools
-
-- [vamos](docs/vamos.md) **V)irtual AM)iga OS**
-
-  vamos allows you to run command line (CLI) Amiga programs on your host
-  Mac or PC. vamos is an API level Amiga OS Emulator that replaces exec
-  and dos calls with its own implementation and maps all file access to
-  your local file system.
-
-- [xdftool][9]
-
-  Create and modify ADF or HDF disk image files.
-
-- [xdfscan][10]
-
-  Scan directory trees for ADF or HDF disk image files and verify the contents.
-
-- [rdbtool][11]
-
-  Create or modify disk images with Rigid Disk Block (RDB)
-
-- [romtool][12]
-
-  A tool to inspect, dissect, and build Amiga Kickstart ROM images to be
-  used with emulators, run with soft kickers or burned into flash ROMs.
-
-- hunktool
-
-  The hunktool uses amitools' hunk library to load a hunk-based amiga
-  binary. Currently, its main purpose is to display the contents of the
-  files in various formats.
-
-  You can load hunk-based binaries, libraries, and object files. Even
-  overlayed binary files are supporte.
-
-- typetool
-
-  This little tool is a companion for vamos. It allows you to dump and get
-  further information on the API C structure of AmigaOS used in vamos.
-
-- fdtool
-
-  This tool reads the fd (function description) files Commodore supplied for
-  all of their libraries and dumps their contents in different formats
-  including a code structure used in vamos.
-
-  You can query functions and find their jump table offset.
-
-[8]: https://amitools.readthedocs.io/
-[9]: https://amitools.readthedocs.io/en/latest/tools/xdftool.html
-[10]: https://amitools.readthedocs.io/en/latest/tools/xdfscan.html
-[11]: https://amitools.readthedocs.io/en/latest/tools/rdbtool.html
-[12]: https://amitools.readthedocs.io/en/latest/tools/romtool.html
-
-### Python Libraries
-
-- Hunk library ```amitools.binfmt.hunk```
-
-  This library allows to read Amiga OS loadSeg()able binaries and represent
-  them in a python structure. You could query all items found there,
-  retrieve the code, data, and bss segments and even relocate them to target
-  addresses
-
-- ELF library ```amitools.binfmt.elf```
-
-  This library allows to read a subset of the ELF format mainly used in
-  AROS m68k.
-
-- .fd File Parser ```amitools.fd```
-
-  Parse function descriptions shipped by Commodore to describe the Amiga APIs
-
-- OFS and FFS File System Tools ```amitools.fs```
-
-  Create or modify Amiga's OFS and FFS file system structures
-
-- File Scanners ```amitools.scan```
-
-  I've written some scanners that walk through file trees and retrieve the
-  file data for further processing. I support file trees on the file system,
-  in lha archives or in adf/hdf disk images
+This is **NOT** an official application. This application is not created by, affiliated with, or supported by Doist.
