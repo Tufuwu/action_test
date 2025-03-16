@@ -1,158 +1,106 @@
-About
-=====
+# Efficient-Apriori ![Build Status](https://github.com/tommyod/Efficient-Apriori/workflows/Python%20CI/badge.svg?branch=master) [![PyPI version](https://badge.fury.io/py/efficient-apriori.svg)](https://pypi.org/project/efficient-apriori/) [![Documentation Status](https://readthedocs.org/projects/efficient-apriori/badge/?version=latest)](https://efficient-apriori.readthedocs.io/en/latest/?badge=latest) [![Downloads](https://pepy.tech/badge/efficient-apriori)](https://pepy.tech/project/efficient-apriori) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-This is a Japanese-English dictionary based on the
-[JMdict](http://www.edrdg.org/jmdict/j_jmdict.html) and [JMnedict](https://www.edrdg.org/enamdict/enamdict_doc.html) and [Tatoeba](https://tatoeba.org/) database for
-_e-Ink_ Kindle devices.
+An efficient pure Python implementation of the Apriori algorithm. Works with Python 3.6+.
 
-Features:
+The apriori algorithm uncovers hidden structures in categorical data.
+The classical example is a database containing purchases from a supermarket.
+Every purchase has a number of items associated with it.
+We would like to uncover association rules such as `{bread, eggs} -> {bacon}` from the data.
+This is the goal of [association rule learning](https://en.wikipedia.org/wiki/Association_rule_learning), and the [Apriori algorithm](https://en.wikipedia.org/wiki/Apriori_algorithm) is arguably the most famous algorithm for this problem.
+This repository contains an efficient, well-tested implementation of the apriori algorithm as described in the [original paper](https://www.macs.hw.ac.uk/~dwcorne/Teaching/agrawal94fast.pdf) by Agrawal et al, published in 1994.
 
-* lookup of inflected verbs.
-* lookup for Japanese names.
-* Example sentences
-* Pronunciation
-* the dictionaries can be downloaded as separate files or as one big dictionary
-
-<!--
-Screenshots were captured inside the Kindle device as explained in
-http://blog.blankbaby.com/2012/10/take-a-screenshot-on-a-kindle-paperwhite.html
-then processed with ImageMagick's
-`mogrify -colorspace gray -level 0%,111.11% -define PNG:compression-level=9`
-to look like E-Ink display.
--->
-
-![Inflection lookup screenshot](screenshots/infl.png)
-
-![Word lookup screenshot](screenshots/word.png)
-
-![Name lookup screenshot](screenshots/name.png)
-
-Supported Devices
-=================
-
-The dictionary has been tested on _Kindle Paperwhite_ and _Kindle Oasis_.  It _should_ also work
-well with other _e-ink_ Kindle devices
-
-The dictionary will *not* work well on _Kindle Fire_ or _Kindle Android App_,
-or any Android based Kindle, because the Kindle software on those platforms
-does not support inflection lookups.
+**The code is stable and in widespread use.** It's cited in the book "*Mastering Machine Learning Algorithms*" by Bonaccorso.
 
 
-Download
-========
+## Example
 
-You can download the latest version of the dictionary from
-[here](https://github.com/jrfonseca/jmdict-kindle/releases).
+Here's a minimal working example.
+Notice that in every transaction with `eggs` present, `bacon` is present too.
+Therefore, the rule `{eggs} -> {bacon}` is returned with 100 % confidence.
 
+```python
+from efficient_apriori import apriori
+transactions = [('eggs', 'bacon', 'soup'),
+                ('eggs', 'bacon', 'apple'),
+                ('soup', 'bacon', 'banana')]
+itemsets, rules = apriori(transactions, min_support=0.5, min_confidence=1)
+print(rules)  # [{eggs} -> {bacon}, {soup} -> {bacon}]
+```
+If your data is in a pandas DataFrame, you must [convert it to a list of tuples](https://github.com/tommyod/Efficient-Apriori/issues/12).
+Do you have **missing values**, or does the algorithm **run for a long time**? See [this comment](https://github.com/tommyod/Efficient-Apriori/issues/30#issuecomment-626129085).
+**More examples are included below.**
 
-Install
-=======
+## Installation
 
-_e-Ink_ Kindle
------------------
+The software is available through GitHub, and through [PyPI](https://pypi.org/project/efficient-apriori/).
+You may install the software using `pip`.
 
-There are in total 3 dictionaries:
-
-* `jmdict.mobi`: Contains only data from the JMedict database, with additional examples. It does not contain proper names.
-* `jmnedict.mobi`: Contains only Japanese proper names from the JMnedict databse.
-* `combined.mobi`: Contains the data from both of the above dictionaries
-
-To install any of the dictionaries (you can also install all three of them) into your device follow these steps:
-
-* for 1st-generation Kindle Paperwhite devices, ensure you have
-  [firmware version 5.3.9 or higher](http://www.amazon.com/gp/help/customer/display.html/ref=hp_left_cn?ie=UTF8&nodeId=201064850) as it includes improved homonym lookup for Japanese;
-* connect your Kindle device via USB;
-* copy the the `.mobi` file for the dictionary you want to use to the `documents/dictionaries` sub-folder;
-* eject the USB device;
-* on your device go to
-  _Home > Settings > Device Options > Language and Dictionaries > Dictionaries_
-  and set _JMdict Japanese-English Dictionary_ as the default dictionary for
-  Japanese.
-
-Kindle Android App
-------------------
-
-**NOTE: Unfortunately the Kindle Android App does not support dictionary inflections, yielding verbs lookup practically impossible. No known workaround.**
-
-* rename `jmdict.mobi` or any of the other two dictionaries as `B005FNK020_EBOK.prc`
-
-* connect your Android device via USB
-
-* copy `B005FNK020_EBOK.prc` into `Internal Storage/Android/data/com.amazon.kindle/files/` or `/sdcard/android/data/com.amazon.kindle/files`
-
-This will override the
-[default Japanese-Japanese dictionary](https://kindle.amazon.com/work/daijisen-x5927-x8f9e-japanese-edition-ebook/B005FNK020/B005FNK020).
-
-
-Building from source
-====================
-
-![Build](https://github.com/jrfonseca/jmdict-kindle/workflows/build/badge.svg?branch=master)
-
-Requirements:
-
-* Linux or Windows with Cygwin (might also work on macOS with a few changes)
-* Python version 3
-
-  * [Pycairo](http://www.cairographics.org/pycairo)
-  * [Pillow](http://pillow.readthedocs.io/en/latest/)
-  * [htmlmin](https://htmlmin.readthedocs.io/en/latest/index.html)
-
-Inside of the makefile you can change the max number of sentences per entry, compression, as well as which sentences to include:
-
-```makefile
-# The Kindle Publishing Guidelines recommend -c2 (huffdic compression),
-# but it is excruciatingly slow. That's why -c1 is selected by default.
-COMPRESSION ?= 1
-# Sets the max sentences per entry only for the jmdict.mobi.
-# It is ignored by combined.mobi due to size restrictions.
-# If there are too many sentences for the combined dictionary,
-# it will not build (exceeds 650MB size limit). The amount is limited to 3 in this makefile
-SENTENCES ?= 5
-# This flag determines wheter only good and verified sentences are used in the
-# dictionary. Set it to TRUE if you only want those sentences.
-# It is only used by jmdict.mobi
-# It is ignored bei combined.mobi. there it is always true
-# this is due to size constraints.
-ONLY_CHECKED_SENTENCES ?= FALSE
-# If true adds pronunciations indication
-PRONUNCIATIONS ?= TRUE
+```bash
+pip install efficient-apriori
 ```
 
-Build with make to create all 3 dictionaries:
+## Contributing
+
+You are very welcome to scrutinize the code and make pull requests if you have suggestions and improvements.
+Your submitted code must be PEP8 compliant, and all tests must pass.
+Contributors: [CRJFisher](https://github.com/CRJFisher)
+
+## More examples
+
+### Filtering and sorting association rules
+
+It's possible to filter and sort the returned list of association rules.
+
+```python
+from efficient_apriori import apriori
+transactions = [('eggs', 'bacon', 'soup'),
+                ('eggs', 'bacon', 'apple'),
+                ('soup', 'bacon', 'banana')]
+itemsets, rules = apriori(transactions, min_support=0.2, min_confidence=1)
+
+# Print out every rule with 2 items on the left hand side,
+# 1 item on the right hand side, sorted by lift
+rules_rhs = filter(lambda rule: len(rule.lhs) == 2 and len(rule.rhs) == 1, rules)
+for rule in sorted(rules_rhs, key=lambda rule: rule.lift):
+  print(rule)  # Prints the rule and its confidence, support, lift, ...
 ```
-make
+
+### Working with large datasets
+
+If you have **data that is too large to fit in memory**, you may pass a function returning a generator instead of a list.
+The `min_support` will most likely have to be a large value, or the algorithm will take very long before it terminates.
+If you have massive amounts of data, this Python implementation is likely not fast enough, and you should consult more specialized implementations.
+
+```python
+def data_generator(filename):
+  """
+  Data generator, needs to return a generator to be called several times.
+  Use this approach if data is too large to fit in memory. If not use a list.
+  """
+  def data_gen():
+    with open(filename) as file:
+      for line in file:
+        yield tuple(k.strip() for k in line.split(','))      
+
+  return data_gen
+
+transactions = data_generator('dataset.csv')
+itemsets, rules = apriori(transactions, min_support=0.9, min_confidence=0.6)
 ```
-or use any of the following commands to create a specific one:
+
+### Transactions with IDs
+
+If you need to know which transactions occurred in the frequent itemsets, set the `output_transaction_ids` parameter to `True`.
+This changes the output to contain `ItemsetCount` objects for each itemset.
+The objects have a `members` property containing is the set of ids of frequent transactions as well as a `count` property. 
+The ids are the enumeration of the transactions in the order they appear.    
+
+```python
+from efficient_apriori import apriori
+transactions = [('eggs', 'bacon', 'soup'),
+                ('eggs', 'bacon', 'apple'),
+                ('soup', 'bacon', 'banana')]
+itemsets, rules = apriori(transactions, output_transaction_ids=True)
+print(itemsets)
+# {1: {('bacon',): ItemsetCount(itemset_count=3, members={0, 1, 2}), ...
 ```
-make jmdict.mobi
-make jmnedict.mobi
-make combined.mobi
-```
-
-To do
-=====
-
-* Leverage more of the JMdict data:
-
-  * cross references
-* Add Furigana to example sentences
-* Create better covers
-
-
-Credits
-=======
-
-* Jim Breen and the [JMdict/EDICT project](http://www.edrdg.org/jmdict/j_jmdict.html) as well as the [ENAMDICT/JMnedict](https://www.edrdg.org/enamdict/enamdict_doc.html)
-* The [Tatoeba](https://tatoeba.org/) project
-* John Mettraux for his [EDICT2 Japanese-English Kindle dictionary](https://github.com/jmettraux/edict2-kindle)
-* Choplair-network for their [Nihongo conjugator](http://www.choplair.org/?Nihongo%20conjugator)
-* javdejong for the [pronunciation](https://github.com/javdejong/nhk-pronunciation)
-
-
-Alternatives
-============
-
-* [John Mettraux's EDICT2 Japanese-English Kindle dictionary](https://github.com/jmettraux/edict2-kindle)
-
-* [Amazon Kindle Store](http://www.amazon.com/s/url=search-alias%3Ddigital-text&field-keywords=japanese+english+dictionary)
