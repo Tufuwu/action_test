@@ -1,27 +1,64 @@
-Contributing
-============
 
-The `go-netbox` project makes use of the [GitHub Flow](https://guides.github.com/introduction/flow/)
-for contributions.
+## Workflow
 
-If you'd like to contribute to the project, please
-[open an issue](https://github.com/netbox-community/go-netbox/issues/new) or find an
-[existing issue](https://github.com/netbox-community/go-netbox/issues) that you'd like
-to take on.  This ensures that efforts are not duplicated, and that a new feature
-aligns with the focus of the rest of the repository.
+1. Clone
 
-Once your suggestion has been submitted and discussed, please be sure that your
-code meets the following criteria:
-  - code is completely `gofmt`'d
-  - new features or codepaths have appropriate test coverage
-  - `go test ./...` passes
-  - `go vet ./...` passes
-  - `golint ./...` returns no warnings, including documentation comment warnings
+2. Install code style tools
+```bash
+pip install pre-commit==1.17.0
+pip install cpplint==1.4.4
+pip install pydocstyle==4.0.0
+pip install pylint==2.3.1
+pip install yapf==0.28.0
+sudo apt install clang-format
+```
 
-In addition, if this is your first time contributing to the `go-netbox` project,
-add your name and email address to the
-[AUTHORS](https://github.com/netbox-community/go-netbox/blob/master/AUTHORS) file
-under the "Contributors" section using the format:
-`First Last <email@example.com>`.
+3. At your local repo root, run
+```bash
+pre-commit install
+```
 
-Finally, submit a pull request for review!
+4. Make local changes
+```bash
+git co -b PR_change_name origin/master
+```
+
+Make change to your code and test. You can run all the existing unittests
+by the following command:
+```bash
+python -m unittest discover -s alf -p "*_test.py" -v
+```
+
+Then commit your change to the local branch using `git commit`
+
+5. Make pull request:
+```bash
+git push origin PR_change_name
+```
+6. Change your code based on review comments. The new change should be added
+as NEW commit to your previous commits. Do not use `--amend` option for the 
+commit, because then you will have to use '-f' option to push your change to
+github and review will be more difficult because the new change cannot
+be separated from previous change. For the same reason, if you need to incorporate
+the latest code from master, please use `git pull` instead of `git pull --rebase`.
+
+## Coding standard
+
+We follow the coding style http://google.github.io/styleguide/pyguide.html. 
+And please comment all the public functions with the following style:
+```python
+def func(a, b):
+    """Short summary of the function
+
+    Detailed explanation of the function. Including math equations and
+    references. The explanation should be detail enough for the user to have a
+    clear understanding of its function without reading its implementation.
+
+    Args:
+        a (type of a): purpose
+        b (type of b): purpose
+    Returns:
+        return value1 (type 1): purpose
+        return value2 (type 1): purpose
+    """
+```
