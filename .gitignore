@@ -1,5 +1,12 @@
-.vscode/
-denstream/__pycache__/
-denstream/tests/__pycache__/
-denstream.egg-info/
-examples/.ipynb_checkpoints/
+*~
+*.pyc
+*.egg-info
+*.eggs/
+*.pybuild/
+__pycache__/
+/build
+/dist
+/deb_dist
+/debian/stcgal*
+/debian/files
+/.vscode
