@@ -1,77 +1,33 @@
-#!/usr/bin/env python
+from setuptools import find_packages, setup
 
-from __future__ import absolute_import
+with open('README.rst', 'r') as f:
+    long_description = f.read()
 
-import os.path as op
-import versioneer
-
-from setuptools import setup, find_packages, Extension
-from setup_helper import SetupHelper
-
-name = "jcvi"
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 3",
-    "Topic :: Scientific/Engineering :: Bio-Informatics",
-]
-
-# Use the helper
-h = SetupHelper(initfile="jcvi/__init__.py", readmefile="README.md")
-h.check_version(name, majorv=2, minorv=7)
-cmdclass = versioneer.get_cmdclass()
-include_dirs = []
-setup_dir = op.abspath(op.dirname(__file__))
-requirements = [x.strip() for x in open(op.join(setup_dir, "requirements.txt"))]
-h.install_requirements(requires=["cython", "numpy"])
-
-# Build the ext
-try:
-    import numpy as np
-    from Cython.Distutils import build_ext
-
-    cmdclass.update({"build_ext": build_ext})
-    include_dirs.append(np.get_include())
-except ImportError:
-    print("Cython not installed. Skip compiling Cython extensions.")
-
-ext_modules = [
-    Extension(
-        "jcvi.assembly.chic",
-        ["jcvi/assembly/chic.pyx"],
-        include_dirs=include_dirs,
-        extra_compile_args=["-O3"],
-    ),
-    Extension(
-        "jcvi.formats.cblast", ["jcvi/formats/cblast.pyx"], extra_compile_args=["-O3"]
-    ),
-]
-
-packages = [name] + [
-    ".".join((name, x)) for x in find_packages("jcvi", exclude=["test*.py"])
-]
+with open('VERSION', 'r') as f:
+    version = f.read()
 
 setup(
-    name=name,
-    author=h.author,
-    author_email=h.email,
-    version=versioneer.get_version(),
-    license=h.license,
-    long_description=h.long_description,
-    long_description_content_type="text/markdown",
-    cmdclass=cmdclass,
-    packages=packages,
-    include_package_data=True,
-    package_data={"jcvi.utils.data": ["*.*"]},
-    ext_modules=ext_modules,
-    classifiers=classifiers,
-    zip_safe=False,
-    url="http://github.com/tanghaibao/jcvi",
-    description="Python utility libraries on genome assembly, "
-    "annotation and comparative genomics",
-    setup_requires=["setuptools>=18.0", "cython"],
-    install_requires=requirements,
+    name='sportsreference',
+    version=version,
+    author='Robert Clark',
+    author_email='robdclark@outlook.com',
+    description='A free sports API written for python',
+    long_description=long_description,
+    license='MIT',
+    url='https://github.com/roclark/sportsreference',
+    packages=find_packages(),
+    python_requires='>=3.5',
+    keywords='stats sports api sportsreference machine learning',
+    install_requires=[
+        "pandas >= 0.24.1",
+        "pyquery >= 1.4.0",
+        "requests >= 2.18.4"
+    ],
+    classifiers=(
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+    ),
 )

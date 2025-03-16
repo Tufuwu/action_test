@@ -1,50 +1,19 @@
-# Created by http://www.gitignore.io
+# Python specific
+*.pyc
 
-### Python ###
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
+# Test files
+*cache*
+*coverage*
 
-# C extensions
-*.so
+# Building files
+build*
+dist*
+sportsreference.egg-info*
 
-# Distribution / packaging
-.Python
-env/
-build/
-develop-eggs/
-dist/
-eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.cache
-nosetests.xml
-coverage.xml
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-
-# Sphinx documentation
-docs/_build/
-
-# gffutils temp DB file
-*.db
+# VirtualEnv
+bin/*
+include/*
+lib/*
+man/*
+pip-selfcheck.json
+env/*
