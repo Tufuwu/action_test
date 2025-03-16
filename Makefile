@@ -1,133 +1,87 @@
-# vim: set noet sw=4 ts=4 fileencoding=utf-8:
+.PHONY: clean clean-test clean-pyc clean-build docs help
+.DEFAULT_GOAL := help
 
-# External utilities
-PYTHON ?= python
-PIP ?= pip
-PYTEST ?= pytest
-COVERAGE ?= coverage
-TWINE ?= twine
-PYFLAGS ?=
-DEST_DIR ?= /
+define BROWSER_PYSCRIPT
+import os, webbrowser, sys
 
-# Find the location of python-apt (only packaged for apt, not pip)
-PYTHON_APT:=$(wildcard /usr/lib/python3/dist-packages/apt) \
-	$(wildcard /usr/lib/python3/dist-packages/apt_pkg*.so) \
-	$(wildcard /usr/lib/python3/dist-packages/apt_inst*.so)
+try:
+	from urllib import pathname2url
+except:
+	from urllib.request import pathname2url
 
-# Calculate the base names of the distribution, the location of all source,
-# documentation, packaging, icon, and executable script files
-NAME:=$(shell $(PYTHON) $(PYFLAGS) setup.py --name)
-PKG_DIR:=$(subst -,_,$(NAME))
-VER:=$(shell $(PYTHON) $(PYFLAGS) setup.py --version)
-PY_SOURCES:=$(shell \
-	$(PYTHON) $(PYFLAGS) setup.py egg_info >/dev/null 2>&1 && \
-	grep -v "\.egg-info" $(PKG_DIR).egg-info/SOURCES.txt)
-DOC_SOURCES:=docs/conf.py \
-	$(wildcard docs/*.png) \
-	$(wildcard docs/*.svg) \
-	$(wildcard docs/*.dot) \
-	$(wildcard docs/*.mscgen) \
-	$(wildcard docs/*.gpi) \
-	$(wildcard docs/*.rst) \
-	$(wildcard docs/*.pdf)
-SUBDIRS:=
+webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
+endef
+export BROWSER_PYSCRIPT
 
-# Calculate the name of all outputs
-DIST_WHEEL=dist/$(NAME)-$(VER)-py2.py3-none-any.whl
-DIST_TAR=dist/$(NAME)-$(VER).tar.gz
-DIST_ZIP=dist/$(NAME)-$(VER).zip
-MAN_PAGES=man/piw-master.1 man/piw-slave.1 man/piw-monitor.1 man/piw-initdb.1
+define PRINT_HELP_PYSCRIPT
+import re, sys
 
+for line in sys.stdin:
+	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
+	if match:
+		target, help = match.groups()
+		print("%-20s %s" % (target, help))
+endef
+export PRINT_HELP_PYSCRIPT
 
-# Default target
-all:
-	@echo "make install - Install on local system"
-	@echo "make develop - Install symlinks for development"
-	@echo "make test - Run tests"
-	@echo "make doc - Generate HTML and PDF documentation"
-	@echo "make source - Create source package"
-	@echo "make egg - Generate a PyPI egg package"
-	@echo "make zip - Generate a source zip package"
-	@echo "make tar - Generate a source tar package"
-	@echo "make dist - Generate all packages"
-	@echo "make clean - Get rid of all generated files"
-	@echo "make release - Create and tag a new release"
-	@echo "make upload - Upload the new release to repositories"
+BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
-install: $(SUBDIRS)
-	$(PYTHON) $(PYFLAGS) setup.py install --root $(DEST_DIR)
+help:
+	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-doc: $(DOC_SOURCES)
+clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+
+clean-build: ## remove build artifacts
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+	find . -name '*.egg-info' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -f {} +
+
+clean-pyc: ## remove Python file artifacts
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
+
+clean-test: ## remove test and coverage artifacts
+	rm -fr .tox/
+	rm -f .coverage
+	rm -fr htmlcov/
+
+lint: ## check style with flake8
+	flake8 xbox tests
+
+test: ## run tests quickly with the default Python
+	py.test
+
+test-all: ## run tests on every Python version with tox
+	tox
+
+coverage: ## check code coverage quickly with the default Python
+	coverage run --source xbox -m pytest
+	coverage report -m
+	coverage html
+	$(BROWSER) htmlcov/index.html
+
+docs: ## generate Sphinx HTML documentation, including API docs
+	rm -f docs/xbox.rst
+	rm -f docs/modules.rst
+	sphinx-apidoc --implicit-namespaces -a -e -o docs/source xbox
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
-	$(MAKE) -C docs epub
-	$(MAKE) -C docs latexpdf
+	$(BROWSER) docs/_build/html/index.html
 
-source: $(DIST_TAR) $(DIST_ZIP)
+servedocs: docs ## compile the docs watching for changes
+	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
-wheel: $(DIST_WHEEL)
+release: clean ## package and upload a release
+	twine upload dist/*
 
-zip: $(DIST_ZIP)
+dist: clean ## builds source and wheel package
+	python setup.py sdist
+	python setup.py bdist_wheel
+	ls -l dist
 
-tar: $(DIST_TAR)
-
-dist: $(DIST_WHEEL) $(DIST_TAR) $(DIST_ZIP)
-
-develop: tags
-	@# These have to be done separately to avoid a cockup...
-	$(PIP) install -U setuptools
-	$(PIP) install -U pip
-	$(PIP) install -e .[doc,test,master,slave,monitor,logger]
-	@# If we're in a venv, link the system's RTIMULib into it
-ifeq ($(VIRTUAL_ENV),)
-	@echo "Virtualenv not detected! You may need to link python3-apt manually"
-else
-ifeq ($(PYTHON_APT),)
-	@echo "WARNING: python3-apt not found. This is fine on non-Debian platforms"
-else
-	for lib in $(PYTHON_APT); do ln -sf $$lib $(VIRTUAL_ENV)/lib/python*/site-packages/; done
-endif
-endif
-
-test:
-	$(COVERAGE) run --rcfile coverage.cfg -m $(PYTEST) -v tests
-	$(COVERAGE) report --rcfile coverage.cfg
-
-clean:
-	rm -fr dist/ $(NAME).egg-info/ tags
-	for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir clean; \
-	done
-	find $(CURDIR) -name "*.pyc" -delete
-
-tags: $(PY_SOURCES)
-	ctags -R --exclude="build/*" --exclude="debian/*" --exclude="docs/*" --languages="Python"
-
-lint: $(PY_SOURCES)
-	pylint piwheels
-
-$(SUBDIRS):
-	$(MAKE) -C $@
-
-$(MAN_PAGES): $(DOC_SOURCES)
-	$(PYTHON) $(PYFLAGS) setup.py build_sphinx -b man
-	mkdir -p man/
-	cp build/sphinx/man/*.[0-9] man/
-
-$(DIST_TAR): $(PY_SOURCES) $(SUBDIRS)
-	$(PYTHON) $(PYFLAGS) setup.py sdist --formats gztar
-
-$(DIST_ZIP): $(PY_SOURCES) $(SUBDIRS)
-	$(PYTHON) $(PYFLAGS) setup.py sdist --formats zip
-
-$(DIST_WHEEL): $(PY_SOURCES) $(SUBDIRS)
-	$(PYTHON) $(PYFLAGS) setup.py bdist_wheel
-
-release: $(PY_SOURCES) $(DOC_SOURCES)
-	git tag -s release-$(VER) -m "Release $(VER)"
-	git push --tags
-	git push
-	# build a source archive and upload to PyPI
-	$(TWINE) upload $(DIST_TAR) $(DIST_WHEEL)
-
-.PHONY: all install develop test doc source wheel zip tar dist clean tags release $(SUBDIRS)
+install: clean ## install the package to the active Python's site-packages
+	python setup.py install

@@ -1,6 +1,10 @@
-recursive-include piwheels/master/static *
-include piwheels/master/default_libs.txt
-include piwheels/master/templates/*.pt
-include piwheels/initdb/sql/*.sql
+include CONTRIBUTING.rst
+include HISTORY.rst
+include LICENSE
 include README.rst
-include LICENSE.txt
+
+recursive-include tests *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
+recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif

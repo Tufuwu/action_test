@@ -1,203 +1,177 @@
-#!/usr/bin/env python3
-# vim: set et sw=4 sts=4 fileencoding=utf-8:
+# -*- coding: utf-8 -*-
 #
-# The piwheels project
-#   Copyright (c) 2017 Ben Nuttall <https://github.com/bennuttall>
-#   Copyright (c) 2017 Dave Jones <dave@waveform.org.uk>
+# Configuration file for the Sphinx documentation builder.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#     * Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the copyright holder nor the
-#       names of its contributors may be used to endorse or promote products
-#       derived from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
+# This file does only contain a selection of the most common options. For a
+# full list see the documentation:
+# http://www.sphinx-doc.org/en/stable/config
 
-import sys
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
 import os
-from datetime import datetime
-from unittest import mock
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-import piwheels as _setup
+import sys
+sys.path.insert(0, os.path.abspath('../'))
 
-sys.modules['zmq'] = mock.MagicMock()
-sys.modules['zmq.error'] = mock.Mock()
-sys.modules['dateutil'] = mock.Mock()
-sys.modules['dateutil.parser'] = mock.Mock()
-sys.modules['configargparse'] = mock.Mock()
-sys.modules['sqlalchemy'] = mock.Mock()
-sys.modules['sqlalchemy.exc'] = mock.Mock()
-sys.modules['sqlalchemy.engine.url'] = mock.Mock()
-sys.modules['piwheels.terminal'] = mock.Mock()
-sys.modules['voluptuous'] = mock.Mock()
-sys.modules['cbor2'] = mock.Mock()
-sys.modules['chameleon'] = mock.Mock()
-sys.modules['psycopg2.extensions'] = mock.Mock()
-sys.modules['psycopg2'] = mock.Mock()
+# -- Project information -----------------------------------------------------
 
-# -- General configuration ------------------------------------------------
+project = 'Xbox-WebAPI'
+copyright = '2018, OpenXbox'
+author = 'OpenXbox'
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.intersphinx']
-if on_rtd:
-    needs_sphinx = '1.4.0'
-    extensions.append('sphinx.ext.imgmath')
-    imgmath_image_format = 'svg'
-    tags.add('rtd')
-else:
-    extensions.append('sphinx.ext.mathjax')
-    mathjax_path = '/usr/share/javascript/mathjax/MathJax.js?config=TeX-AMS_HTML'
+# The short X.Y version
+version = '1.0'
+# The full version, including alpha/beta/rc tags
+release = '1.1.8'
 
+
+# -- General configuration ---------------------------------------------------
+
+# If your documentation needs a minimal Sphinx version, state it here.
+#
+# needs_sphinx = '1.0'
+
+# Add any Sphinx extension module names here, as strings. They can be
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# ones.
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon'
+]
+
+# Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-source_suffix = '.rst'
-#source_encoding = 'utf-8-sig'
+
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+#
+# source_suffix = ['.rst', '.md']
+source_suffix = ['.rst']
+
+# The master toctree document.
 master_doc = 'index'
-project = _setup.__project__.title()
-copyright = '2017-%s %s' % (datetime.now().year, _setup.__author__)
-version = _setup.__version__
-release = _setup.__version__
-#language = None
-#today_fmt = '%B %d, %Y'
-exclude_patterns = ['_build']
-highlight_language = 'python3'
-#default_role = None
-#add_function_parentheses = True
-#add_module_names = True
-#show_authors = False
+
+# The language for content autogenerated by Sphinx. Refer to documentation
+# for a list of supported languages.
+#
+# This is also used if you do content translation via gettext catalogs.
+# Usually you set "language" from the command line for these cases.
+language = None
+
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+# This pattern also affects html_static_path and html_extra_path .
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+# The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
-#modindex_common_prefix = []
-#keep_warnings = False
 
-# -- Autodoc configuration ------------------------------------------------
 
-autodoc_member_order = 'groupwise'
+# -- Options for HTML output -------------------------------------------------
 
-# -- Intersphinx configuration --------------------------------------------
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+#
+html_theme = 'sphinx_rtd_theme'
 
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.5', None),
-    'lars': ('https://lars.readthedocs.io/en/latest', None),
-    'simplejson': ('https://simplejson.readthedocs.io/en/latest', None),
-}
-intersphinx_cache_limit = 7
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
+# html_theme_options = {}
 
-# -- Options for HTML output ----------------------------------------------
-
-if on_rtd:
-    html_theme = 'sphinx_rtd_theme'
-    pygments_style = 'default'
-    #html_theme_options = {}
-    #html_sidebars = {}
-else:
-    html_theme = 'default'
-    #html_theme_options = {}
-    #html_sidebars = {}
-html_title = '%s %s Documentation' % (project, version)
-#html_theme_path = []
-#html_short_title = None
-#html_logo = None
-#html_favicon = None
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-#html_extra_path = []
-#html_last_updated_fmt = '%b %d, %Y'
-#html_use_smartypants = True
-#html_additional_pages = {}
-#html_domain_indices = True
-#html_use_index = True
-#html_split_index = False
-#html_show_sourcelink = True
-#html_show_sphinx = True
-#html_show_copyright = True
-#html_use_opensearch = ''
-#html_file_suffix = None
-htmlhelp_basename = '%sdoc' % _setup.__project__
 
-# Hack to make wide tables work properly in RTD
-# See https://github.com/snide/sphinx_rtd_theme/issues/117 for details
-def setup(app):
-    app.add_stylesheet('style_override.css')
+# Custom sidebar templates, must be a dictionary that maps document names
+# to template names.
+#
+# The default sidebars (for documents that don't match any pattern) are
+# defined by theme itself.  Builtin themes are using these templates by
+# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
+# 'searchbox.html']``.
+#
+# html_sidebars = {}
 
-# -- Options for LaTeX output ---------------------------------------------
 
-#latex_engine = 'pdflatex'
+# -- Options for HTMLHelp output ---------------------------------------------
+
+# Output file base name for HTML help builder.
+htmlhelp_basename = 'Xbox-WebAPIdoc'
+
+
+# -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
-    'papersize': 'a4paper',
-    'pointsize': '10pt',
-    'preamble': r'\def\thempfootnote{\arabic{mpfootnote}}', # workaround sphinx issue #2530
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
+
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
+
+    # Additional stuff for the LaTeX preamble.
+    #
+    # 'preamble': '',
+
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
 }
 
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (
-        'index',                       # source start file
-        '%s.tex' % _setup.__project__, # target filename
-        '%s %s Documentation' % (project, version), # title
-        _setup.__author__,             # author
-        'manual',                      # documentclass
-        True,                          # documents ref'd from toctree only
-    ),
+    (master_doc, 'Xbox-WebAPI.tex', 'Xbox-WebAPI Documentation',
+     'OpenXbox', 'manual'),
 ]
 
-#latex_logo = None
-#latex_use_parts = False
-latex_show_pagerefs = True
-latex_show_urls = 'footnote'
-#latex_appendices = []
-#latex_domain_indices = True
 
-# -- Options for epub output ----------------------------------------------
+# -- Options for manual page output ------------------------------------------
 
-epub_basename = _setup.__project__
-#epub_theme = 'epub'
-#epub_title = html_title
-epub_author = _setup.__author__
-epub_identifier = 'https://piwheels.readthedocs.io/'
-#epub_tocdepth = 3
-epub_show_urls = 'no'
-#epub_use_index = True
-
-# -- Options for manual page output ---------------------------------------
-
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
 man_pages = [
-    ('master',   'piw-master',   'PiWheels Master',              [_setup.__author__], 1),
-    ('slaves',   'piw-slave',    'PiWheels Build Slave',         [_setup.__author__], 1),
-    ('monitor',  'piw-monitor',  'PiWheels Monitor',             [_setup.__author__], 1),
-    ('sense',    'piw-sense',    'PiWheels Sense HAT Monitor',   [_setup.__author__], 1),
-    ('initdb',   'piw-initdb',   'PiWheels Initialize Database', [_setup.__author__], 1),
-    ('importer', 'piw-import',   'PiWheels Package Importer',    [_setup.__author__], 1),
-    ('remove',   'piw-remove',   'PiWheels Package Remover',     [_setup.__author__], 1),
-    ('logger',   'piw-logger',   'PiWheels Logger',              [_setup.__author__], 1),
+    (master_doc, 'xbox-webapi', 'Xbox-WebAPI Documentation',
+     [author], 1)
 ]
 
-man_show_urls = True
 
-# -- Options for Texinfo output -------------------------------------------
+# -- Options for Texinfo output ----------------------------------------------
 
-texinfo_documents = []
+# Grouping the document tree into Texinfo files. List of tuples
+# (source start file, target name, title, author,
+#  dir menu entry, description, category)
+texinfo_documents = [
+    (master_doc, 'Xbox-WebAPI', 'Xbox-WebAPI Documentation',
+     author, 'Xbox-WebAPI', 'One line description of project.',
+     'Miscellaneous'),
+]
 
-#texinfo_appendices = []
-#texinfo_domain_indices = True
-#texinfo_show_urls = 'footnote'
-#texinfo_no_detailmenu = False
 
-# -- Options for linkcheck builder ----------------------------------------
+# -- Extension configuration -------------------------------------------------
 
-linkcheck_retries = 3
-linkcheck_workers = 20
-linkcheck_anchors = True
+# -- Options for intersphinx extension ---------------------------------------
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {'https://docs.python.org/': None}
+
+# -- Options for napoleon extension ------------------------------------------
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = True
+
+# -- Autodoc settings
+autodoc_member_order = 'bysource'
