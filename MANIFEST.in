@@ -1,3 +1,2 @@
-graft src
-
-global-exclude *.py[cod]
+include setup.cfg README.md requirements/core.txt
+recursive-include django_mock_queries *.py
