@@ -1,205 +1,308 @@
-========
-gpiozero
-========
+===================
+django-health-check
+===================
 
-.. image:: https://badge.fury.io/gh/gpiozero%2Fgpiozero.svg
-    :target: https://badge.fury.io/gh/gpiozero%2Fgpiozero
-    :alt: Source code on GitHub
+|version| |coverage| |health| |license|
 
-.. image:: https://badge.fury.io/py/gpiozero.svg
-    :target: https://badge.fury.io/py/gpiozero
-    :alt: Latest Version
+This project checks for various conditions and provides reports when anomalous
+behavior is detected.
 
-.. image:: https://travis-ci.org/gpiozero/gpiozero.svg?branch=master
-    :target: https://travis-ci.org/gpiozero/gpiozero
-    :alt: Build Tests
+The following health checks are bundled with this project:
 
-.. image:: https://img.shields.io/codecov/c/github/gpiozero/gpiozero/master.svg?maxAge=2592000
-    :target: https://codecov.io/github/gpiozero/gpiozero
-    :alt: Code Coverage
+- cache
+- database
+- storage
+- disk and memory utilization (via ``psutil``)
+- AWS S3 storage
+- Celery task queue
+- RabbitMQ
+- Migrations
 
-A simple interface to GPIO devices with Raspberry Pi.
+Writing your own custom health checks is also very quick and easy.
 
-Created by `Ben Nuttall`_ and `Dave Jones`_.
+We also like contributions, so don't be afraid to make a pull request.
 
-.. _Ben Nuttall: https://github.com/bennuttall
-.. _Dave Jones: https://github.com/waveform80
+Use Cases
+---------
 
-About
-=====
+The primary intended use case is to monitor conditions via HTTP(S), with
+responses available in HTML and JSON formats. When you get back a response that
+includes one or more problems, you can then decide the appropriate course of
+action, which could include generating notifications and/or automating the
+replacement of a failing node with a new one. If you are monitoring health in a
+high-availability environment with a load balancer that returns responses from
+multiple nodes, please note that certain checks (e.g., disk and memory usage)
+will return responses specific to the node selected by the load balancer.
 
-Component interfaces are provided to allow a frictionless way to get started
-with physical computing:
+Supported Versions
+------------------
 
-.. code:: python
-
-    from gpiozero import LED
-    from time import sleep
-
-    led = LED(17)
-
-    while True:
-        led.on()
-        sleep(1)
-        led.off()
-        sleep(1)
-
-With very little code, you can quickly get going connecting your components
-together:
-
-.. code:: python
-
-    from gpiozero import LED, Button
-    from signal import pause
-
-    led = LED(17)
-    button = Button(3)
-
-    button.when_pressed = led.on
-    button.when_released = led.off
-
-    pause()
-
-You can advance to using the declarative paradigm along with provided
-to describe the behaviour of devices and their interactions:
-
-.. code:: python
-
-    from gpiozero import LED, MotionSensor, LightSensor
-    from gpiozero.tools import booleanized, all_values
-    from signal import pause
-
-    garden = LED(17)
-    motion = MotionSensor(4)
-    light = LightSensor(5)
-
-    garden.source = all_values(booleanized(light, 0, 0.1), motion)
-
-    pause()
-
-See the chapter on `Source/Values`_ for more information.
-
-.. _Source/Values: https://gpiozero.readthedocs.io/en/stable/source_values.html
-
-The library includes interfaces to many simple everyday components, as well as
-some more complex things like sensors, analogue-to-digital converters, full
-colour LEDs, robotics kits and more. See the `Recipes`_ chapter of the
-documentation for ideas on how to get started.
-
-.. _Recipes: https://gpiozero.readthedocs.io/en/stable/recipes.html
-
-Pin factories
-=============
-
-GPIO Zero builds on a number of underlying pin libraries, including `RPi.GPIO`_
-and `pigpio`_, each with their own benefits. You can select a particular pin
-library to be used, either for the whole script or per-device, according to your
-needs. See the section on `changing the pin factory`_.
-
-.. _RPi.GPIO: https://pypi.org/project/RPi.GPIO
-.. _pigpio: https://pypi.org/project/pigpio
-.. _changing the pin factory: https://gpiozero.readthedocs.io/en/stable/api_pins.html#changing-the-pin-factory
-
-A "mock pin" interface is also provided for testing purposes. Read more about
-this in the section on `mock pins`_.
-
-.. _mock pins: https://gpiozero.readthedocs.io/en/stable/api_pins.html#mock-pins
+We officially only support the latest version of Python as well as the
+latest version of Django and the latest Django LTS version.
 
 Installation
-============
+------------
 
-GPIO Zero is installed by default in the Raspbian desktop image, available from
-`raspberrypi.org`_. To install on Raspbian Lite or other operating systems,
-including for PCs using remote GPIO, see the `Installing`_ chapter.
+First install the ``django-health-check`` package:
 
-.. _raspberrypi.org: https://www.raspberrypi.org/downloads/
-.. _Installing: https://gpiozero.readthedocs.io/en/stable/installing.html
+.. code::
 
-Documentation
-=============
+    pip install django-health-check
 
-Comprehensive documentation is available at https://gpiozero.readthedocs.io/.
-Please refer to the `Contributing`_ and `Development`_ chapters in the
-documentation for information on contributing to the project.
+Add the health checker to a URL you want to use:
 
-.. _Contributing: https://gpiozero.readthedocs.io/en/stable/contributing.html
-.. _Development: https://gpiozero.readthedocs.io/en/stable/development.html
+.. code:: python
 
-Contributors
-============
+    urlpatterns = [
+        # ...
+        url(r'^ht/', include('health_check.urls')),
+    ]
 
-See the `contributors page`_ on GitHub for more info.
+Add the ``health_check`` applications to your ``INSTALLED_APPS``:
 
-.. _contributors page: https://github.com/gpiozero/gpiozero/graphs/contributors
+.. code:: python
 
-Core developers:
+    INSTALLED_APPS = [
+        # ...
+        'health_check',                             # required
+        'health_check.db',                          # stock Django health checkers
+        'health_check.cache',
+        'health_check.storage',
+        'health_check.contrib.celery',              # requires celery
+        'health_check.contrib.psutil',              # disk and memory utilization; requires psutil
+        'health_check.contrib.s3boto3_storage',     # requires boto3 and S3BotoStorage backend
+        'health_check.contrib.rabbitmq',            # requires RabbitMQ broker
+        'health_check.contrib.redis',               # required Redis broker
+    ]
 
-- `Ben Nuttall`_
-- `Dave Jones`_
-- `Andrew Scheller`_
+Note : If using ``boto 2.x.x`` use ``health_check.contrib.s3boto_storage``
 
-Other contributors:
+(Optional) If using the ``psutil`` app, you can configure disk and memory
+threshold settings; otherwise below defaults are assumed. If you want to disable
+one of these checks, set its value to ``None``.
 
-- `Alex Chan`_
-- `Alex Eames`_
-- `Barry Byford`_
-- `Carl Monk`_
-- `Claire Pollard`_
-- `Clare Macrae`_
-- `David Glaude`_
-- `Daniele Procida`_
-- `Delcio Torres`_
-- `Edward Betts`_
-- `Fatih Sarhan`_
-- `Ian Harcombe`_
-- `Jeevan M R`_
-- `Mahallon`_
-- `Maksim Levental`_
-- `Martchus`_
-- `Martin O'Hanlon`_
-- `Mike Kazantsev`_
-- `Phil Howard`_
-- `Philippe Muller`_
-- `Rick Ansell`_
-- `Russel Winder`_
-- `Ryan Walmsley`_
-- `Schelto van Doorn`_
-- `Sofiia Kosovan`_
-- `Steve Amor`_
-- `Stewart Adcock`_
-- `Thijs Triemstra`_
-- `Tim Golden`_
-- `Yisrael Dov Lebow`_
+.. code:: python
+
+    HEALTH_CHECK = {
+        'DISK_USAGE_MAX': 90,  # percent
+        'MEMORY_MIN': 100,    # in MB
+    }
+
+If using the DB check, run migrations:
+
+.. code::
+
+    django-admin migrate
+
+To use the RabbitMQ healthcheck, please make sure that there is a variable named ``BROKER_URL``
+on django.conf.settings with the required format to connect to your rabbit server. For example:
+
+.. code::
+
+    BROKER_URL = amqp://myuser:mypassword@localhost:5672/myvhost
+
+To use the Redis healthcheck, please make sure that there is a variable named ``REDIS_URL``
+on django.conf.settings with the required format to connect to your redis server. For example:
+
+.. code::
+
+    REDIS_URL = redis://localhost:6370
+
+Setting up monitoring
+---------------------
+
+You can use tools like Pingdom_ or other uptime robots to monitor service status.
+The ``/ht/`` endpoint will respond a HTTP 200 if all checks passed
+and a HTTP 500 if any of the tests failed.
+
+.. code::
+
+    $ curl -v -X GET -H http://www.example.com/ht/
+
+    > GET /ht/ HTTP/1.1
+    > Host: www.example.com
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < Content-Type: text/html; charset=utf-8
+
+    <!-- This is an excerpt -->
+    <div class="container">
+        <h1>System status</h1>
+        <table>
+            <tr>
+                <td class="status_1"></td>
+                <td>CacheBackend</td>
+                <td>working</td>
+            </tr>
+            <tr>
+                <td class="status_1"></td>
+                <td>DatabaseBackend</td>
+                <td>working</td>
+            </tr>
+            <tr>
+                <td class="status_1"></td>
+                <td>S3BotoStorageHealthCheck</td>
+                <td>working</td>
+            </tr>
+        </table>
+    </div>
+
+Getting machine readable JSON reports
+-------------------------------------
+
+If you want machine readable status reports you can request the ``/ht/``
+endpoint with the ``Accept`` HTTP header set to ``application/json``
+or pass ``format=json`` as a query parameter.
+
+The backend will return a JSON response:
+
+.. code::
+
+    $ curl -v -X GET -H "Accept: application/json" http://www.example.com/ht/
+
+    > GET /ht/ HTTP/1.1
+    > Host: www.example.com
+    > Accept: application/json
+    >
+    < HTTP/1.1 200 OK
+    < Content-Type: application/json
+
+    {
+        "CacheBackend": "working",
+        "DatabaseBackend": "working",
+        "S3BotoStorageHealthCheck": "working"
+    }
+
+    $ curl -v -X GET http://www.example.com/ht/?format=json
+
+    > GET /ht/?format=json HTTP/1.1
+    > Host: www.example.com
+    >
+    < HTTP/1.1 200 OK
+    < Content-Type: application/json
+
+    {
+        "CacheBackend": "working",
+        "DatabaseBackend": "working",
+        "S3BotoStorageHealthCheck": "working"
+    }
+
+Writing a custom health check
+-----------------------------
+
+Writing a health check is quick and easy:
+
+.. code:: python
+
+    from health_check.backends import BaseHealthCheckBackend
+
+    class MyHealthCheckBackend(BaseHealthCheckBackend):
+        #: The status endpoints will respond with a 200 status code
+        #: even if the check errors.
+        critical_service = False
+
+        def check_status(self):
+            # The test code goes here.
+            # You can use `self.add_error` or
+            # raise a `HealthCheckException`,
+            # similar to Django's form validation.
+            pass
+
+        def identifier(self):
+            return self.__class__.__name__  # Display name on the endpoint.
+
+After writing a custom checker, register it in your app configuration:
+
+.. code:: python
+
+    from django.apps import AppConfig
+
+    from health_check.plugins import plugin_dir
+
+    class MyAppConfig(AppConfig):
+        name = 'my_app'
+
+        def ready(self):
+            from .backends import MyHealthCheckBackend
+            plugin_dir.register(MyHealthCheckBackend)
+
+Make sure the application you write the checker into is registered in your ``INSTALLED_APPS``.
+
+Customizing output
+------------------
+
+You can customize HTML or JSON rendering by inheriting from ``MainView`` in ``health_check.views``
+and customizing the ``template_name``, ``get``, ``render_to_response`` and ``render_to_response_json`` properties:
+
+.. code:: python
+
+    # views.py
+    from health_check.views import MainView
+
+    class HealthCheckCustomView(MainView):
+        template_name = 'myapp/health_check_dashboard.html'  # customize the used templates
+
+        def get(self, request, *args, **kwargs):
+            plugins = []
+            status = 200 # needs to be filled status you need
+            # ...
+            if 'application/json' in request.META.get('HTTP_ACCEPT', ''):
+                return self.render_to_response_json(plugins, status)
+            return self.render_to_response(plugins, status)
+
+        def render_to_response(self, plugins, status):       # customize HTML output
+            return HttpResponse('COOL' if status == 200 else 'SWEATY', status=status)
+
+        def render_to_response_json(self, plugins, status):  # customize JSON output
+            return JsonResponse(
+                {str(p.identifier()): 'COOL' if status == 200 else 'SWEATY' for p in plugins},
+                status=status
+            )
+
+    # urls.py
+    import views
+
+    urlpatterns = [
+        # ...
+        url(r'^ht/$', views.HealthCheckCustomView.as_view(), name='health_check_custom'),
+    ]
+
+Django command
+--------------
+
+You can run the Django command `health_check` to perform your health checks via the command line,
+or periodically with a cron, as follow:
+
+.. code::
+
+    django-admin health_check
+
+This should yield the following output:
+
+.. code::
+
+    DatabaseHealthCheck      ... working
+    CustomHealthCheck        ... unavailable: Something went wrong!
+
+Similar to the http version, a critical error will cause the command to quit with the exit code `1`.
 
 
-.. _Alex Chan: https://github.com/gpiozero/gpiozero/commits?author=alexwlchan
-.. _Alex Eames: https://github.com/gpiozero/gpiozero/commits?author=raspitv
-.. _Andrew Scheller: https://github.com/gpiozero/gpiozero/commits?author=lurch
-.. _Barry Byford: https://github.com/gpiozero/gpiozero/commits?author=ukBaz
-.. _Carl Monk: https://github.com/gpiozero/gpiozero/commits?author=ForToffee
-.. _Claire Pollard: https://github.com/gpiozero/gpiozero/commits?author=tuftii
-.. _Clare Macrae: https://github.com/gpiozero/gpiozero/commits?author=claremacrae
-.. _David Glaude: https://github.com/gpiozero/gpiozero/commits?author=dglaude
-.. _Daniele Procida: https://github.com/evildmp
-.. _Delcio Torres: https://github.com/gpiozero/gpiozero/commits?author=delciotorres
-.. _Edward Betts: https://github.com/gpiozero/gpiozero/commits?author=edwardbetts
-.. _Fatih Sarhan: https://github.com/gpiozero/gpiozero/commits?author=f9n
-.. _Ian Harcombe: https://github.com/gpiozero/gpiozero/commits?author=MrHarcombe
-.. _Jeevan M R: https://github.com/gpiozero/gpiozero/commits?author=jee1mr
-.. _Mahallon: https://github.com/gpiozero/gpiozero/commits?author=Mahallon
-.. _Maksim Levental: https://github.com/gpiozero/gpiozero/commits?author=makslevental
-.. _Martchus: https://github.com/gpiozero/gpiozero/commits?author=Martchus
-.. _Martin O'Hanlon: https://github.com/martinohanlon
-.. _Mike Kazantsev: https://github.com/gpiozero/gpiozero/commits?author=mk-fg
-.. _Phil Howard: https://github.com/gpiozero/gpiozero/commits?author=Gadgetoid
-.. _Philippe Muller: https://github.com/gpiozero/gpiozero/commits?author=pmuller
-.. _Rick Ansell: https://github.com/gpiozero/gpiozero/commits?author=ricksbt
-.. _Russel Winder: https://github.com/russel
-.. _Ryan Walmsley: https://github.com/gpiozero/gpiozero/commits?author=ryanteck
-.. _Schelto van Doorn: https://github.com/gpiozero/gpiozero/commits?author=goloplo
-.. _Sofiia Kosovan: https://github.com/gpiozero/gpiozero/commits?author=SofiiaKosovan
-.. _Steve Amor: https://github.com/gpiozero/gpiozero/commits?author=SteveAmor
-.. _Stewart Adcock: https://github.com/gpiozero/gpiozero/commits?author=stewartadcock
-.. _Thijs Triemstra: https://github.com/gpiozero/gpiozero/commits?author=thijstriemstra
-.. _Tim Golden: https://github.com/gpiozero/gpiozero/commits?author=tjguk
-.. _Yisrael Dov Lebow: https://github.com/gpiozero/gpiozero/commits?author=yisraeldov
+Other resources
+---------------
+
+- django-watchman_ is a package that does some of the same things in a slightly different way.
+- See this weblog_ about configuring Django and health checking with AWS Elastic Load Balancer.
+
+.. |version| image:: https://img.shields.io/pypi/v/django-health-check.svg
+   :target: https://pypi.python.org/pypi/django-health-check/
+.. |coverage| image:: https://codecov.io/gh/KristianOellegaard/django-health-check/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/KristianOellegaard/django-health-check
+.. |health| image:: https://landscape.io/github/KristianOellegaard/django-health-check/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/KristianOellegaard/django-health-check/master
+.. |license| image:: https://img.shields.io/badge/license-MIT-blue.svg
+   :target: LICENSE
+
+.. _Pingdom: https://www.pingdom.com/
+.. _django-watchman: https://github.com/mwarkentin/django-watchman
+.. _weblog: https://www.vincit.fi/en/blog/deploying-django-to-elastic-beanstalk-with-https-redirects-and-functional-health-checks/

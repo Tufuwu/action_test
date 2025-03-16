@@ -1,7 +1,9 @@
+from io import StringIO
+
 import pytest
+from django.core.management import call_command
 
 from health_check.backends import BaseHealthCheckBackend
-from health_check.mixins import CheckMixin
 from health_check.plugins import plugin_dir
 
 
@@ -15,11 +17,7 @@ class OkPlugin(BaseHealthCheckBackend):
         pass
 
 
-class Checker(CheckMixin):
-    pass
-
-
-class TestCheckMixin:
+class TestCommand:
     @pytest.yield_fixture(autouse=True)
     def setup(self):
         plugin_dir.reset()
@@ -28,11 +26,12 @@ class TestCheckMixin:
         yield
         plugin_dir.reset()
 
-    def test_plugins(self):
-        assert len(Checker().plugins) == 2
-
-    def test_errors(self):
-        assert len(Checker().errors) == 1
-
-    def test_run_check(self):
-        assert len(Checker().run_check()) == 1
+    def test_command(self):
+        stdout = StringIO()
+        with pytest.raises(SystemExit):
+            call_command("health_check", stdout=stdout)
+        stdout.seek(0)
+        assert stdout.read() == (
+            "FailPlugin               ... unknown error: Oops\n"
+            "OkPlugin                 ... working\n"
+        )
