@@ -1,0 +1,10 @@
+blockdiag
+sphinxcontrib-seqdiag
+sphinxcontrib-blockdiag
+sphinx_rtd_theme
+numpy
+pillow
+pyproj
+sqlalchemy
+pyyaml
+appdirs
