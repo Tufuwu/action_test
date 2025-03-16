@@ -1,9 +1,7 @@
-include setup.py
-include README.txt CHANGES.txt LICENSE README.html
-include void.css
-include MANIFEST.in
-include setup.py Makefile
-include tests.py
-recursive-include xmltestdata *.xml
-recursive-include other *.php *.pl *.rb *.py *.txt
+include LICENSE
+include README.rst
+recursive-include projectroles/static *
+recursive-include projectroles/templates *
 
+include versioneer.py
+include projectroles/_version.py
