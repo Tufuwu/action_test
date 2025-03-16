@@ -1,26 +1,57 @@
-.. _api:
+SwarmRequest
+============
 
-PyTeal Package
-==============
+.. autoclass:: viresclient.SwarmRequest
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+    :exclude-members: AUXILIARY_VARIABLES, COLLECTIONS, COLLECTION_SAMPLING_STEPS, MAGNETIC_MODELS, MAGNETIC_MODEL_VARIABLES, OBS_COLLECTIONS, PRODUCT_VARIABLES
 
-.. automodule:: pyteal
-   :members:
-   :undoc-members:
-   :imported-members:
-   :special-members: __getitem__
-   :show-inheritance:
+AeolusRequest
+=============
 
-   .. data:: Txn
-      :annotation: = <pyteal.TxnObject object>
+.. autoclass:: viresclient.AeolusRequest
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
 
-      The current transaction being evaluated. This is an instance of :any:`TxnObject`.
-   
-   .. data:: Gtxn
-      :annotation: = <pyteal.TxnGroup object>
+ReturnedData
+============
 
-      The current group of transactions being evaluated. This is an instance of :any:`TxnGroup`.
+.. autoclass:: viresclient.ReturnedData
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
 
-   .. data:: InnerTxn
-      :annotation: = <pyteal.TxnObject object>
+.. autoclass:: viresclient.ReturnedDataFile
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
 
-      The most recently submitted inner transaction. This is an instance of :any:`TxnObject`.
+
+ClientConfig
+============
+
+.. autoclass:: viresclient.ClientConfig
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+
+set_token
+=========
+
+.. autofunction:: viresclient.set_token
+
+DataUpload
+==========
+
+.. autoclass:: viresclient.DataUpload
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:

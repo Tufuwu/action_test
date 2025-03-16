@@ -1,8 +1,7 @@
 #-------------------------------------------------------------------------------
 #
-# viresclient package setup
+# Handles the WPS requests to the VirES server
 #
-# Project: VirES-Python-Client
 # Authors: Ashley Smith <ashley.smith@ed.ac.uk>
 #          Martin Paces <martin.paces@eox.at>
 #
@@ -28,54 +27,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import os
-from setuptools import setup, find_packages
-
-with open('viresclient/__init__.py') as f:
-    for line in f:
-        if line.find("__version__") >= 0:
-            version = line.split("=")[1].strip()
-            version = version.strip('"')
-            version = version.strip("'")
-            continue
+from ._config import ClientConfig, set_token
+from ._client_swarm import SwarmRequest
+from ._client_aeolus import AeolusRequest
+from ._data_handling import ReturnedData
+from ._data_handling import ReturnedDataFile
+from ._api.upload import DataUpload
+from ._api.token import TokenManager
+from . import _data
 
 
-# Utility function to read the README file.
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-
-setup(
-    name='viresclient',
-    version=version,
-    license='EOX licence (MIT style)',
-    description='A Python client for interacting with a VirES server',
-    long_description=read('README.rst'),
-    author='Ashley Smith',
-    author_email='ashley.smith@ed.ac.uk',
-    url='https://github.com/ESA-VirES/VirES-Python-Client',
-    packages=find_packages(),
-    scripts=[],
-    package_data={
-        'viresclient': [
-            '_wps/templates/*',
-            '_data/*'
-        ],
-    },
-    python_requires='>=3.6',
-    install_requires=[
-        'Jinja2>=2.10, <3.0.0',
-        'pandas>=0.18, <2.0.0',
-        'cdflib>=0.3.9, <=0.3.20',
-        'tables>=3.4.4, <4.0.0',
-        'tqdm>=4.23.0, <5.0.0',
-        'xarray>=0.11.0, <1.0.0',
-        'requests>=2.0.0, <3.0.0',
-        'netCDF4>=1.5.3, <1.6.0',
-    ],
-    entry_points={
-        'console_scripts': [
-            'viresclient=viresclient.commands.viresclient:start',
-        ],
-    },
-)
+__version__ = "0.10.0"
