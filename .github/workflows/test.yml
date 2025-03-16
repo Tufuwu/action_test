@@ -1,26 +1,45 @@
+name: Lint
 on:
-  push: {}
-  pull_request:
-    types: [opened, reopened, synchronize]
-name: CI
+  push:
+    branches:
+      - main
+  pull_request: ~
+
 jobs:
-  test:
+  flake8:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10"]
     steps:
-    - name: Check out source code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install -e .
-    - name: Run tests
-      run: |
-        python -m unittest discover
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install deps
+        run: pip install flake8
+      - name: Flake8
+        run: flake8
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install deps
+        run: pip install isort
+      - name: Isort
+        run: isort --diff --check-only .
+
+  # superlinter:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+  #     - name: Run Superlinter
+  #       uses: docker://github/super-linter:latest
+  #       env:
+  #         VALIDATE_PYTHON: true
