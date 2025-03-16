@@ -1,51 +1,22 @@
-# Chronicle Detection API
+# Overview
 
-Python samples and guidelines for using the Chronicle Detection API.
+[![Build Status](https://travis-ci.org/duosecurity/duo_openvpn.svg?branch=master)](https://travis-ci.org/duosecurity/duo_openvpn)
+[![Issues](https://img.shields.io/github/issues/duosecurity/duo_openvpn)](https://github.com/duosecurity/duo_openvpn/issues)
+[![Forks](https://img.shields.io/github/forks/duosecurity/duo_openvpn)](https://github.com/duosecurity/duo_openvpn/network/members)
+[![Stars](https://img.shields.io/github/stars/duosecurity/duo_openvpn)](https://github.com/duosecurity/duo_openvpn/stargazers)
+[![License](https://img.shields.io/badge/License-View%20License-orange)](https://github.com/duosecurity/duo_openvpn/blob/master/LICENSE)
 
-## Setup
+**duo_openvpn** - Duo two-factor authentication for OpenVPN
 
-Follow these instructions: https://cloud.google.com/python/setup
+# Usage
 
-You may skip installing the Cloud Client Libraries and the Cloud SDK, they are
-unnecessary for interacting with Chronicle.
+OpenVPN integration instructions: <http://www.duosecurity.com/docs/openvpn>
 
-After creating and activating the virtual environment `venv`, install Python
-library dependencies by running this command:
+# Support
 
-```shell
-pip install -r requirements.txt
-```
+Report any bugs, feature requests, etc. to us directly:
+support@duosecurity.com
 
-It is assumed that you're using Python 3.7 or above. If you're using an older
-Python 3 version, you need to install this backported library as well:
+Have fun!
 
-```shell
-pip install dataclasses
-```
-
-## Credentials
-
-Running the samples requires a JSON credentials file. By default, all the
-samples try to use the file `.chronicle_credentials.json` in the user's home
-directory. If this file is not found, you need to specify it explicitly by
-adding the following argument to the sample's command-line:
-
-```shell
--c <file_path>
-```
-
-or
-
-```shell
---credentials_file <file_path>
-```
-
-## Usage
-
-Run this command-line, assuming the current working directory is the root
-directory of this repository (i.e. the directory which contains this `README.md`
-file):
-
-```shell
-python3 -m samples.v1.<sample_name> -h
-```
+<http://www.duosecurity.com>
