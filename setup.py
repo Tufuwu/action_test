@@ -1,64 +1,131 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-   Copyright 2008-2020 The Open Microscopy Environment, Glencoe Software, Inc.
-   All rights reserved.
+#
+# openant distutils setup script
+#
+# Copyright (c) 2012, Gustav Tiger <gustav@tiger.name>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 
-   Use is subject to license terms supplied in LICENSE.txt
-
-"""
+from __future__ import absolute_import, print_function
 
 import os
-import sys
+import shutil
 
+from distutils.util import execute
+from distutils.cmd import Command
+from subprocess import call
+from setuptools.command.install import install
+from setuptools.command.develop import develop
 from setuptools import setup, find_packages
 
-sys.path.append(".")
-from omeroweb.version import omeroweb_version as owv  # noqa
-from omeroweb.version import omero_version as opv  # noqa
+
+def udev_reload_rules():
+    call(["udevadm", "control", "--reload-rules"])
 
 
-def read(fname):
-    """
-    Utility function to read the README file.
-    :rtype : String
-    """
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+def udev_trigger():
+    call(
+        [
+            "udevadm",
+            "trigger",
+            "--subsystem-match=usb",
+            "--attr-match=idVendor=0fcf",
+            "--action=add",
+        ]
+    )
 
+
+def install_udev_rules(raise_exception):
+    if check_root():
+        shutil.copy("resources/42-ant-usb-sticks.rules", "/etc/udev/rules.d")
+        execute(udev_reload_rules, [], "Reloading udev rules")
+        execute(udev_trigger, [], "Triggering udev rules")
+    else:
+        msg = 'You must have root privileges to install udev rules. Run "sudo python setup.py udev_rules"'
+        if raise_exception:
+            raise OSError(msg)
+        else:
+            print(msg)
+
+
+def check_root():
+    return os.geteuid() == 0
+
+
+class InstallUdevRules(Command):
+    description = "install udev rules (requires root privileges)"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        install_udev_rules(True)
+
+
+class CustomInstall(install):
+    def run(self):
+        install.run(self)
+        install_udev_rules(True)
+
+
+class CustomDevelop(develop):
+    def run(self):
+        develop.run(self)
+        install_udev_rules(False)
+
+
+try:
+    with open("README.md") as file:
+        long_description = file.read()
+except IOError:
+    long_description = ""
 
 setup(
-    name="omero-web",
-    version=owv,
-    description="OMERO.web",
-    long_description=read("README.rst"),
+    name="openant",
+    version="0.4",
+    description="ANT and ANT-FS Python Library",
+    long_description=long_description,
+    author="Gustav Tiger",
+    author_email="gustav@tiger.name",
+    url="https://github.com/Tigge/openant",
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "Intended Audience :: System Administrators",
-        "License :: OSI Approved :: GNU General Public License v2 " "or later (GPLv2+)",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3",
+        "Intended Audience :: Healthcare Industry",
+        "Intended Audience :: Science/Research"
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Software Development :: Libraries :: Python Modules",
-    ],  # Get strings from
-    # http://pypi.python.org/pypi?%3Aaction=list_classifiers
-    author="The Open Microscopy Team",
-    author_email="ome-devel@lists.openmicroscopy.org.uk",
-    url="https://github.com/ome/omero-web/",
-    license="GPLv2+",
-    packages=find_packages(exclude=("test",)) + ["omero.plugins"],
-    python_requires=">=3",
-    install_requires=[
-        # requires Ice (use wheel for faster installs)
-        "omero-py>=5.7.0",
-        # minimum requirements for `omero web start`
-        "Django>=1.11,<2.0",
-        "django-pipeline==1.6.14",
-        "gunicorn>=19.3",
-        "omero-marshal>=0.7.0",
-        "Pillow",
     ],
-    include_package_data=True,
-    tests_require=["pytest"],
+    packages=find_packages(),
+    install_requires=["pyusb>=1.0a2"],
+    cmdclass={
+        "udev_rules": InstallUdevRules,
+        "install": CustomInstall,
+        "develop": CustomDevelop,
+    },
+    test_suite="ant.tests",
 )

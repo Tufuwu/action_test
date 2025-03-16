@@ -1,4 +1,12 @@
+*.pyc
+*.orig
+*.iml
+*~
+MANIFEST
+build/
 dist/
 *.egg-info/
-*.pyc
 .tox/
+.eggs/
+.env/
+.coverage
