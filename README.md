@@ -1,253 +1,158 @@
-# Supysonic
+About
+=====
 
-_Supysonic_ is a Python implementation of the [Subsonic][] server API.
+This is a Japanese-English dictionary based on the
+[JMdict](http://www.edrdg.org/jmdict/j_jmdict.html) and [JMnedict](https://www.edrdg.org/enamdict/enamdict_doc.html) and [Tatoeba](https://tatoeba.org/) database for
+_e-Ink_ Kindle devices.
 
-![Build Status](https://github.com/spl0k/supysonic/workflows/Tests/badge.svg)
-[![codecov](https://codecov.io/gh/spl0k/supysonic/branch/master/graph/badge.svg)](https://codecov.io/gh/spl0k/supysonic)
-![Python](https://img.shields.io/badge/python-3.5--3.9-blue.svg)
+Features:
 
-Current supported features are:
-* browsing (by folders or tags)
-* streaming of various audio file formats
-* [transcoding]
-* user or random playlists
-* cover arts (as image files in the same folder as music files)
-* starred tracks/albums and ratings
-* [Last.FM][lastfm] scrobbling
-* Jukebox mode
+* lookup of inflected verbs.
+* lookup for Japanese names.
+* Example sentences
+* Pronunciation
+* the dictionaries can be downloaded as separate files or as one big dictionary
 
-_Supysonic_ currently targets the version 1.10.2 of the _Subsonic_ API. For more
-details, go check the [API implementation status][docs-api].
+<!--
+Screenshots were captured inside the Kindle device as explained in
+http://blog.blankbaby.com/2012/10/take-a-screenshot-on-a-kindle-paperwhite.html
+then processed with ImageMagick's
+`mogrify -colorspace gray -level 0%,111.11% -define PNG:compression-level=9`
+to look like E-Ink display.
+-->
 
-[subsonic]: http://www.subsonic.org/
-[transcoding]: docs/transcoding.md
-[lastfm]: https://last.fm/
-[docs-api]: docs/api.md
+![Inflection lookup screenshot](screenshots/infl.png)
 
-## Table of contents
+![Word lookup screenshot](screenshots/word.png)
 
-* [Installation](#installation)
-  + [Prerequisites](#prerequisites)
-  + [Database initialization](#database-initialization)
-  + [Configuration](#configuration)
-* [Running the application](#running-the-application)
-  + [As a standalone debug server](#as-a-standalone-debug-server)
-  + [As an Apache WSGI application](#as-an-apache-wsgi-application)
-  + [Other options](#other-options)
-  + [Docker](#docker)
-* [Quickstart](#quickstart)
-* [Running the daemon](#running-the-daemon)
-* [Upgrading](#upgrading)
+![Name lookup screenshot](screenshots/name.png)
 
-## Installation
+Supported Devices
+=================
 
-_Supysonic_ can run as a standalone application (not recommended for a
-"production" server) or as a WSGI application (on _Apache_ for instance).
+The dictionary has been tested on _Kindle Paperwhite_ and _Kindle Oasis_.  It _should_ also work
+well with other _e-ink_ Kindle devices
 
-To install it, either run:
+The dictionary will *not* work well on _Kindle Fire_ or _Kindle Android App_,
+or any Android based Kindle, because the Kindle software on those platforms
+does not support inflection lookups.
 
-    $ python setup.py install
 
-or
+Download
+========
 
-    $ pip install .
+You can download the latest version of the dictionary from
+[here](https://github.com/jrfonseca/jmdict-kindle/releases).
 
-but not both.
 
-### Prerequisites
+Install
+=======
 
-You'll need Python 3.5 or later to run _Supysonic_.
+_e-Ink_ Kindle
+-----------------
 
-All the dependencies will automatically be installed by the installation
-command above.
+There are in total 3 dictionaries:
 
-You may also need a database specific package if you don't want to use SQLite
-(the default):
+* `jmdict.mobi`: Contains only data from the JMedict database, with additional examples. It does not contain proper names.
+* `jmnedict.mobi`: Contains only Japanese proper names from the JMnedict databse.
+* `combined.mobi`: Contains the data from both of the above dictionaries
 
-* _MySQL_: `pip install pymysql` or `pip install mysqlclient`
-* _PostgreSQL_: `pip install psycopg2-binary`
+To install any of the dictionaries (you can also install all three of them) into your device follow these steps:
 
-### Database initialization
+* for 1st-generation Kindle Paperwhite devices, ensure you have
+  [firmware version 5.3.9 or higher](http://www.amazon.com/gp/help/customer/display.html/ref=hp_left_cn?ie=UTF8&nodeId=201064850) as it includes improved homonym lookup for Japanese;
+* connect your Kindle device via USB;
+* copy the the `.mobi` file for the dictionary you want to use to the `documents/dictionaries` sub-folder;
+* eject the USB device;
+* on your device go to
+  _Home > Settings > Device Options > Language and Dictionaries > Dictionaries_
+  and set _JMdict Japanese-English Dictionary_ as the default dictionary for
+  Japanese.
 
-_Supysonic_ needs a database to run. It can either be a _SQLite_,
-_MySQL_-compatible or _PostgreSQL_ database.
+Kindle Android App
+------------------
 
-Please refer to the documentation of the DBMS you've chosen on how to create a
-database. Once it has a database, _Supysonic_ will automatically create the
-tables it needs.
+**NOTE: Unfortunately the Kindle Android App does not support dictionary inflections, yielding verbs lookup practically impossible. No known workaround.**
 
-If you want to use _PostgreSQL_ you'll have to add the `citext` extension to the
-database once created. This can be done when connected to the database as the
-superuser with the folowing SQL command:
+* rename `jmdict.mobi` or any of the other two dictionaries as `B005FNK020_EBOK.prc`
 
-    supysonic=# CREATE EXTENSION citext;
+* connect your Android device via USB
 
-If you absolutely have no clue about databases, you can go with _SQLite_ as it
-doesn't need any setup other than specifying a path for the database.
-Note that using _SQLite_ for large libraries might not be the brightest idea as
-it tends to struggle with larger datasets.
+* copy `B005FNK020_EBOK.prc` into `Internal Storage/Android/data/com.amazon.kindle/files/` or `/sdcard/android/data/com.amazon.kindle/files`
 
-### Configuration
+This will override the
+[default Japanese-Japanese dictionary](https://kindle.amazon.com/work/daijisen-x5927-x8f9e-japanese-edition-ebook/B005FNK020/B005FNK020).
 
-Once you have a database, you'll need to create a configuration file. It must
-be saved under one of the following paths:
 
-* `/etc/supysonic`
-* `~/.supysonic`
-* `~/.config/supysonic/supysonic.conf`
+Building from source
+====================
 
-A roughly documented sample configuration file is provided as `config.sample`.
+![Build](https://github.com/jrfonseca/jmdict-kindle/workflows/build/badge.svg?branch=master)
 
-The minimal configuration using a _SQLite_ database would be:
+Requirements:
 
-```ini
-[base]
-database_uri = sqlite:////some/path/to/a/supysonic.db
+* Linux or Windows with Cygwin (might also work on macOS with a few changes)
+* Python version 3
+
+  * [Pycairo](http://www.cairographics.org/pycairo)
+  * [Pillow](http://pillow.readthedocs.io/en/latest/)
+  * [htmlmin](https://htmlmin.readthedocs.io/en/latest/index.html)
+
+Inside of the makefile you can change the max number of sentences per entry, compression, as well as which sentences to include:
+
+```makefile
+# The Kindle Publishing Guidelines recommend -c2 (huffdic compression),
+# but it is excruciatingly slow. That's why -c1 is selected by default.
+COMPRESSION ?= 1
+# Sets the max sentences per entry only for the jmdict.mobi.
+# It is ignored by combined.mobi due to size restrictions.
+# If there are too many sentences for the combined dictionary,
+# it will not build (exceeds 650MB size limit). The amount is limited to 3 in this makefile
+SENTENCES ?= 5
+# This flag determines wheter only good and verified sentences are used in the
+# dictionary. Set it to TRUE if you only want those sentences.
+# It is only used by jmdict.mobi
+# It is ignored bei combined.mobi. there it is always true
+# this is due to size constraints.
+ONLY_CHECKED_SENTENCES ?= FALSE
+# If true adds pronunciations indication
+PRONUNCIATIONS ?= TRUE
 ```
 
-For a more details on the configuration, please refer to
-[documentation][docs-config].
+Build with make to create all 3 dictionaries:
+```
+make
+```
+or use any of the following commands to create a specific one:
+```
+make jmdict.mobi
+make jmnedict.mobi
+make combined.mobi
+```
 
-[docs-config]: docs/configuration.md
+To do
+=====
 
-## Running the application
+* Leverage more of the JMdict data:
 
-### As a standalone debug server
+  * cross references
+* Add Furigana to example sentences
+* Create better covers
 
-It is possible to run _Supysonic_ as a standalone server, but it is only
-recommended to do so if you are hacking on the source. A standalone won't be
-able to serve more than one request at a time.
 
-To start the server, just run the `cgi-bin/server.py` script.
+Credits
+=======
 
-    $ python cgi-bin/server.py
+* Jim Breen and the [JMdict/EDICT project](http://www.edrdg.org/jmdict/j_jmdict.html) as well as the [ENAMDICT/JMnedict](https://www.edrdg.org/enamdict/enamdict_doc.html)
+* The [Tatoeba](https://tatoeba.org/) project
+* John Mettraux for his [EDICT2 Japanese-English Kindle dictionary](https://github.com/jmettraux/edict2-kindle)
+* Choplair-network for their [Nihongo conjugator](http://www.choplair.org/?Nihongo%20conjugator)
+* javdejong for the [pronunciation](https://github.com/javdejong/nhk-pronunciation)
 
-By default, it will listen on the loopback interface (`127.0.0.1`) on port
-5000, but you can specify another address on the command line, for instance on
-all the IPv6 interfaces:
 
-    $ python cgi-bin/server.py ::
+Alternatives
+============
 
-### As an _Apache_ WSGI application
+* [John Mettraux's EDICT2 Japanese-English Kindle dictionary](https://github.com/jmettraux/edict2-kindle)
 
-_Supysonic_ can run as a WSGI application with the `cgi-bin/supysonic.wsgi`
-file. To run it within an _Apache2_ server, first you need to install the WSGI
-module and enable it.
-
-    $ apt install libapache2-mod-wsgi-py3
-    $ a2enmod wsgi
-
-Next, edit the _Apache_ configuration to load the application. Here's a basic
-example of what it looks like:
-
-    WSGIScriptAlias /supysonic /path/to/supysonic/cgi-bin/supysonic.wsgi
-    <Directory /path/to/supysonic/cgi-bin>
-        WSGIApplicationGroup %{GLOBAL}
-        WSGIPassAuthorization On
-        Require all granted
-    </Directory>
-
-With that kind of configuration, the server address will look like
-*http://server/supysonic/*
-
-### Other options
-
-If you use another HTTP server, such as _nginx_ or _lighttpd_, or prefer to use
-FastCGI or CGI over WSGI, FastCGI and CGI scripts are also provided in the
-`cgi-bin` folder, respectively as `supysonic.fcgi` and `supysonic.cgi`. You
-might need to edit those file to suit your system configuration.
-
-Here are some quick docs on how to configure your server for [FastCGI][] or
-[CGI][].
-
-[fastcgi]: http://flask.pocoo.org/docs/deploying/fastcgi/
-[cgi]: http://flask.pocoo.org/docs/deploying/cgi/
-
-### Docker
-
-If you want to run _Supysonic_ in a _Docker_ container, here are some images
-provided by the community.
-
-- https://github.com/ultimate-pms/docker-supysonic
-- https://github.com/ogarcia/docker-supysonic
-- https://github.com/foosinn/supysonic
-- https://github.com/mikafouenski/docker-supysonic
-- https://github.com/oakman/supysonic-docker
-- https://github.com/glogiotatidis/supysonic-docker
-
-## Quickstart
-
-To start using _Supysonic_, you'll first have to specify where your music
-library is located and create a user to allow calls to the API.
-
-Let's start by creating a new admin user this way:
-
-    $ supysonic-cli user add MyUserName -p MyAwesomePassword
-    $ supysonic-cli user setroles -A MyUserName
-
-To add a new folder to your music library, you can do something like this:
-
-    $ supysonic-cli folder add MyLibrary /home/username/Music
-
-Once you've added a folder, you will need to scan it:
-
-    $ supysonic-cli folder scan MyLibrary
-
-You should now be able to enjoy your music with the client of your choice!
-
-For more details on the command-line usage, take a look at the
-[documentation][docs-cli].
-
-[docs-cli]: docs/cli.md
-
-## Client authentication
-
-The Subsonic API provides several authentication methods. One of them, known as
-_token authentication_ was added with API version 1.13.0. As Supysonic currently
-targets API version 1.9.0, the token based method isn't supported. So if your
-client offers you the option, you'll have to disable the token based
-authentication for it to work.
-
-## Running the daemon
-
-_Supysonic_ comes with an optional daemon service that currently provides the
-following features:
-- background scans
-- library changes detection
-- jukebox mode
-
-First of all, the daemon allows running backgrounds scans, meaning you can start
-scans from the CLI and do something else while it's scanning (otherwise the scan
-will block the CLI until it's done).
-Background scans also enable the web UI to run scans, while you have to use the
-CLI to do so if you don't run the daemon.
-
-Instead of manually running a scan every time your library changes, the daemon
-can listen to any library change and update the database accordingly. This
-watcher is started along with the daemon but can be disabled to only keep
-background scans.
-
-Finally, the daemon acts as a backend for the jukebox mode, allowing to play
-audio on the machine running Supysonic.
-
-The daemon is `supysonic-daemon`, it is a non-exiting process. If you want to
-keep it running in background, either use the old `nohup` or `screen` methods,
-or start it as a _systemd_ unit (see the very basic _supysonic-daemon.service_
-file).
-
-## Upgrading
-
-To upgrade your _Supysonic_ installation, simply re-run the command you used to
-install it (either `python setup.py install` or `pip install .`).
-
-Some commits might introduce changes in the database schema. Starting with
-commit e84459d6278bfc735293edc19b535c62bc2ccd8d (August 29th, 2018) migrations
-will be automatically applied.
-
-If your database was created prior to this date, you'll have to manually apply
-unapplied migrations up to the latest. Once done you won't have to worry about
-future migrations as they'll be automatically applied.
-Migration scripts are provided in the `supysonic/schema/migration` folder, named
-by the date of commit that introduced the schema changes. There could be both
-SQL scripts or Python scripts. The Python scripts require arguments that are
-explained when the script is invoked with the `-h` flag.
+* [Amazon Kindle Store](http://www.amazon.com/s/url=search-alias%3Ddigital-text&field-keywords=japanese+english+dictionary)
