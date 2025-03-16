@@ -1,140 +1,91 @@
-# Trimmer
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3548989.svg)](https://doi.org/10.5281/zenodo.3548989)
+![Codecov](https://img.shields.io/codecov/c/github/cgevans/scikits-bootstrap)
+![PyPI](https://img.shields.io/pypi/v/scikits-bootstrap)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/cgevans/scikits-bootstrap)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/scikits-bootstrap)
 
-[![ci](https://github.com/jonlabelle/Trimmer/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/jonlabelle/Trimmer/actions/workflows/ci.yml)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/fdcdvfsip9d9efg3?svg=true)](https://ci.appveyor.com/project/jonlabelle/trimmer)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/jonlabelle/Trimmer.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/jonlabelle/Trimmer/context:python)
-[![Package Control Installs](https://img.shields.io/packagecontrol/dt/Trimmer.svg?label=installs)](https://packagecontrol.io/packages/Trimmer)
-[![Latest Release](https://img.shields.io/github/tag/jonlabelle/Trimmer.svg?label=version)](https://github.com/jonlabelle/Trimmer/releases)
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/jonlabelle/Trimmer/blob/master/LICENSE.md)
 
-> [Trimmer](https://github.com/jonlabelle/Trimmer) is a [Sublime Text](http://www.sublimetext.com) plug-in for cleaning up whitespace.
 
-## Features
+scikits-bootstrap
+=================
 
-- Trim whitespace at the end of each line.
-- Trim whitespace at the start of each line.
-- Trim whitespace at the start and end of each line.
-- Trim whitespace from selection(s).
-- Delete empty, whitespace only lines.
-- Collapse multiple consecutive empty lines into one empty line.
-- Collapse multiple consecutive spaces into one space.
-- Trim empty, whitespace only lines at the beginning and end of file.
-- Remove blank space characters.
-- Normalize spaces (consecutive spaces reduced, empty lines removed and lines trimmed).
-- Tokenize a string by collapsing consecutive spaces, and trimming leading and trailing spaces.
-- Delete empty, whitespace only HTML and XML tags.
-- Remove code comments and collapse lines.
+Scikits.bootstrap provides bootstrap confidence interval algorithms for Numpy/Scipy/Pandas.  It originally required scipy, but no longer needs it.
 
-## Additional Features
+It also provides an algorithm which estimates the probability that the statistics
+lies satisfies some criteria, e.g. lies in some interval.
 
-A **Replace Smart Characters** command that performs the following actions:
+At present, it is rather feature-incomplete and in flux. However, the functions
+that have been written should be relatively stable as far as results.
 
-- **Smart single quotes:** `’` *to* `'`
-- **Smart double quotes:** `“` *to* `"`
-- **Prime:** `′` *to* `'`
-- **Double Prime:** `″` *to* `"`
-- **German quotes:** `„` *to* `"` and `‚` *to* `'`
-- **Ellipsis:** `…` *to* `...`
-- **Em dash:** `—` *to* `---`
-- **En dash:** `–` *to* `--`
-- **Bullet:** `•` *to* `*`
-- **Middle dot:** `·` *to* `-`
-- **Em space** *to* three spaces
-- **En space** *to* two spaces
-- **Non-breaking space** *to* one space
-- **Thin space** *to* one space
-- **Hair space** *to* one space
-- **Left angle quote:** `«` *to* `<<`
-- **Right angle quote:** `»` *to* `>>`
-- **Copyright symbol:** `©` *to* `(C)`
-- **Trademark symbol:** `™` *to* `(T)`
-- **Registered trademark symbol:** `®` *to* `(R)`
+Much of the code has been written based off the descriptions from Efron and
+Tibshirani's Introduction to the Bootstrap, and results should match the results
+obtained from following those explanations. However, the current ABC code is
+based off of the modified-BSD-licensed R port of the Efron bootstrap code, as
+I do not believe I currently have a sufficient understanding of the ABC method
+to write the code independently.
 
-![ScreenShot](https://raw.githubusercontent.com/jonlabelle/Trimmer/master/screenshots/command_palette.png)
+In any case, please contact me (Constantine Evans <cevans@evanslabs.org>) with
+any questions or suggestions. I'm trying to add documentation, and will
+be adding tests as well. I'm especially interested, however, in how the API
+should actually look; please let me know if you think the package should be
+organized differently.
 
-Watch a [**Quick Demo**](https://raw.githubusercontent.com/jonlabelle/Trimmer/master/screenshots/demo.gif)
+The package is licensed under the BSD 3-Clause License. It is supported in part
+by the Evans Foundation.
 
-## Install
+Version Info
+============
 
-Trimmer is compatible with both Sublime Text 2 and 3 and all supported Operating Systems.
+- HEAD: Randomness is now generated via a numpy.random Generator.  Anything
+        that relied on using numpy.random.seed to obtain deterministic results
+        will fail (mostly of relevance for testing).  Seeds (or Generators) can
+        now be passed to relevant functions with the `seed` argument, but note
+        that changes in Numpy's random number generation means this will not
+        give the same results that would be obtained using `numpy.random.seed`
+        to set the seed in previous versions.
 
-### Package Control
+  Numba is now supported in some instances (np.average or np.mean as
+  statfunction, 1-D data), using use_numba=True.  Pypy3 is also supported.
+  Typing information has been added.
 
-The easiest, and recommended way to install Trimmer is using [Package Control](https://packagecontrol.io).
+  Handling of multiple data sets (tuples/etc of arrays) now can be specified
+        as multi="paired" (the previous handling), where the sets must be of the
+        same length, and samples are taken keeping corresponding points connected,
+        or multi="independent", treating data sets as independent and sampling them
+        seperately (in which case they may be different sizes).
 
-From the main application menu, navigate to:
+- v1.0.1: Licensing information added.
 
-- `Tools` -> `Command Palette...` -> `Package Control: Install Package`, type
-  the word ***Trimmer***, then select it to complete installation.
+- v1.0.0: scikits.bootstrap now uses pyerf, which means that it doesn't actually
+        need scipy at all.  It should work with PyPy, has some improved error
+        and warning messages, and should be a bit faster in many cases.  The old
+        ci_abc function has been removed: use method='abc' instead.
 
-### Git
+- v0.3.3: Bug fixes.  Warnings have been cleaned up, and are implemented for BCa
+        when all statistic values are equal (a common confusion in prior versions).
+        Related numpy warnings are now suppressed.  Some tests on Python 2 were
+        fixed, and the PyPI website link is now correct.
 
-To install Trimmer using Git, change to your **Sublime Text Packages** directory
-and clone the [Trimmer repository](https://github.com/jonlabelle/Trimmer).
+- v0.3.2: This version contains various fixes to allow compatibility with Python
+        3.3. While I have not used the package extensively with Python 3, all
+        tests now pass, and importing works properly. The compatibility changes
+        slightly modify the output of bootstrap_indexes, from a Python list to
+        a Numpy array that can be iterated over in the same manner. This should
+        only be important in extremely unusual situations.
 
-For example, on **OS X**... start a new **Terminal** session and enter the following
-commands:
 
-```shell
-$ cd ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/
-$ git clone https://github.com/jonlabelle/Trimmer
+
+Installation and Usage
+======================
+
+scikits.bootstrap is tested on Python 3.6 - 3.9, and PyPy 3.  The package can be installed using pip.
+
+`pip install scikits.bootstrap`
+
+Usage example for python 3.x:
+
 ```
-
-### Manually
-
-**Download** and **extract** the [zip](https://github.com/jonlabelle/Trimmer/zipball/master)
-or [tarball](https://github.com/jonlabelle/Trimmer/tarball/master) to your
-Sublime Text packages directory.
-
-**Default Sublime Text Packages Paths:**
-
-* **OS X:** `~/Library/Application Support/Sublime Text [2|3]/Packages`
-* **Linux:** `~/.Sublime Text [2|3]/Packages`
-* **Windows:** `%APPDATA%/Sublime Text [2|3]/Packages`
-
-> **NOTE** Replace the `[2|3]` part with the appropriate Sublime Text
-> version for your installation.
-
-## Usage
-
-All commands are accessible from the **Command Palette** using prefix
-***Trimmer***, and in the **Main Menu** under `Edit` -> `Line` -> *Trimmer* command.
-
-- [Command Palette screenshot](https://raw.githubusercontent.com/jonlabelle/Trimmer/master/screenshots/command_palette.png)
-- [Main Menu screenshot](https://raw.githubusercontent.com/jonlabelle/Trimmer/master/screenshots/main_menu.png)
-
-### Key Bindings
-
-The *default* key binding will trim trailing whitespace at the end of each of
-line (entire file).
-
-- **OS X**: `Ctrl + S`
-- **Linux**: `Ctrl + Alt + S`
-- **Windows**: `Ctrl + Alt + S`
-
-### Trimmer Command API
-
-|              Command               |                                              Description                                               |          Context          |
-|------------------------------------|--------------------------------------------------------------------------------------------------------|---------------------------|
-| `trimmer`                          | trim whitespace at the end of each line                                                                | entire file               |
-| `trim_leading_whitespace`          | trim whitespace at the start of each line                                                              | selection, or entire file |
-| `trim_leading_trailing_whitespace` | trim whitespace at the start and end of each line                                                      | selection, or entire file |
-| `trim_selections`                  | trim whitespace from selection(s)                                                                      | selection                 |
-| `delete_empty_lines`               | delete empty, whitespace only lines                                                                    | selection, or entire file |
-| `collapse_lines`                   | collapse multiple consecutive empty lines into one empty line                                          | selection, or entire file |
-| `collapse_spaces`                  | collapse multiple consecutive spaces into one space                                                    | selection, or entire file |
-| `trim_edges`                       | trim empty, whitespace only lines at the beginning and end of the file                                 | entire file               |
-| `remove_blank_spaces`              | remove all blank space characters (tab, cr, ff, vt, space)                                             | selection, or entire file |
-| `normalize_spaces`                 | consecutive spaces reduced, empty lines removed and lines trimmed                                      | selection, or entire file |
-| `replace_smart_characters`         | replace smart characters (smart quotes, em/en dash, ellipsis, nbsp)                                    | selection, or entire file |
-| `tokenize_string`                  | convert a string to a token by collapsing consecutive spaces, and trimming leading and trailing spaces | selection, or entire file |
-| `delete_empty_tags`                | delete empty, whitespace only html and xml tags                                                        | selection, or entire file |
-| `remove_comments`                  | remove code comments and collapse lines                                                                | selection, or entire file |
-
-## Author
-
-[Jon LaBelle](https://jonlabelle.com)
-
-## License
-
-Trimmer is licensed under the [MIT license](http://opensource.org/licenses/MIT).
+import scikits.bootstrap as boot
+import numpy as np
+boot.ci(np.random.rand(100), np.average)
+```
