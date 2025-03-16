@@ -26,7 +26,7 @@ BASE_DIR = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'w537@nm@5n)=+e%-7*z-jxf21a#0k%uv^rbu**+cj4=_u57e(8'
+SECRET_KEY = '8ic41*pm@ag55fc$k-=ox@0_(xxvu&amp;fj+*bse$1ndjix96p%fe'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'DEBUG' in os.environ
@@ -75,8 +75,11 @@ MODOBOA_APPS = (
     'modoboa.relaydomains',
     'modoboa.limits',
     'modoboa.parameters',
+    'modoboa.dnstools',
+    'modoboa.policyd',
+    'modoboa.maillog',
     # Modoboa extensions here.
-    'modoboa_contacts',
+    'modoboa_radicale',
 )
 
 INSTALLED_APPS += MODOBOA_APPS
@@ -89,6 +92,8 @@ MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
+    'modoboa.core.middleware.TwoFAMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -276,8 +281,9 @@ LOGGING = {
 }
 
 # Load settings from extensions
-try:
-    from modoboa_contacts import settings as modoboa_contacts_settings
-    modoboa_contacts_settings.apply(globals())
-except AttributeError:
-    from modoboa_contacts.settings import *  # noqa
+from modoboa_radicale import settings as modoboa_radicale_settings
+
+modoboa_radicale_settings.apply(globals())
+
+WEBPACK_LOADER["CALENDAR"]["STATS_FILE"] = os.path.join(
+    os.path.dirname(__file__), "webpack-stats.json")

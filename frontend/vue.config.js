@@ -5,8 +5,8 @@ module.exports = {
     publicPath: process.env.NODE_ENV === 'production'
               ? '/sitestatic/'
               : 'http://localhost:8080/',
-    outputDir: '../modoboa_contacts/static/',
-    assetsDir: 'modoboa_contacts',
+    outputDir: '../modoboa_radicale/static/',
+    assetsDir: 'modoboa_radicale',
     devServer: {
         publicPath: 'http://localhost:8080/',
         headers: {
@@ -19,7 +19,7 @@ module.exports = {
     },
     configureWebpack: config => {
         config.plugins.push(new BundleTracker({
-            path: '../modoboa_contacts/static/modoboa_contacts/'
+            path: '../modoboa_radicale/static/modoboa_radicale/'
         }));
     }
 }
