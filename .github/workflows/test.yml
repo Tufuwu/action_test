@@ -1,33 +1,42 @@
-name: Sciris CI workflow
-on: [pull_request]
+name: luma.core
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  install_and_test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
-      max-parallel: 8
       matrix:
-        python-version: ["3.9", "3.10"]
-    name: Install and test
+        os: [ubuntu-latest]
+        python-minor-version: [6, 7, 8, 9]
+    name: Python 3.${{ matrix.python-minor-version }}
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
-      - uses: actions/setup-python@main
+      - uses: actions/checkout@v2
+      - name: Setup pip cache
+        uses: actions/cache@v4
+        id: pipcache
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-      - name: Install Sciris
-        run: python setup.py develop
-      - name: Install tests
-        run: pip install pytest
-      - name: Run API tests
-        working-directory: ./tests
-        run: pytest test_*.py --durations=0 --junitxml=test-results.xml # Run actual tests
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: failure()
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          name: test_results
-          path: tests/test-results.xml
+          python-version: 3.${{ matrix.python-minor-version }}
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install Python packages
+        run: pip install --upgrade setuptools pip wheel tox coveralls
+      - name: Run tests
+        env:
+          TOX_ENV: py3${{ matrix.python-minor-version }}
+        run: python -m tox -e $TOX_ENV
+      - name: QA
+        env:
+          TOX_ENV: qa,doc
+        run: python -m tox -e $TOX_ENV

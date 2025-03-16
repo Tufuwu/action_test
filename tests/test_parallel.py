@@ -1,116 +1,83 @@
-'''
-Test parallelization. Not written as pytest tests because it conflicts with pytest's
-built-in parallelization, and since functions-within-functions can't be pickled.
-'''
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (c) 2020 Richard Hull and contributors
+# See LICENSE.rst for details.
 
-import sciris as sc
-import pylab as pl
+"""
+Tests for the :py:module:`luma.core.interface.parallel` module.
+"""
 
+from unittest.mock import Mock, call
+from luma.core.interface.parallel import bitbang_6800
+import luma.core.error
 
-if 'doplot' not in locals(): doplot = False
+import pytest
 
-
-def test_simple():
-    sc.heading('Example 1 -- simple usage as a shortcut to multiprocessing.map()')
-
-    def f(x):
-        return x*x
-
-    results = sc.parallelize(f, [1,2,3])
-    print(results)
-    return
+from helpers import rpi_gpio_missing
 
 
-def test_embarrassing():
-    sc.heading('Example 2 -- simple usage for "embarrassingly parallel" processing')
-
-    def rnd():
-        import pylab as pl
-        return pl.rand()
-
-    results = sc.parallelize(rnd, 10)
-    print(results)
-    return
+gpio = Mock(unsafe=True)
 
 
-def test_multiargs():
-    sc.heading('Example 3 -- using multiple arguments')
-
-    def f(x,y):
-        return x*y
-
-    results1 = sc.parallelize(func=f, iterarg=[(1,2),(2,3),(3,4)])
-    results2 = sc.parallelize(func=f, iterkwargs={'x':[1,2,3], 'y':[2,3,4]})
-    results3 = sc.parallelize(func=f, iterkwargs=[{'x':1, 'y':2}, {'x':2, 'y':3}, {'x':3, 'y':4}])
-    assert results1 == results2 == results3
-    print(results1)
-    return
+def setup_function(function):
+    gpio.reset_mock()
+    gpio.HIGH = 200
+    gpio.LOW = 100
+    gpio.RS = 7
+    gpio.E = 8
+    gpio.PINS = [25, 24, 23, 18]
+    gpio.DATA = gpio.HIGH
+    gpio.CMD = gpio.LOW
+    gpio.OUT = 300
 
 
-def test_noniterated(doplot=doplot):
-    sc.heading('Example 4 -- using non-iterated arguments and dynamic load balancing')
+def test_data():
+    eight_to_four = lambda data: [f(x) for x in data for f in (lambda x: x >> 4, lambda x: 0x0F & x)]
 
-    def myfunc(i, x, y):
-        xy = [x+i*pl.randn(100), y+i*pl.randn(100)]
-        return xy
+    data = (0x41, 0x42, 0x43)  # ABC
+    serial = bitbang_6800(gpio=gpio, RS=7, E=8, PINS=[25, 24, 23, 18])
 
-    xylist1 = sc.parallelize(myfunc, kwargs={'x':3, 'y':8}, iterarg=range(5), maxload=0.8, interval=0.2) # Use kwargs dict
-    xylist2 = sc.parallelize(myfunc, x=5, y=10, iterarg=[5,10,15]) # Supply kwargs directly
+    serial.command(*eight_to_four([0x80]))
+    serial.data(eight_to_four(data))
 
-    if doplot:
-        for p,xylist in enumerate([xylist1, xylist2]):
-            pl.subplot(2,1,p+1)
-            for i,xy in enumerate(reversed(xylist)):
-                pl.scatter(xy[0], xy[1], label='Run %i'%i)
-            pl.legend()
-    return
+    setup = [call(gpio.RS, gpio.OUT), call(gpio.E, gpio.OUT)] + \
+        [call(gpio.PINS[i], gpio.OUT) for i in range(4)]
+    prewrite = lambda mode: [call(gpio.RS, mode), call(gpio.E, gpio.LOW)]
+    pulse = [call(gpio.E, gpio.HIGH), call(gpio.E, gpio.LOW)]
+    send = lambda v: [call(gpio.PINS[i], (v >> i) & 0x01) for i in range(serial._datalines)]
 
+    calls = \
+        prewrite(gpio.CMD) + send(0x08) + pulse + send(0x00) + pulse + \
+        prewrite(gpio.DATA) + \
+        send(data[0] >> 4) + pulse + \
+        send(data[0]) + pulse + \
+        send(data[1] >> 4) + pulse + \
+        send(data[1]) + pulse + \
+        send(data[2] >> 4) + pulse + \
+        send(data[2]) + pulse
 
-def test_parallelcmd():
-    sc.heading('Using a string-based command')
-
-    const = 4
-    parfor = {'val':[3,5,9]}
-    returnval = 'result'
-    cmd = """
-newval = val+const # Note that this can't be indented
-result = newval**2
-    """
-    results = sc.parallelcmd(cmd=cmd, parfor=parfor, returnval=returnval, const=const, maxload=0)
-    print(results)
-    return
+    gpio.setup.assert_has_calls(setup)
+    gpio.output.assert_has_calls(calls)
 
 
-def test_components():
-    sc.heading('Testing subcomponents directly')
-    sc.loadbalancer()
-
-    def empty(): pass
-
-    args = [0]*9
-    args[0] = empty
-    args[3] = None # Set iterdict to None
-    args[4] = None # Set args to empty list
-    args[5] = None # Set kwargs to empty dict
-    args[8] = True # Set embarrassing
-    taskargs = sc.sc_parallel.TaskArgs(*args)
-    task = sc.sc_parallel.parallel_task(taskargs)
-    return task
+def test_wrong_number_of_pins():
+    try:
+        bitbang_6800(gpio=gpio, RS=7, E=8, PINS=[25, 24, 23])
+    except AssertionError as ex:
+        assert str(ex) == 'You\'ve provided 3 pins but a bus must contain either four or eight pins'
 
 
+def test_cleanup():
+    serial = bitbang_6800(gpio=gpio)
+    serial._managed = True
+    serial.cleanup()
+    gpio.cleanup.assert_called_once_with()
 
-#%% Run as a script
-if __name__ == '__main__':
-    sc.tic()
 
-    doplot = True
-
-    test_simple()
-    test_embarrassing()
-    test_multiargs()
-    test_noniterated(doplot)
-    test_parallelcmd()
-    test_components()
-
-    sc.toc()
-    print('Done.')
+def test_unsupported_gpio_platform():
+    try:
+        bitbang_6800()
+    except luma.core.error.UnsupportedPlatform as ex:
+        assert str(ex) == 'GPIO access not available'
+    except ImportError:
+        pytest.skip(rpi_gpio_missing)

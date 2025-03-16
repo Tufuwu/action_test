@@ -1,7 +1,0 @@
-# Dependencies for testing/documentation
-pytest
-pytest-xdist
-# nbsphinx
-# ipykernel
-pandoc
-sphinx>=1.8
