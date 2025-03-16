@@ -1,0 +1,39 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - docker-py>=3.5.0
+  - jinja2>=2.10
+  - jupyter_client>=6.1
+  - jupyter_core>=4.6.0
+# add this back when 6.1.0 is out
+# and than remove pip section below
+#  - notebook>=6.1.0rc1
+  - paramiko>=2.1.2
+  - pexpect>=4.2.0
+  - pip
+  - pycryptodomex>=3.9.7
+  - python-kubernetes>=4.0.0
+  - pyzmq>=17.0.0
+  - requests>=2.7,<3.0
+  - tornado>=4.2.0
+  - traitlets>=4.2.0
+  - yarn-api-client>=1.0
+
+  # Test Requirements
+  - nose
+  - mock
+  - websocket-client
+  - pytest
+
+  # Code Style
+  - flake8
+
+  # Documentation Requirements
+  - sphinx_rtd_theme
+  - sphinx>=3
+  - recommonmark
+  - sphinx-markdown-tables
+
+  - pip:
+    - notebook>=6.1.0

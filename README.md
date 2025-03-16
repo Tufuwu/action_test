@@ -1,115 +1,83 @@
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Build Status](https://github.com/dlenski/what-vpn/workflows/test_and_release/badge.svg)](https://github.com/dlenski/what-vpn/actions?query=workflow%3Atest_and_release)
-[![PyPI](https://img.shields.io/pypi/v/what-vpn.svg)](https://pypi.python.org/pypi/what-vpn)
+**[Website](https://jupyter.org/enterprise_gateway/)** |
+**[Technical Overview](#technical-overview)** |
+**[Features](#features)** |
+**[Installation](#installation)** |
+**[System Architecture](#system-architecture)** |
+**[Contributing](#contributing)** |
 
-# what-vpn
+# Jupyter Enterprise Gateway
 
-Identifies servers running various SSL VPNs. (They should really be called
-"TLS-based" VPNs, but "SSL VPN" has become the de facto standard jargon.)
-Currently it can recognize…
+[![PyPI version](https://badge.fury.io/py/jupyter-enterprise-gateway.svg)](https://badge.fury.io/py/jupyter-enterprise-gateway)
+[![Downloads](https://pepy.tech/badge/jupyter-enterprise-gateway/month)](https://pepy.tech/project/jupyter-enterprise-gateway/month)
+[![Build Status](https://travis-ci.org/jupyter/enterprise_gateway.svg?branch=master)](https://travis-ci.org/jupyter/enterprise_gateway)
+[![Documentation Status](https://readthedocs.org/projects/jupyter-enterprise-gateway/badge/?version=latest)](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/?badge=latest)
+[![Coverage Status](https://codecov.io/github/jupyter/enterprise_gateway/coverage.svg?branch=master)](https://codecov.io/github/jupyter/enterprise_gateway?branch=master)
+[![Google Group](https://img.shields.io/badge/google-group-blue.svg)](https://groups.google.com/forum/#!forum/jupyter) [![Join the chat at https://gitter.im/jupyter/enterprise_gateway](https://badges.gitter.im/jupyter/enterprise_gateway.svg)](https://gitter.im/jupyter/enterprise_gateway?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-* Cisco AnyConnect and [OpenConnect (ocserv)](https://ocserv.gitlab.io/www)
-* Juniper Network Connect/Pulse
-* PAN GlobalProtect
-* Barracuda Networks
-* Check Point
-* Microsoft SSTP
-* [OpenVPN](https://openvpn.net/)
-* Fortinet
-* Array Networks
-* F5 BigIP
-* SonicWall NX
+Jupyter Enterprise Gateway enables Jupyter Notebook to launch remote kernels in a distributed cluster,
+including Apache Spark managed by YARN, IBM Spectrum Conductor, Kubernetes or Docker Swarm.
 
-## Install
+It provides out of the box support for the following kernels:
 
-Requires Python 3, `pip`, and [`requests`](https://docs.python-requests.org):
+* Python using IPython kernel
+* R using IRkernel
+* Scala using Apache Toree kernel
 
-```sh
-$ pip3 install https://github.com/dlenski/what-vpn/archive/master.zip
-...
-$ what-vpn
-usage: what-vpn [-h] [-k] [-t SEC] [-v | -c] server [server ...]
-what-vpn: error: the following arguments are required: server
+Full Documentation for Jupyter Enterprise Gateway can be found [here](https://jupyter-enterprise-gateway.readthedocs.io/en/latest)
+
+Jupyter Enterprise Gateway does not manage multiple Jupyter Notebook deployments, for that
+you should use [JupyterHub](https://github.com/jupyterhub/jupyterhub).
+
+## Technical Overview
+
+Jupyter Enterprise Gateway is a web server that provides headless access to Jupyter kernels within 
+an enterprise.  Inspired by Jupyter Kernel Gateway, Jupyter Enterprise Gateway provides feature parity with Kernel Gateway's [jupyter-websocket mode](https://jupyter-kernel-gateway.readthedocs.io/en/latest/websocket-mode.html) in addition to the following:
+* Adds support for remote kernels hosted throughout the enterprise where kernels can be launched in 
+the following ways:
+    * Local to the Enterprise Gateway server (today's Kernel Gateway behavior)
+    * On specific nodes of the cluster utilizing a round-robin algorithm
+    * On nodes identified by an associated resource manager
+* Provides support for Apache Spark managed by YARN, IBM Spectrum Conductor, Kubernetes or Docker Swarm out of the box.   Others can be configured via Enterprise Gateway's extensible framework.
+* Secure communication from the client, through the Enterprise Gateway server, to the kernels
+* Multi-tenant capabilities
+* Persistent kernel sessions
+* Ability to associate profiles consisting of configuration settings to a kernel for a given user (see [Project Roadmap](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/roadmap.html))
+
+![Deployment Diagram](https://github.com/jupyter/enterprise_gateway/blob/master/docs/source/images/deployment.png?raw=true)
+
+## Features
+
+See [Enterprise Gateway Features](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/getting-started.html#enterprise-gateway-features) in the 
+documentation for a list of Jupyter Enterprise Gateway features.
+
+## Installation
+
+Detailed installation instructions are located in the 
+[Getting Started page](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/getting-started.html)
+of the project docs. Here's a quick start using `pip`:
+
+```bash
+# install from pypi
+pip install --upgrade jupyter_enterprise_gateway
+
+# show all config options
+jupyter enterprisegateway --help-all
+
+# run it with default options
+jupyter enterprisegateway
 ```
 
-## Examples
+Please check the [Configuration Options page](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/config-options.html) 
+for information about the supported options.
 
-```sh
-$ what-vpn vpn.colorado.edu vpn.northeastern.edu \
-    vpn.tnstate.edu vpn.smith.edu vpn.caltech.edu \
-    vpn.yale.edu vpn.drew.edu vpn.uca.edu vpn.simmons.edu \
-    vpn.nl.edu cpvpn.its.hawaii.edu ssl-vpn.***.com
-vpn.colorado.edu: AnyConnect/OpenConnect (Cisco)
-vpn.northeastern.edu: PAN GlobalProtect (portal)
-vpn.tnstate.edu: PAN GlobalProtect (portal+gateway)
-vpn.smith.edu: Juniper Network Connect
-vpn.caltech.edu: AnyConnect/OpenConnect (Cisco, ASA (9.1(6)6))
-vpn.yale.edu: AnyConnect/OpenConnect (Cisco, ASA (8.4(5)))
-vpn.uca.edu: Barracuda (2017)
-vpn.simmons.edu: Check Point (2015, 20%)
-vpn.nl.edu: Check Point
-cpvpn.its.hawaii.edu: Check Point
-vpn.***.com: Array Networks (40%)
-ssl-vpn.***.com: no match
+## System Architecture
 
-$ what-vpn -kv vpn.***.com
+The [System Architecture page](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/system-architecture.html) 
+includes information about Enterprise Gateway's remote kernel, process proxy, and launcher frameworks.
 
-Sniffing ***.***.com ...
-  Is it AnyConnect/OpenConnect? ocserv, 0.8.0-0.11.6
-  Is it Juniper Network Connect? no match
-  Is it PAN GlobalProtect? no match
-  Is it Barracuda? no match
-  Is it Check Point? no match
-  Is it SSTP? no match
-  Is it OpenVPN? no match
-  => AnyConnect/OpenConnect (ocserv, 0.8.0-0.11.6)
-```
+## Contributing
 
-# Interesting results
+The [Contribution page](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/contrib.html) includes 
+information about how to contribute to Enterprise Gateway along with our roadmap.  While there, you'll want to
+[set up a development environment](https://jupyter-enterprise-gateway.readthedocs.io/en/latest/devinstall.html) and check out typical developer tasks.
 
-An interesting question for the open source community, including the indispensable
-[OpenConnect](https://www.infradead.org/openconnect) (which I also contribute to) is…
-
-> What are the most commonly-used SSL VPN protocols in the real world?
-
-In April 2019, I took a list of major universities and companies in the USA, and
-generated some guesses for the hostnames of their VPN endpoints
-(e.g. `{vpn,ssl-vpn,sslvpn}.*.{edu,com}`). I then used `what-vpn` to probe them all
-and looked at the subset of the results that matched to an identifiable SSL
-VPN protocol:
-
-```
-  1  Check Point
-  1  Citrix (manually inspected, don't know how to reliably autodetect)
-  1  OpenVPN
-  5  Dell or SonicWall (manually inspected, didn't know how to reliably autodetect at the time
-  7  Fortinet
-  7  Barracuda
-  8  F5 (manually inspected, didn't know how to reliably autodetect at this time)
- 14  SSTP
- 53  PAN GlobalProtect (portal and/or gateway)
- 72  Juniper Network Connect (or Junos/Pulse, hard to distinguish)
-243  Cisco AnyConnect (including 1 ocserv)
-```
-
-Assuming these results are roughly representative of “SSL VPN” deployments
-_in general_ (at least in the USA), they show that OpenConnect already supports
-the top 3 most commonly-encountered SSL VPN protocols, or about 80% of SSL VPNs.
-Additionally Microsoft SSTP is supported by the open-source
-[`sstp-client`](http://sstp-client.sourceforge.net),
-and of course OpenVPN is well-supported by open-source clients as well.
-
-_(Excerpted from
-[this post on the OpenConnect mailing list](https://lists.infradead.org/pipermail/openconnect-devel/2019-April/005335.html))_
-
-## TODO
-
-* Identify non-SSL/TLS-based VPNs? (e.g. IPSEC, à la [ike-scan](//github.com/royhills/ike-scan))
-* Identify more SSL VPNs: Citrix, Dell… any others?
-  * Fix apparent false-negatives for some SonicWall servers
-* Identify specific versions or flavors of VPN servers?
-* Better confidence levels?
-
-## License
-
-GPLv3 or later

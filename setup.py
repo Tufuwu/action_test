@@ -1,36 +1,89 @@
-#!/usr/bin/env python3
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
 
-import sys, os
-try:
-  from setuptools import setup
-except ImportError:
-  from distutils.core import setup
+import os
+import sys
+from setuptools import setup
 
-if not sys.version_info[0] == 3:
-    sys.exit("Python 2.x is not supported; Python 3.x is required.")
+here = os.path.abspath(os.path.dirname(__file__))
 
-########################################
+v = sys.version_info
+if v[:2] < (3, 5):
+    error = "ERROR: Jupyter Enterprise Gateway requires Python version 3.5 or above."
+    print(error, file=sys.stderr)
+    sys.exit(1)
 
-version_py = os.path.join('what_vpn', 'version.py')
+version_ns = {}
+with open(os.path.join(here, 'enterprise_gateway', '_version.py')) as f:
+    exec(f.read(), {}, version_ns)
 
-d = {}
-with open(version_py, 'r') as fh:
-    exec(fh.read(), d)
-    version_pep = d['__version__']
+setup_args = dict(
+    name='jupyter_enterprise_gateway',
+    author='Jupyter Development Team',
+    author_email='jupyter@googlegroups.com',
+    url='http://github.com/jupyter-incubator/enterprise_gateway',
+    description='A web server for spawning and communicating with remote Jupyter kernels',
+    long_description='''\
+A lightweight, multi-tenant, scalable and secure gateway that enables
+Jupyter Notebooks to share resources across distributed clusters such as
+Apache Spark, Kubernetes and others..
+''',
+    version=version_ns['__version__'],
+    license='BSD',
+    platforms="Linux, Mac OS X, Windows",
+    keywords=['Interactive', 'Interpreter', 'Kernel', 'Web', 'Cloud'],
+    packages=[
+        'enterprise_gateway',
+        'enterprise_gateway.base',
+        'enterprise_gateway.client',
+        'enterprise_gateway.services',
+        'enterprise_gateway.services.api',
+        'enterprise_gateway.services.kernels',
+        'enterprise_gateway.services.kernelspecs',
+        'enterprise_gateway.services.processproxies',
+        'enterprise_gateway.services.sessions'
+    ],
+    scripts=[
+        'scripts/jupyter-enterprisegateway'
+    ],
+    install_requires=[
+        'docker>=3.5.0',
+        'future',
+        'jinja2>=2.10',
+        'jupyter_client>=6.1',
+        'jupyter_core>=4.6.0',
+        'kubernetes>=4.0.0',
+        'notebook>=6.1.0',
+        'paramiko>=2.1.2',
+        'pexpect>=4.2.0',
+        'pycryptodomex>=3.9.7',
+        'pyzmq>=17.0.0',
+        'requests>=2.7,<3.0',
+        'tornado>=4.2.0',
+        'traitlets>=4.3.3',
+        'yarn-api-client>=1.0',
+    ],
+    python_requires='>=3.5',
+    classifiers=[
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3'
+    ],
+    include_package_data=True,
+)
 
-########################################
+if 'setuptools' in sys.modules:
+    # setupstools turns entrypoint scripts into executables on windows
+    setup_args['entry_points'] = {
+        'console_scripts': [
+            'jupyter-enterprisegateway = enterprise_gateway:launch_instance'
+        ]
+    }
+    # Don't bother installing the .py scripts if if we're using entrypoints
+    setup_args.pop('scripts', None)
 
-setup(name="what-vpn",
-      version=version_pep,
-      description="Identify servers running various SSL VPNs",
-      long_description=open("description.rst").read(),
-      author="Daniel Lenski",
-      author_email="dlenski@gmail.com",
-      license='GPL v3 or later',
-      install_requires=[ 'requests>=2.0.0' ],
-      url="https://github.com/dlenski/what-vpn",
-      packages = ['what_vpn'],
-      entry_points={ 'console_scripts': [ 'what-vpn=what_vpn.__main__:main' ] },
-      tests_require=['nose>=1.0'],
-      test_suite='nose.collector',
-      )
+if __name__ == '__main__':
+    setup(**setup_args)
