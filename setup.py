@@ -1,76 +1,66 @@
-# Copyright 2009 Shikhar Bhushan
-# Copyright 201[2-5] Leonidas Poulopoulos (@leopoul)
-# Copyright 2013 Ebben Aries
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#!/usr/bin/env python3
 
-from setuptools import setup, find_packages
-from distutils.command.install import install as _install
+from setuptools import setup
 
-import sys
-import platform
-import codecs
-import versioneer
-
-__author__ = "Shikhar Bhushan, Leonidas Poulopoulos, Ebben Aries, Einar Nilsen-Nygaard"
-__author_email__ = "shikhar@schmizz.net, lpoulopoulos@verisign.com, exa@dscp.org, einarnn@gmail.com"
-__licence__ = "Apache 2.0"
-
-if sys.version_info.major == 2 and sys.version_info.minor < 7:
-    print ("Sorry, Python < 2.7 is not supported")
-    exit()
-
-#parse requirements
-req_lines = [line.strip() for line in open("requirements.txt").readlines()]
-install_reqs = list(filter(None, req_lines))
-
-test_req_lines = [line.strip() for line in open("test-requirements.txt").readlines()]
-test_reqs = list(filter(None, test_req_lines))
-
-with codecs.open('README.rst', 'r', encoding='utf8') as file:
-    long_description = file.read()
-
-
-setup(name='ncclient',
-      version=versioneer.get_version(),
-      cmdclass=versioneer.get_cmdclass(),
-      description="Python library for NETCONF clients",
-      long_description = long_description,
-      author=__author__,
-      author_email=__author_email__,
-      url="https://github.com/ncclient/ncclient",
-      packages=find_packages(exclude=['test', 'test.*']),
-      install_requires=install_reqs,
-      tests_require=test_reqs,
-      license=__licence__,
-      platforms=["Posix; OS X; Windows"],
-      keywords=['NETCONF', 'NETCONF Python client', 'Juniper Optimization', 'Cisco NXOS Optimization'],
-      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
-      classifiers=[
-          'Development Status :: 5 - Production/Stable',
-          'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7',
-          'Topic :: System :: Networking',
-          'Intended Audience :: Developers',
-          'Operating System :: OS Independent',
-          'Topic :: Software Development :: Libraries :: Python Modules',
-      ])
-
-
-
-
-
-
-
+setup(
+    name = "django-jinja",
+    version = "2.9.1",
+    description = "Jinja2 templating language integrated in Django.",
+    long_description = open("README.rst").read(),
+    long_description_content_type='text/x-rst',
+    keywords = "django, jinja2",
+    author = "Andrey Antukh",
+    author_email = "niwi@niwi.be",
+    maintainer = "Asif Saif Uddin",
+    maintainer_email = "auvipy@gmail.com",
+    url = "https://github.com/niwinz/django-jinja",
+    license = "BSD",
+    packages = [
+        "django_jinja",
+        "django_jinja.builtins",
+        "django_jinja.management",
+        "django_jinja.management.commands",
+        "django_jinja.contrib",
+        "django_jinja.contrib._pipeline",
+        "django_jinja.contrib._pipeline.templatetags",
+        "django_jinja.contrib._easy_thumbnails",
+        "django_jinja.contrib._easy_thumbnails.templatetags",
+        "django_jinja.contrib._humanize",
+        "django_jinja.contrib._humanize.templatetags",
+        "django_jinja.contrib._subdomains",
+        "django_jinja.contrib._subdomains.templatetags",
+        "django_jinja.views",
+        "django_jinja.views.generic",
+    ],
+    include_package_data = True,
+    package_data = {
+        "django_jinja": ["contrib/_pipeline/templates/pipeline/*.jinja"],
+    },
+    python_requires = ">=3.6",
+    install_requires = [
+        "jinja2>=3",
+        "django>=2.2",
+    ],
+    tests_require = [
+        "pytz",
+    ],
+    classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "Framework :: Django",
+        "Framework :: Django :: 2.2",
+        "Framework :: Django :: 3.0",
+        "Framework :: Django :: 3.1",
+        "Framework :: Django :: 3.2",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Internet :: WWW/HTTP",
+    ]
+)
