@@ -1,40 +1,56 @@
-from setuptools import setup, find_packages
+import re
+from setuptools import setup
+from io import open
 
-with open('flavio/_version.py', encoding='utf-8') as f:
-    exec(f.read())
+__version__, = re.findall('__version__ = "(.*)"',
+                          open('mappyfile/__init__.py').read())
 
-with open('README.md', encoding='utf-8') as f:
-    LONG_DESCRIPTION = f.read()
+def readme():
+    with open('README.rst', "r", encoding="utf-8") as f:
+        return f.read()
 
-setup(name='flavio',
+
+setup(name='mappyfile',
       version=__version__,
-      author='David M. Straub',
-      author_email='straub@protonmail.com',
-      url='https://flav-io.github.io',
-      description='A Python package for flavour physics phenomenology in the Standard Model and beyond',
-      long_description=LONG_DESCRIPTION,
-      long_description_content_type='text/markdown',
-      license='MIT',
-      packages=find_packages(),
+      description='A pure Python MapFile parser for working with MapServer',
+      long_description=readme(),
+      classifiers=[
+          # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
+          'Development Status :: 4 - Beta',
+          'License :: OSI Approved :: MIT License',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Intended Audience :: Developers',
+          'Topic :: Text Processing :: Linguistic',
+          'Topic :: Software Development :: Build Tools'
+      ],
       package_data={
-      'flavio':['data/*.yml',
-                'data/test/*',
-                'physics/data/arXiv-0810-4077v3/*',
-                'physics/data/arXiv-1503-05534v1/*',
-                'physics/data/arXiv-1503-05534v2/*',
-                'physics/data/arXiv-1501-00367v2/*',
-                'physics/data/arXiv-1602-01399v1/*',
-                'physics/data/arXiv-1602-01399v1/*',
-                'physics/data/arXiv-1811-00983v1/*',
-                'physics/data/qcdf_interpolate/*',
-                'physics/data/wcsm/*',
-                ]
+          '': ['*.g'],
+          'mappyfile': ['schemas/*.json']
       },
-      install_requires=['numpy>=1.16.5', 'scipy', 'setuptools>=3.3', 'pyyaml',
-                        'ckmutil', 'wilson>=2.0', 'particle>=0.16.0', ],
-      extras_require={
-            'testing': ['nose2'],
-            'plotting': ['matplotlib>=2.0'],
-            'sampling': ['iminuit>=2.0'],
-            },
-    )
+      url='http://github.com/geographika/mappyfile',
+      author='Seth Girvin',
+      author_email='sethg@geographika.co.uk',
+      license='MIT',
+      packages=['mappyfile'],
+      install_requires=[
+            'lark-parser>=0.11.3',
+            # pyrsistent is a dependency of jsonschema but py2 is not
+            # supported beyond 0.16.0
+            'pyrsistent<0.17.0; python_version=="2.7"',
+            'jsonschema>=2.0, <=3.2.0; python_version=="2.7"',
+            'jsonschema>=2.0; python_version>="3.0.0"',
+            'jsonref==0.2',
+            'click; python_version>="3.0.0"',
+            'click < 8.0.0; python_version=="2.7"'
+      ],
+      zip_safe=False,
+      entry_points = {
+        'console_scripts': ['mappyfile=mappyfile.cli:main'],
+    }
+)

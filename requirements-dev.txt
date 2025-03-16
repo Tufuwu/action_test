@@ -1,0 +1,15 @@
+colorama
+docutils
+flake8
+# git+git://github.com/erezsh/lark.git#egg=lark
+pluggy
+py
+pydot
+pyparsing
+pytest
+pytest-cov
+tox
+virtualenv
+glob2
+coveralls
+sphinx
