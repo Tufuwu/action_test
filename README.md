@@ -1,96 +1,121 @@
-# python-dispatch
-Lightweight event handling for Python
+# mesa-geo - a GIS extension to Mesa Agent-Based Modeling
 
-[![Build Status](https://travis-ci.org/nocarryr/python-dispatch.svg?branch=master)](https://travis-ci.org/nocarryr/python-dispatch)[![Coverage Status](https://coveralls.io/repos/github/nocarryr/python-dispatch/badge.svg?branch=master)](https://coveralls.io/github/nocarryr/python-dispatch?branch=master)[![PyPI version](https://badge.fury.io/py/python-dispatch.svg)](https://badge.fury.io/py/python-dispatch)[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/nocarryr/python-dispatch/master/LICENSE.txt)
+mesa-geo implements a `GeoSpace` that can host GIS-based `GeoAgents`, which are like normal Agents, except they have a `shape` attribute that is a [Shapely object](https://shapely.readthedocs.io/en/latest/manual.html). You can use `Shapely` directly to create arbitrary shapes, but in most cases you will want to import your shapes from a file. Mesa-geo allows you to create GeoAgents from any vector data file (e.g. shapefiles), valid GeoJSON objects or a GeoPandas GeoDataFrame.
 
-## Description
-This is an implementation of the "Observer Pattern" with inspiration from the
-[Kivy](kivy.org) framework. Many of the features though are intentionally
-stripped down and more generalized. The goal is to have a simple drop-in
-library with no dependencies that stays out of the programmer's way.
+This is the first release of mesa-geo. No functionality guaranteed, bugs included.
 
 ## Installation
+
+To install mesa-geo on linux or macOS run
+
+```shell
+pip install mesa-geo
 ```
-pip install python-dispatch
+
+On windows you should first use Anaconda to install some of the requirements with
+
+```shell
+conda install fiona pyproj rtree shapely
+pip install mesa-geo
 ```
 
-## Links
+Since mesa-geo is in early development you could also install the latest version directly from Github via
 
-|               |                                              |
-| -------------:|:-------------------------------------------- |
-| Project Home  | https://github.com/nocarryr/python-dispatch  |
-| PyPI          | https://pypi.python.org/pypi/python-dispatch |
-| Documentation | https://python-dispatch.readthedocs.io       |
+```shell
+pip install -e git+https://github.com/projectmesa/mesa-geo.git#egg=mesa-geo
+```
 
+## Getting started
 
-## Usage
+You should be familiar with how [mesa](https://github.com/projectmesa/mesa) works.
 
-### Events
+So let's get started with some shapes! We will work with [records of US states](http://eric.clst.org/Stuff/USGeoJSON). We use the `requests` library to retrieve the data, but of course you can work with local data.
 
 ```python
->>> from pydispatch import Dispatcher
->>> class MyEmitter(Dispatcher):
-...     # Events are defined in classes and subclasses with the '_events_' attribute
-...     _events_ = ['on_state', 'new_data']
-...     def do_some_stuff(self):
-...         # do stuff that makes new data
-...         data = {'foo':'bar'}
-...         # Then emit the change with optional positional and keyword arguments
-...         self.emit('new_data', data=data)
-...
->>> # An observer - could inherit from Dispatcher or any other class
->>> class MyListener(object):
-...     def on_new_data(self, *args, **kwargs):
-...         data = kwargs.get('data')
-...         print('I got data: {}'.format(data))
-...     def on_emitter_state(self, *args, **kwargs):
-...         print('emitter state changed')
-...
->>> emitter = MyEmitter()
->>> listener = MyListener()
->>> emitter.bind(on_state=listener.on_emitter_state)
->>> emitter.bind(new_data=listener.on_new_data)
->>> emitter.do_some_stuff()
-I got data: {'foo': 'bar'}
->>> emitter.emit('on_state')
-emitter state changed
-
+from mesa_geo import GeoSpace, GeoAgent, AgentCreator
+from mesa import Model
+import requests
+url = 'http://eric.clst.org/assets/wiki/uploads/Stuff/gz_2010_us_040_00_20m.json'
+r = requests.get(url)
+geojson_states = r.json()
 ```
 
-### Properties
+First we create a `State` Agent and a `GeoModel`. Both should look familiar if you have worked with mesa before.
 
 ```python
->>> from pydispatch import Dispatcher, Property
->>> class MyEmitter(Dispatcher):
-...     # Property objects are defined and named at the class level.
-...     # They will become instance attributes that will emit events when their values change
-...     name = Property()
-...     value = Property()
-...
->>> class MyListener(object):
-...     def on_name(self, instance, value, **kwargs):
-...         print('emitter name is {}'.format(value))
-...     def on_value(self, instance, value, **kwargs):
-...         print('emitter value is {}'.format(value))
-...
->>> emitter = MyEmitter()
->>> listener = MyListener()
->>> emitter.bind(name=listener.on_name, value=listener.on_value)
->>> emitter.name = 'foo'
-emitter name is foo
->>> emitter.value = 42
-emitter value is 42
+class State(GeoAgent):
+    def __init__(self, unique_id, model, shape):
+        super().__init__(unique_id, model, shape)
 
+class GeoModel(Model):
+    def __init__(self):
+        self.space = GeoSpace()
+        
+        state_agent_kwargs = dict(model=self)
+        AC = AgentCreator(agent_class=State, agent_kwargs=state_agent_kwargs)
+        agents = AC.from_GeoJSON(GeoJSON=geojson_states, unique_id="NAME")
+        self.space.add_agents(agents)
 ```
 
-## Contributing
+In the `GeoModel` we first create an instance of AgentCreator, where we provide the Agent class (State) and its required arguments, except shape and unique_id. We then use the `.from_GeoJSON` function to create our agents from the shapes in the GeoJSON file. We provide the feature "name" as the key from which the agents get their unique_ids.
+Finally, we add the agents to the GeoSpace
 
-Contributions are welcome!
+Let's instantiate our model and look at one of the agents:
 
-If you want to contribute through code or documentation, please see the
-[Contributing Guide](CONTRIBUTING.md) for information.
+```python
+m = GeoModel()
 
-## License
+agent = m.space.agents[0]
+print(agent.unique_id)
+agent.shape
+```
 
-This project is released under the MIT License. See the [LICENSE](LICENSE.txt) file
-for more information.
+If you work in the Jupyter Notebook your output should give you the name of the state and a visual representation of the shape.
+
+    Arizona
+
+!['Arizona state borders'](output_3_1.svg)
+
+By default the AgentCreator also sets further agent attributes from the Feature properties.
+
+```python
+agent.CENSUSAREA
+```
+
+    113594.084
+
+Let's start to do some spatial analysis. We can use usual Mesa function names to get neighboring states
+
+```python
+neighbors = m.space.get_neighbors(agent)
+print([a.unique_id for a in neighbors])
+```
+
+    California
+    Colorado
+    New Mexico
+    Utah
+    Nevada
+
+To get a list of all states within a certain distance you can use the following
+
+```python
+[a.unique_id for a in m.space.get_neighbors_within_distance(agent, 600000)]
+```
+
+    ['California',
+    'Colorado',
+    'New Mexico',
+    'Oklahoma',
+    'Wyoming',
+    'Idaho',
+    'Utah',
+    'Nevada']
+
+The unit for the distance depends on the coordinate reference system (CRS) of the GeoSpace. Since we did not specify the CRS, mesa-geo defaults to the 'Web Mercator' projection (in meters). If you want to do some serious measurements you should always set an appropriate CRS, since the accuracy of Web Mercator declines with distance from the equator.  We can achieve this by initializing the AgentCreator and the GeoSpace with the `crs` keyword  `crs="epsg:2163"`. Mesa-geo then transforms all coordinates from the GeoJSON geographic coordinates into the set crs.
+
+## Going further
+
+To get a deeper understanding of mesa-geo you should checkout the GeoSchelling example. It implements a Leaflet visualization which is similar to use as the CanvasGridVisualization of Mesa.
+
+To add further functionality, I need feedback on which functionality is desired by users. Please post a message [here](https://groups.google.com/forum/#!topic/projectmesa-dev/qEf2XBFZYnI) or open an issue if you have any ideas or recommendations.
