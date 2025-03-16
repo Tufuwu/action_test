@@ -1,106 +1,68 @@
+# python-zxing
 
-<p align="center">
-  <img src="static/img/ade_scheduler_icon.png" width="200" height="200"> </img>
-</p>
-<p align="center">
-    <img alt="Website" src="https://img.shields.io/website?down_color=red&down_message=offline&label=Status%20&style=for-the-badge&up_color=green&up_message=online&url=https%3A%2F%2Fade-scheduler.info.ucl.ac.be">
-</p>
-<p align="center">
-<img src="https://img.shields.io/endpoint?url=https://ade-scheduler.info.ucl.ac.be/api/shield/user">
-<img src="https://img.shields.io/endpoint?url=https://ade-scheduler.info.ucl.ac.be/api/shield/schedule">
-</p>
+[![PyPI](https://img.shields.io/pypi/v/zxing.svg)](https://pypi.python.org/pypi/zxing)
+[![Build Status](https://github.com/dlenski/python-zxing/workflows/test_and_release/badge.svg)](https://github.com/dlenski/python-zxing/actions?query=workflow%3Atest_and_release)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
-# ADE Scheduler: a scheduling tool made for humans
+This is a wrapper for the [ZXing barcode library](https://github.com/zxing/zxing). (It's a "slightly less quick-and-dirty" fork of [oostendo/python-zxing](https://github.com/oostendo/python-zxing).)
+It will allow you to read and decode barcode images from Python.
 
-[ADE-Scheduler](https://ade-scheduler.info.ucl.ac.be/) is a web-application made by (former) students which is destined to be used by UCLouvain members (students, academics,...).
+## Dependencies and installation
 
-### Project creators
+Use the Python 3 version of pip (usually invoked via `pip3`) to install: `pip3 install zxing`
 
-- [Eertmans Jérome](https://www.linkedin.com/in/j%C3%A9rome-eertmans-130ab1130/)
-- [Navarre Louis](https://www.linkedin.com/in/louis-navarre-36b78b143/)
-- [Poncelet Gilles](https://www.linkedin.com/in/gilles-poncelet-020442195/)
+* You'll neeed to have a recent `java` binary somewhere in your path. (Tested with OpenJDK v7, v8, v11.)
+* pip will automatically download the relevant [JAR](https://en.wikipedia.org/wiki/JAR_(file_format)) files for the Java ZXing libraries (currently v3.4.1)
 
-We are three former students from the Ecole Polytechnique de Louvain (EPL) and were starting our first master year at the start of the project.
+## Usage
 
-### Why such a tool ?
+The `BarCodeReader` class is used to decode images:
 
-The currently used scheduling tool used by the UCLouvain, [ADE](http://horaire.uclouvain.be/direct/), lacks an intuitive interface and general usability. Therefore, we decided to create ADE-Scheduler as a "wrapper" around this tool to make it more intuitive, nice and complete.
+```python
+>>> import zxing
+>>> reader = zxing.BarCodeReader()
+>>> print(reader.zxing_version, reader.zxing_version_info)
+3.4.1 (3, 4, 1)
+>>> barcode = reader.decode("test/barcodes/QR_CODE-easy.png")
+>>> print(barcode)
+BarCode(raw='This should be QR_CODE', parsed='This should be QR_CODE', format='QR_CODE', type='TEXT', points=[(15.0, 87.0), (15.0, 15.0), (87.0, 15.0), (75.0, 75.0)])
+```
 
-Before that, we were using the excellent [ADE2ICS](https://github.com/cdamman/UCL2ICS) made by Corentin Damman which allowed to create subscription links where one could select its events (TPs, CMs, etc). ADE-Scheduler is therefore an improvement of this tool.
+The attributes of the decoded `BarCode` object are `raw`, `parsed`, `format`, `type`, and `points`. The list of formats which ZXing can decode is
+[here](https://zxing.github.io/zxing/apidocs/com/google/zxing/BarcodeFormat.html).
 
-### Key dates
+The `decode()` method accepts an image path (or list of paths) and takes optional parameters `try_harder` (boolean), `possible_formats` (list of formats to consider), and `pure_barcode` (boolean).
+If no barcode is found, it returns `None`, and if it encounters any other recognizable error from the Java ZXing library, it raises `BarCodeReaderException`.
 
-- **August 2019** : start of the project
-- **September 2019** : access to the API of ADE and release of the first version of the tool
-- **Summer 2020**: complete overhaul of the tool to make it more attractive, intuitive and mobile-friendly.
-- **September 2020**: release of the second version of the tool
-- **September 2021**: 2 years of service, Python 3.9 upgrade and 3500+ users
+## Command-line interface
 
-### How does it work ?
+The command-line interface can decode images into barcodes and output in either a human-readable or CSV format:
 
-#### Back-end <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1024px-Python-logo-notext.svg.png" alt="python" width="20" height="20"></img>
+```
+usage: zxing [-h] [-c] [--try-harder] image [image ...]
+```
 
-##### Data source
+Human-readable:
 
-Thanks to the access to the API of ADE, we obtain all the information in a `XML` format. Those are up-to-date with the infos you will find on the ADE website. We are mainly interested in two type of informations:
- - Event list sorted by course
- - Location of every UCLouvain classroom, auditorium, etc.
+```sh
+$ zxing /tmp/barcode.png
+/tmp/barcode.png
+================
+  Decoded TEXT barcode in QR_CODE format.
+  Raw text:    'Testing 123'
+  Parsed text: 'Testing 123'
+```
 
-#### Data treatment
+CSV output (can be opened by LibreOffice or Excel):
 
-The backend of ADE-Scheduler is written in Python using the [Flask](https://flask.palletsprojects.com/en/1.1.x/) micro-framework. Other packages are also used to supply many useful functions to enhance the overall user experience.\
-Among those, we use [pandas](https://pandas.pydata.org/) pandas to optimise the performances, [ics](https://pypi.org/project/ics/) to convert the schedules in the iCal format, [Flask-Security](https://pypi.org/project/Flask-Security-Too/) to handle user registrations and security aspects - and many more.
+```sh
+$ zxing /tmp/barcode1.png /tmp/barcode2.png /tmp/barcode3.png
+Filename,Format,Type,Raw,Parsed
+/tmp/barcode1.png,CODE_128,TEXT,Testing 123,Testing 123
+/tmp/barcode2.png,QR_CODE,URI,http://zxing.org,http://zxing.org
+/tmp/barcode3.png,QR_CODE,TEXT,"This text, ""Has stuff in it!"" Wow⏎Yes it does!","This text, ""Has stuff in it!"" Wow⏎Yes it does!"
+```
 
-We also use a [Redis](https://redis.io) server to store user sessions and buffer data, as well as a [PostgreSQL](https://www.postgresql.org/) database to store user accounts and schedules.
+## License
 
-### Front-end <img src="https://www.w3.org/html/logo/downloads/HTML5_Badge_512.png" alt="html" width="20" height="20"></img> <img src="https://i1.wp.com/www.thekitchencrew.com/wp-content/uploads/2016/03/js-logo.png?fit=500%2C500" alt="js" width="20" height="20"></img>
-
-Client-side logic is handled using [Vue](https://vuejs.org/), a JavaScript reactive framework. Moreover, the events are displayed on a calendar generated with the help of the [FullCalendar](https://fullcalendar.io) package.
-
-The UI is made mainly with the help of [Bootstrap](https://getbootstrap.com/), which handles all the CSS and makes the website enjoyable and mobile-friendly.
-
-
-### Functionalities and comparison with ADE
-
-In short, ADE Scheduler offers the same information as ADE, but in a much
- more elegant manner. A side by side comparison of the two sites just
-  speaks for itself:
-
- ![](static/img/ade_official_side_by_side.png)
-
- ![](static/img/ade_scheduler_side_by_side.png)
-
-But an intuitive design is not the only advantage of ADE Scheduler, it also
- comes with several useful tools which ADE does not have:
-
-- [x] black-listing some events in order to have a clean schedule
-- [x] easily viewing multiple courses
-- [x] handling multiple schedules
-- [x] computing your optimized schedule which minimizes conflicts
-- [x] adding private events
-- [x] no connection required
-- [x] caching of you data so you don't lose everything each time you leave
-- [x] detailed map of classrooms and events associated
-- [x] possibility to download schedule to iCal file or create subscription link
-- [x] you can share you calendar with anyone you would like
-
-... and many more !
-
-### Documentation
-
-The website's documentation is available on the [help page](https://ade-scheduler.info.ucl.ac.be/help).
-
-### Future improvements
-
-Here are listed a series of issues we would like to implement in the future:
- - Implement a complete testing suite to enable easy and robust CI
- - Complete the help section with more videos, tips, etc.
-
-We are open to any suggestions !
-
-## Contributing
-
-This application being open source, everyone is more than welcome to contribute in any way !
-To see more details about our contributing guidelines, please refer to [contributing](/CONTRIBUTING.md).
-
-Any suggestion, idea or bugs are much appreciated, and you can contact us at all times either by [mail](mailto:adescheduler@gmail.com) or directly on this repository.
+LGPLv3
