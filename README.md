@@ -1,143 +1,32 @@
-olefile
-=======
+# Jaro Winkler Distance
 
-[![Test](https://github.com/decalage2/olefile/actions/workflows/test.yml/badge.svg)](https://github.com/decalage2/olefile/actions)
-[![Build Status AppVeyor](https://ci.appveyor.com/api/projects/status/github/decalage2/olefile?svg=true)](https://ci.appveyor.com/project/decalage2/olefile)
-[![codecov](https://codecov.io/gh/decalage2/olefile/branch/main/graph/badge.svg)](https://codecov.io/gh/decalage2/olefile)
-[![Documentation Status](http://readthedocs.org/projects/olefile/badge/?version=latest)](http://olefile.readthedocs.io/en/latest/?badge=latest)
-[![PyPI](https://img.shields.io/pypi/v/olefile.svg)](https://pypi.org/project/olefile/)
-[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/decalage2)
+![PyPI - Version](https://img.shields.io/pypi/v/pyjarowinkler?style=flat-square)
+![License](https://img.shields.io/github/license/nap/jaro-winkler-distance?style=flat-square)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyjarowinkler?style=flat-square)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nap/jaro-winkler-distance/workflow.yml)
 
-[olefile](https://www.decalage.info/olefile) is a Python package to parse, read and write
-[Microsoft OLE2 files](http://en.wikipedia.org/wiki/Compound_File_Binary_Format)
-(also called Structured Storage, Compound File Binary Format or Compound Document File Format),
-such as Microsoft Office 97-2003 documents, vbaProject.bin in MS Office 2007+ files, Image Composer
-and FlashPix files, Outlook messages, StickyNotes, several Microscopy file formats, McAfee antivirus quarantine files,
-etc.
+Find the Jaro Winkler Distance which indicates the similarity score between two strings or words.
+Jaro's equation measure is the weighted sum of percentage of matched and transposed characters from each strings. Winkler's factor increased this measure for matching prefixed characters.
 
+## The Implementation
 
-**Quick links:** [Home page](https://www.decalage.info/olefile) -
-[Download/Install](http://olefile.readthedocs.io/en/latest/Install.html) -
-[Documentation](http://olefile.readthedocs.io/en/latest) -
-[Report Issues/Suggestions/Questions](https://github.com/decalage2/olefile/issues) -
-[Contact the author](https://www.decalage.info/contact) -
-[Repository](https://github.com/decalage2/olefile) -
-[Updates on Twitter](https://twitter.com/decalage2)
+The original implementation is based on the Jaro Winkler Similarity Algorithm article that can be found on [Wikipedia](http://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance). This version of is based on the [Apache commons-text](https://github.com/apache/commons-text/blob/c2cb4501669e4148aebd9d7265430080f47af016/src/main/java/org/apache/commons/text/similarity/JaroWinklerSimilarity.java#L1-L167) library.
 
+### Correctness
 
-News
-----
+Unit tests similar to what you will find in the `commons-text` library were used to validate the implementation.
 
-Follow all updates and news on Twitter: <https://twitter.com/decalage2>
+### Note
 
-- **2018-09-09 v0.46**: OleFileIO can now be used as a context manager
-(with...as), to close the file automatically
-(see [doc](https://olefile.readthedocs.io/en/latest/Howto.html#open-an-ole-file-from-disk)).
-Improved handling of malformed files, fixed several bugs.
-- 2018-01-24 v0.45: olefile can now overwrite streams of any size, improved handling of malformed files,
-fixed several [bugs](https://github.com/decalage2/olefile/milestone/4?closed=1), end of support for Python 2.6 and 3.3.
-- 2017-01-06 v0.44: several bugfixes, removed support for Python 2.5 (olefile2),
-added support for incomplete streams and incorrect directory entries (to read malformed documents),
-added getclsid, improved [documentation](http://olefile.readthedocs.io/en/latest) with API reference.
-- 2017-01-04: moved the documentation to [ReadTheDocs](http://olefile.readthedocs.io/en/latest)
-- 2016-05-20: moved olefile repository to [GitHub](https://github.com/decalage2/olefile)
-- 2016-02-02 v0.43: fixed issues [#26](https://github.com/decalage2/olefile/issues/26)
-    and [#27](https://github.com/decalage2/olefile/issues/27),
-    better handling of malformed files, use python logging.
-- see [changelog](https://github.com/decalage2/olefile/blob/master/CHANGELOG.md) for more detailed information and
-the latest changes.
+A limit of `shorter / 2 + 1` is used in `commons-text`, this differs from Wikipedia and also [Winkler's paper](https://files.eric.ed.gov/fulltext/ED325505.pdf), where a distance of `longer / 2 - 1` is used, corresponding to positions of `longer / 2`.
 
-Download/Install
-----------------
+## Example
 
-If you have pip or setuptools installed (pip is included in Python 2.7.9+), you may simply run **pip install olefile**
-or **easy_install olefile** for the first installation.
-
-To update olefile, run **pip install -U olefile**.
-
-Otherwise, see http://olefile.readthedocs.io/en/latest/Install.html
-
-Features
---------
-
-- Parse, read and write any OLE file such as Microsoft Office 97-2003 legacy document formats (Word .doc, Excel .xls,
-    PowerPoint .ppt, Visio .vsd, Project .mpp), Image Composer and FlashPix files, Outlook messages, StickyNotes,
-    Zeiss AxioVision ZVI files, Olympus FluoView OIB files, etc
-- List all the streams and storages contained in an OLE file
-- Open streams as files
-- Parse and read property streams, containing metadata of the file
-- Portable, pure Python module, no dependency
-
-olefile can be used as an independent package or with PIL/Pillow.
-
-olefile is mostly meant for developers. If you are looking for tools to analyze OLE files or to extract data (especially
-for security purposes such as malware analysis and forensics), then please also check my
-[python-oletools](https://www.decalage.info/python/oletools), which are built upon olefile and provide a higher-level interface.
-
-
-Documentation
--------------
-
-Please see the [online documentation](http://olefile.readthedocs.io/en/latest) for more information.
-
-
-## Real-life examples ##
-
-A real-life example: [using OleFileIO_PL for malware analysis and forensics](http://blog.gregback.net/2011/03/using-remnux-for-forensic-puzzle-6/).
-
-See also [this paper](https://computer-forensics.sans.org/community/papers/gcfa/grow-forensic-tools-taxonomy-python-libraries-helpful-forensic-analysis_6879) about python tools for forensics, which features olefile.
-
-
-License
--------
-
-olefile (formerly OleFileIO_PL) is copyright (c) 2005-2023 Philippe Lagadec
-([https://www.decalage.info](https://www.decalage.info))
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
- * Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-----------
-
-olefile is based on source code from the OleFileIO module of the Python Imaging Library (PIL) published by Fredrik
-Lundh under the following license:
-
-The Python Imaging Library (PIL) is
-
-- Copyright (c) 1997-2009 by Secret Labs AB
-- Copyright (c) 1995-2009 by Fredrik Lundh
-
-By obtaining, using, and/or copying this software and/or its associated documentation, you agree that you have read,
-understood, and will comply with the following terms and conditions:
-
-Permission to use, copy, modify, and distribute this software and its associated documentation for any purpose and
-without fee is hereby granted, provided that the above copyright notice appears in all copies, and that both that
-copyright notice and this permission notice appear in supporting documentation, and that the name of Secret Labs AB or
-the author not be used in advertising or publicity pertaining to distribution of the software without specific, written
-prior permission.
-
-SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL SECRET LABS AB OR THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
-CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
-SOFTWARE.
+```python
+from pyjarowinkler import distance
+# Scaling is 0.1 by default
+distance.get_jaro_distance("hello", "haloa", winkler=True, scaling=0.1)
+# 0.76
+distance.get_jaro_distance("hello", "haloa", winkler=False, scaling=0.1)
+# 0.733333333333
+```
