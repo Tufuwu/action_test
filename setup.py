@@ -1,47 +1,49 @@
-from os import path
+from setuptools import setup, find_packages
 
-from setuptools import find_packages, setup
 
-# META
-##############################################################################
-AUTHORS = "F. Dangel, F. Kunstner"
-NAME = "backpack-for-pytorch"
-PACKAGES = find_packages()
+def clean_history(history):
+    # PyPI does not allow the `raw` directive. We'll laboriously
+    # replace it. Hang tight, it's going to be ugly.
+    history = history.replace('|backward-incompatible|', '**backward incompatible:** ')
+    lines = []
+    for line in history.split('\n'):
+        if line.startswith('.. role:: raw-html'):
+            break
+        lines.append(line)
+    return '\n'.join(lines)
 
-DESCRIPTION = "BackPACK: Packing more into backprop"
-LONG_DESCR = """
-    BackPACK is built on top of PyTorch.
-    It efficiently computes quantities other than the gradient.
 
-    Website: https://backpack.pt
-    Code: https://github.com/f-dangel/backpack
-    Documentation: https://readthedocs.org/projects/backpack/
-    Bug reports & feature requests: https://github.com/f-dangel/backpack/issues
-    """
-
-VERSION = "1.2.0"
-URL = "https://github.com/f-dangel/backpack"
-LICENSE = "MIT"
-
-# DEPENDENCIES
-##############################################################################
-REQUIREMENTS_FILE = "requirements.txt"
-REQUIREMENTS_PATH = path.join(path.abspath(__file__), REQUIREMENTS_FILE)
-
-with open(REQUIREMENTS_FILE) as f:
-    requirements = f.read().splitlines()
+readme = open('README.rst').read()
+changelog = clean_history(open('HISTORY.rst').read())
 
 setup(
-    author=AUTHORS,
-    name=NAME,
-    version=VERSION,
-    description=DESCRIPTION,
-    long_description=LONG_DESCR,
-    long_description_content_type="text/markdown",
-    install_requires=requirements,
-    url=URL,
-    license=LICENSE,
-    packages=PACKAGES,
+    name='django-cid',
+    version='2.2.dev0',
+    description="""Correlation IDs in Django for debugging requests""",
+    long_description=readme + '\n\n' + changelog,
+    author='Snowball One',
+    author_email='opensource+django-cid@polyconseil.fr',
+    maintainer="Polyconseil",
+    maintainer_email="opensource+django-cid@polyconseil.fr",
+    url='https://github.com/Polyconseil/django-cid',
+    packages=find_packages(exclude=('sandbox*', 'tests*')),
+    include_package_data=True,
+    install_requires=[
+        'django>=2.2',
+    ],
+    license="BSD",
     zip_safe=False,
-    python_requires=">=3.6",
+    keywords='django logging correlation id debugging',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+    ],
 )
