@@ -1,6 +1,12 @@
-*.pyc
-build
-dist
+__pycache__
+*.py[co]
+/build
+/dist
+/MANIFEST
+/duecredit/version.py
+/venv*
+/.tox
+.duecredit.p
 .coverage
-.cache
-.mypy_cache
+*.egg-info
+.idea
