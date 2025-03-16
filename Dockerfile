@@ -1,36 +1,27 @@
-# Usage:
-# 	Building
-# 		docker build -t wee-slack .
-#	Running (no saved state)
-# 		docker run -it \
-#			-v /etc/localtime:/etc/localtime:ro \ # for your time
-# 			wee-slack
-# 	Running (saved state)
-# 		docker run -it \
-#			-v /etc/localtime:/etc/localtime:ro \ # for your time
-# 			-v "${HOME}/.weechat:/home/user/.weechat" \
-# 			wee-slack
-#
-FROM alpine:latest
+###############################################################################
+# Copyright (c), The AiiDA-CP2K authors.                                      #
+# SPDX-License-Identifier: MIT                                                #
+# AiiDA-CP2K is hosted on GitHub at https://github.com/aiidateam/aiida-cp2k   #
+# For further information on the license, see the LICENSE.txt file.           #
+###############################################################################
 
-RUN apk add --no-cache \
-	ca-certificates \
-	python \
-	py-pip \
-	weechat \
-	weechat-perl \
-	weechat-python
+FROM aiidateam/aiida-core:latest
 
-RUN pip install websocket-client
+# To prevent the container to exit prematurely.
+ENV KILL_ALL_RPOCESSES_TIMEOUT=50
 
-ENV HOME /home/user
+WORKDIR /opt/
 
-COPY wee_slack.py /home/user/.weechat/python/autoload/wee_slack.py
+# Install CP2K.
+RUN apt-get update && apt-get install -y --no-install-recommends cp2k
 
-RUN adduser -S user -h $HOME \
-	&& chown -R user $HOME
+# Install aiida-cp2k plugin.
+COPY . aiida-cp2k
+RUN pip install ./aiida-cp2k[pre-commit,test,docs]
 
-WORKDIR $HOME
-USER user
+# Install coverals.
+RUN pip install coveralls
 
-ENTRYPOINT [ "weechat" ]
+# Install the cp2k code.
+COPY .docker/opt/add-codes.sh /opt/
+COPY .docker/my_init.d/add-codes.sh /etc/my_init.d/50_add-codes.sh
