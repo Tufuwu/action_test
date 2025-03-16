@@ -1,47 +1,64 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+   Copyright 2008-2020 The Open Microscopy Environment, Glencoe Software, Inc.
+   All rights reserved.
+
+   Use is subject to license terms supplied in LICENSE.txt
+
+"""
+
 import os
+import sys
 
-from setuptools import find_packages, setup
+from setuptools import setup, find_packages
 
-from daphne import __version__
+sys.path.append(".")
+from omeroweb.version import omeroweb_version as owv  # noqa
+from omeroweb.version import omero_version as opv  # noqa
 
-# We use the README as the long_description
-readme_path = os.path.join(os.path.dirname(__file__), "README.rst")
-with open(readme_path) as fp:
-    long_description = fp.read()
+
+def read(fname):
+    """
+    Utility function to read the README file.
+    :rtype : String
+    """
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 setup(
-    name="daphne",
-    version=__version__,
-    url="https://github.com/django/daphne",
-    author="Django Software Foundation",
-    author_email="foundation@djangoproject.com",
-    description="Django ASGI (HTTP/WebSocket) server",
-    long_description=long_description,
-    license="BSD",
-    zip_safe=False,
-    package_dir={"twisted": "daphne/twisted"},
-    packages=find_packages() + ["twisted.plugins"],
-    include_package_data=True,
-    install_requires=["twisted[tls]>=18.7", "autobahn>=0.18", "asgiref~=3.2"],
-    setup_requires=["pytest-runner"],
-    extras_require={
-        "tests": ["hypothesis==4.23", "pytest~=3.10", "pytest-asyncio~=0.8"]
-    },
-    entry_points={
-        "console_scripts": ["daphne = daphne.cli:CommandLineInterface.entrypoint"]
-    },
+    name="omero-web",
+    version=owv,
+    description="OMERO.web",
+    long_description=read("README.rst"),
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Environment :: Web Environment",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: BSD License",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: GNU General Public License v2 " "or later (GPLv2+)",
+        "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Topic :: Internet :: WWW/HTTP",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],  # Get strings from
+    # http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    author="The Open Microscopy Team",
+    author_email="ome-devel@lists.openmicroscopy.org.uk",
+    url="https://github.com/ome/omero-web/",
+    license="GPLv2+",
+    packages=find_packages(exclude=("test",)) + ["omero.plugins"],
+    python_requires=">=3",
+    install_requires=[
+        # requires Ice (use wheel for faster installs)
+        "omero-py>=5.7.0",
+        # minimum requirements for `omero web start`
+        "Django>=1.11,<2.0",
+        "django-pipeline==1.6.14",
+        "gunicorn>=19.3",
+        "omero-marshal>=0.7.0",
+        "Pillow",
     ],
+    include_package_data=True,
+    tests_require=["pytest"],
 )
