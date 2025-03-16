@@ -1,90 +1,37 @@
-import io
-import os
-import sys
-from shutil import rmtree
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-from setuptools import find_packages, setup, Command
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
-VERSION = '1.3.3'
+import cologne_phonetics
 
-here = os.path.abspath(os.path.dirname(__file__))
-with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
-    README = '\n' + f.read()
-
-
-class UploadCommand(Command):
-    """Support setup.py upload."""
-
-    description = 'Build and publish the package.'
-    user_options = []
-
-    @staticmethod
-    def status(s):
-        """Prints things in bold."""
-        print('\033[1m{0}\033[0m'.format(s))
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        try:
-            self.status('Removing previous builds...')
-            rmtree(os.path.join(here, 'dist'))
-        except OSError:
-            pass
-
-        self.status('Building Source and Wheel (universal) distribution...')
-        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
-
-        self.status('Uploading the package to PyPI via Twine...')
-        os.system('twine upload dist/*')
-
-        self.status('Pushing git tags...')
-        os.system('git tag {0}'.format(VERSION))
-        os.system('git push --tags')
-
-        sys.exit()
-
-
-setup(
-    name='django-rest-multitokenauth',
-    version=VERSION,
-    packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    install_requires=[
-        'django-ipware==3.0.*',
+setup(name="cologne_phonetics",
+      version=cologne_phonetics.__version__,
+      description="Python implementation of the cologne-phonetics algorithm.",
+      long_description=cologne_phonetics.__doc__,
+      url="https://github.com/provinzkraut/cologne_phonetics",
+      author="Janek Nouvertné",
+      author_email="j.a.nouvertne@posteo.de",
+      license=cologne_phonetics.__license__,
+      classifiers=[
+                    'Development Status :: 5 - Production/Stable',
+                    'License :: OSI Approved :: MIT License',
+                    'Intended Audience :: Developers',
+                    'Intended Audience :: Education',
+                    'Intended Audience :: Other Audience',
+                    'Programming Language :: Python :: 3',
+                    'Programming Language :: Python :: 3.6',
+                    'Programming Language :: Python :: 3.7',
+                    'Programming Language :: Python :: 3.8',
+                    'Programming Language :: Python :: 3.9',
+                    'Topic :: Text Processing :: Linguistic',
+                    'Natural Language :: English',
     ],
-    include_package_data=True,
-    license='BSD License',
-    description='An extension of django rest frameworks token auth, providing multiple authentication tokens per user',
-    long_description=README,
-    long_description_content_type='text/markdown',
-    url='https://github.com/anexia-it/django-rest-multitokenauth',
-    author='Harald Nezbeda',
-    author_email='hnezbeda@anexia-it.com',
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Framework :: Django',
-        'Framework :: Django :: 2.2',
-        'Framework :: Django :: 3.0',
-        'Framework :: Django :: 3.1',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Internet :: WWW/HTTP',
-        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-    ],
-    # $ setup.py upload support.
-    cmdclass={
-        'upload': UploadCommand,
-    },
+    keywords="cologne-phonetics phonetic",
+    python_requires=">=3",
+    py_modules=["cologne_phonetics"],
+    scripts=["cologne_phonetics.py"]
 )
