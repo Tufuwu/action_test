@@ -1,3 +1,0 @@
-modoboa>=1.15.0
-chardet
-lxml
