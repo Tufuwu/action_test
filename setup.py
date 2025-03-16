@@ -1,49 +1,48 @@
-from setuptools import setup, find_packages
+from setuptools import setup
+from tools.configuration import Configuration
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-def clean_history(history):
-    # PyPI does not allow the `raw` directive. We'll laboriously
-    # replace it. Hang tight, it's going to be ugly.
-    history = history.replace('|backward-incompatible|', '**backward incompatible:** ')
-    lines = []
-    for line in history.split('\n'):
-        if line.startswith('.. role:: raw-html'):
-            break
-        lines.append(line)
-    return '\n'.join(lines)
+with open('requirements.txt', "r") as req_file:
+    requirements = req_file.read().splitlines()
 
-
-readme = open('README.rst').read()
-changelog = clean_history(open('HISTORY.rst').read())
-
-setup(
-    name='django-cid',
-    version='2.2.dev0',
-    description="""Correlation IDs in Django for debugging requests""",
-    long_description=readme + '\n\n' + changelog,
-    author='Snowball One',
-    author_email='opensource+django-cid@polyconseil.fr',
-    maintainer="Polyconseil",
-    maintainer_email="opensource+django-cid@polyconseil.fr",
-    url='https://github.com/Polyconseil/django-cid',
-    packages=find_packages(exclude=('sandbox*', 'tests*')),
-    include_package_data=True,
-    install_requires=[
-        'django>=2.2',
-    ],
-    license="BSD",
-    zip_safe=False,
-    keywords='django logging correlation id debugging',
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Framework :: Django',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-    ],
-)
+# such name for package is used here because 'repostat' is already occupied by https://pypi.org/project/repostat/
+setup(name='repostat-app',
+      version=Configuration.get_release_data_info()['develop_version'],
+      description='Desktop git repository analyser and report creator.',
+      keywords='git analysis statistics vcs python visualization',
+      url='https://github.com/vifactor/repostat',
+      author='Viktor Kopp',
+      author_email='vifactor@gmail.com',
+      license='GPLv3',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
+      classifiers=[
+          "Development Status :: 5 - Production/Stable",
+          "Environment :: Console",
+          "Intended Audience :: Developers",
+          "Intended Audience :: Science/Research",
+          "Intended Audience :: Education",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
+          "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+          "Topic :: Software Development :: Version Control",
+          "Topic :: Utilities",
+          "Operating System :: OS Independent",
+          "Operating System :: POSIX",
+          "Operating System :: MacOS :: MacOS X",
+          "Operating System :: Microsoft :: Windows",
+      ],
+      python_requires='>3.5',
+      packages=['analysis', 'tools', 'report'],
+      package_data={'report': ['templates/*.html',
+                               'templates/*.js',
+                               'assets/images/*.gif',
+                               'assets/*.js',
+                               'assets/*.css'],
+                    'tools': ['release_data.json']},
+      install_requires=requirements,
+      entry_points={"console_scripts": ["repostat = analysis.repostat:main"]},
+      include_package_data=True,
+      zip_safe=False)
