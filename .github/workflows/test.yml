@@ -1,132 +1,55 @@
-name: build_and_test
+name: Test
 
-on:  # yamllint disable-line rule:truthy
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
-  # Only lint in one platform to save compute time
-  linter:
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      matrix:
-        platform: [ubuntu-latest]
-        python-version: ["3.9", "3.10"]
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-        shell: bash
-
-      - name: Linter
-        run: |
-          python -m pip install flake8
-          flake8 .
-
-  build_and_test:
-    name: Build & Test
-    runs-on: ${{ matrix.platform }}
-    needs: [linter]
-    strategy:
-      matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.9", "3.10"]
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade bump2version twine
-          python -m pip install --upgrade coverage
-
-      - name: Build
-        run: |
-          python --version
-          python setup.py sdist bdist_wheel
-          twine check dist/*.whl
-          twine check dist/*.tar.gz
-          bump2version --dry-run --verbose --allow-dirty patch
-          bump2version --dry-run --verbose --allow-dirty minor
-          bump2version --dry-run --verbose --allow-dirty major
-
-      - name: Install pdb-tools
-        run: |
-          python -m pip install .
-
-      - name: Test on Linux
-        run: |
-            script -q -e -c "coverage run -p setup.py test"
-        shell: bash
-        if: matrix.os == 'ubuntu-latest'
-
-      - name: Test on MacOS / Windows
-        run: |
-            coverage run -p setup.py test
-        shell: bash
-        if: matrix.os != 'ubuntu-latest'
-        env:
-          SKIP_TTY_TESTS: true
-
-      # Store coverage data for later
-      # https://hynek.me/articles/ditch-codecov-python/
-      - name: Store coverage data
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-data
-          path: .coverage.*
-          if-no-files-found: ignore
-          retention-days: 2
-
-  # Combine and analyze coverage
-  # https://hynek.me/articles/ditch-codecov-python/
-  coverage:
-    name: Combine & Check coverage.
+  test:
     runs-on: ubuntu-latest
-    needs: [build_and_test]
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        python-version: ["3.9", "3.10"]
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
+    - uses: actions/checkout@v2
 
-      - run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade coverage
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
 
-      - name: Download coverage data.
-        uses: actions/download-artifact@v2
-        with:
-          name: coverage-data
+    - name: Get pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key:
+          ${{ matrix.python-version }}-v1-${{ hashFiles('**/setup.py') }}-${{ hashFiles('**/tox.ini') }}
+        restore-keys: |
+          ${{ matrix.python-version }}-v1-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade tox tox-gh-actions
+    - name: Tox tests
+      run: |
+        tox -v
+    - name: Coveralls
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel: true
+        flag-name: Unit Test
 
-      # We should update the threshold as we write more tests.
-      # It should be the minimum we are comfortable with.
-      - name: Combine coverage & fail if it's < threshold %.
-        run: |
-          python -m coverage combine
-          python -m coverage html --skip-covered --skip-empty
-          python -m coverage report --fail-under=80
+  coveralls_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel-finished: true
 
-      - name: Upload HTML report if check failed.
-        uses: actions/upload-artifact@v4
-        with:
-          name: html-report
-          path: htmlcov
-        if: ${{ failure() }}
