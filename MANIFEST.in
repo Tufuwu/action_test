@@ -1,5 +1,6 @@
-include checkQC/default_config/config.yaml
-include checkQC/default_config/logger.yaml
-include README.md
+include AUTHORS.rst
+include CONTRIBUTING.rst
+include HISTORY.rst
 include LICENSE
-recursive-exclude tests *
+include README.rst
+recursive-include rest_framework_tus *.html *.png *.gif *js *.css *jpg *jpeg *svg *py
