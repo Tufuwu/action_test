@@ -1,52 +1,49 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from setuptools import setup
-import os
+PROJ_NAME = 'you-get'
+PACKAGE_NAME = 'you_get'
 
-__here__ = os.path.abspath(os.path.dirname(__file__))
+PROJ_METADATA = '%s.json' % PROJ_NAME
 
-from pytest_order import __version__
+import os, json, imp
+here = os.path.abspath(os.path.dirname(__file__))
+proj_info = json.loads(open(os.path.join(here, PROJ_METADATA), encoding='utf-8').read())
+try:
+    README = open(os.path.join(here, 'README.rst'), encoding='utf-8').read()
+except:
+    README = ""
+CHANGELOG = open(os.path.join(here, 'CHANGELOG.rst'), encoding='utf-8').read()
+VERSION = imp.load_source('version', os.path.join(here, 'src/%s/version.py' % PACKAGE_NAME)).__version__
 
-with open(os.path.join(__here__, "README.md")) as f:
-    LONG_DESCRIPTION = f.read()
-
-
+from setuptools import setup, find_packages
 setup(
-    name="pytest-order",
-    description="pytest plugin to run your tests in a specific order",
-    long_description=LONG_DESCRIPTION,
-    long_description_content_type="text/markdown",
-    version=__version__,
-    author="mrbean-bremen",
-    author_email="hansemrbean@googlemail.com",
-    url="https://github.com/mrbean-bremen/pytest-order",
-    packages=["pytest_order"],
-    entry_points={
-        "pytest11": [
-            "pytest_order = pytest_order",
-        ]
-    },
-    install_requires=["pytest>=3.6"],
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: POSIX",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS :: MacOS X",
-        "Topic :: Software Development :: Testing",
-        "Topic :: Software Development :: Quality Assurance",
-        "Topic :: Utilities",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: Implementation :: PyPy",
-    ],
+    name = proj_info['name'],
+    version = VERSION,
+
+    author = proj_info['author'],
+    author_email = proj_info['author_email'],
+    url = proj_info['url'],
+    license = proj_info['license'],
+
+    description = proj_info['description'],
+    keywords = proj_info['keywords'],
+
+    long_description = README,
+
+    packages = find_packages('src'),
+    package_dir = {'' : 'src'},
+
+    test_suite = 'tests',
+
+    platforms = 'any',
+    zip_safe = True,
+    include_package_data = True,
+
+    classifiers = proj_info['classifiers'],
+
+    entry_points = {'console_scripts': proj_info['console_scripts']},
+
+    extras_require={
+        'socks': ['PySocks'],
+    }
 )
