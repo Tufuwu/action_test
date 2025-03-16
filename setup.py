@@ -1,43 +1,28 @@
-from setuptools import find_packages, setup
+import setuptools
 
-import picklefield
+from tinytuya import __version__
 
-with open('README.rst') as file_:
-    long_description = file_.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-setup(
-    name='django-picklefield',
-    version=picklefield.__version__,
-    description='Pickled object field for Django',
+setuptools.setup(
+    name="tinytuya",
+    version=__version__,
+    author="Jason Cox",
+    author_email="jason@jasonacox.com",
+    description="Python module to interface with Tuya WiFi smart devices",
     long_description=long_description,
-    author='Simon Charette',
-    author_email='charette.s+django-picklefiel@gmail.com',
-    url='http://github.com/gintas/django-picklefield',
-    license='MIT',
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Framework :: Django',
-        'Framework :: Django :: 2.2',
-        'Framework :: Django :: 3.0',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Software Development :: Libraries :: Application Frameworks',
-        'Topic :: Software Development :: Libraries :: Python Modules',
+    long_description_content_type="text/markdown",
+    url='https://github.com/jasonacox/tinytuya',
+    packages=setuptools.find_packages(),
+    install_requires=[
+        'pycryptodome',  # Encryption - AES can also be provided via PyCrypto or pyaes
+        'requests',      # Used for Setup Wizard - Tuya IoT Platform calls
     ],
-    keywords=['django pickle model field'],
-    packages=find_packages(exclude=['tests', 'tests.*']),
-    python_requires='>=3',
-    install_requires=['Django>=2.2'],
-    extras_require={
-        'tests': ['tox'],
-    },
+    classifiers=[
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
 )
