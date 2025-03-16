@@ -1,37 +1,128 @@
-# IBL Python Libraries 
-[![Coverage badge](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fibllib.hooks.internationalbrainlab.org%2Fcoverage%2Fibllib%2Fmaster)](https://ibllib.hooks.internationalbrainlab.org/coverage/master) 
-[![Tests status badge](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fibllib.hooks.internationalbrainlab.org%2Ftests%2Fibllib%2Fmaster)](https://ibllib.hooks.internationalbrainlab.org/logs/records/master)
-[![Tests status badge](https://img.shields.io/endpoint?label=develop&url=https%3A%2F%2Fibllib.hooks.internationalbrainlab.org%2Ftests%2Fibllib%2Fdevelop)](https://ibllib.hooks.internationalbrainlab.org/logs/records/develop)
+PyConcorde
+==========
 
-## Description
-Library used to implement the International Brain Laboratory data pipeline. Currently in active development.
-The library as currently 4 main modules:
--   **brainbox**: neuroscience analysis oriented library
--   **ibllib**: general purpose library containing I/O, signal processing and IBL data pipelines utilities.
--   **oneibl**: interface to the Alyx database of experiments to access IBL data.
--   **alf**: implementation of ALF file naming convention
+[![Build Status](https://travis-ci.org/jvkersch/pyconcorde.svg?branch=master)](https://travis-ci.org/jvkersch/pyconcorde)
 
-[Release Notes here](release_notes.md)
+What is it?
+-----
 
-## Requirements
-**OS**: Deployed on Linux and Windows. Minimally tested for Mac.
+PyConcorde is a Python wrapper around the [Concorde TSP
+solver](http://www.math.uwaterloo.ca/tsp/concorde.html).
 
-**Python Module**: Python 3.7 or higher, we develop on 3.8.
+PyConcorde allows you to compute solutions to the Traveling Salesman Problem
+with just a few lines of Python code. It uses the state-of-the-art Concorde
+solver and provides a convenient Python layer around it.
 
-## Installation, documentation and examples
-https://docs.internationalbrainlab.org
+<p align="center">
+  <a href="examples/us_state_capitals.py">
+	<img src="examples/us_state_capitals.png" alt="US state capital tour"/>
+	</a>
+</p>
 
+Note: until commit e065497 (pre version 0.1) PyConcorde was called PyTSP. It
+was renamed to emphasize the central role of the underlying Concorde solver.
 
-## Contribution and development practices
-See https://int-brain-lab.github.io/iblenv/07_contribution.html
+How do I install it?
+------
 
-We use gitflow and Semantic Versioning.
+PyConcorde runs under Python 2.7 and 3.5 and up. It needs the [Concorde TSP
+solver](http://www.math.uwaterloo.ca/tsp/concorde.html) and [QSOpt linear
+programming library](http://www.math.uwaterloo.ca/~bico/qsopt/). Further
+instructions on building/downloading those can be found below.
 
-Before commiting to your branch:
--   run tests
--   flake8
-This is also enforced by continuous integration.
+To build PyConcorde, clone the repository:
 
+    git clone https://github.com/jvkersch/pyconcorde
+	cd pyconcorde
+	
+Then run 
 
-## Matlab Library
-The Matlab library has moved to its own repository here: https://github.com/int-brain-lab/ibllib-matlab/
+	pip install -e .
+	
+This will download and build Concorde (and its dependency QSOpt) and then build
+PyConcorde. While this may take a few minutes, downloading Concorde only
+happens the first time the install script is run (unless you remove the `data`
+directory).
+
+If you already have Concorde and/or QSOpt installed (or an equivalent linear
+solver), you can use those instead. Simply set the environment variable
+`CONCORDE_DIR` (or `QSOPT_DIR`) to point to the folder where you installed
+Concorde (or QSOpt).
+
+Detailed instructions to build Concorde can be found at [this web
+page](https://github.com/perrygeo/pytsp/wiki/Installing-Solvers).
+
+What can I do with it?
+-------
+
+PyConcorde is a very light-weight library. The main entry point is the
+`TSPSolver` class. Here we use it to read in the Berlin52 dataset, a dataset of
+52 locations in Berlin (part of the TSPlib test data).
+
+```python
+    >>> from concorde.tsp import TSPSolver
+    >>> from concorde.tests.data_utils import get_dataset_path
+    >>> fname = get_dataset_path("berlin52")
+    >>> solver = TSPSolver.from_tspfile(fname)
+    Problem Name: berlin52
+    Problem Type: TSP
+    52 locations in Berlin (Groetschel)
+    Number of Nodes: 52
+    Rounded Euclidean Norm (CC_EUCLIDEAN)
+```    
+
+As you can see above, PyConcorde (or rather, Concorde) is somewhat chatty and
+will print various message to the standard output. Now that we have a solver
+instance, let's compute a solution. On my machine this is almost instantaneous.
+   
+```python    
+    >>> solution = solver.solve()
+    (... output snipped for brevity ...)
+```
+
+Again, Concorde will display a variety of messages while it's running. The end
+result is a `ComputedTour` object called `solution` with information about the
+tour that we just computed:
+
+```python
+    
+    >>> solution.found_tour
+    True
+    >>> solution.optimal_value
+    7542.0
+    >>> solution.tour
+    array([ 0, 48, 31, 44, 18, 40,  7,  8,  9, 42, 32, 50, 10, 51, 13, 12, 46,
+           25, 26, 27, 11, 24,  3,  5, 14,  4, 23, 47, 37, 36, 39, 38, 35, 34,
+           33, 43, 45, 15, 28, 49, 19, 22, 29,  1,  6, 41, 20, 16,  2, 17, 30,
+           21], dtype=int32)
+    
+```
+
+Other TSP solvers for Python
+----------------------------
+
+If you are looking for a pure Python TSP implementation, check
+out [tsp-solver](https://github.com/dmishin/tsp-solver). It is not competitive
+with Concorde in terms of speed or memory usage, but has the advantage of being
+written in pure Python, which makes it more readily inspectable.
+
+If you have another TSP algorithm that can be called from within Python, and
+you want to have it added here, please open an issue.
+
+Technical Notes
+-------
+
+PyConcorde needs Concorde and QSOpt. Downloading and building these packages
+should happen automatically on Linux/Mac OS, but please file an issue if you
+experience any trouble during this step.
+
+Note that Windows is currently unsupported. If you get the library to work on
+Windows, please open a ticket to describe any tweaks (or better yet, a Pull
+Request).
+
+License
+-----
+
+PyConcorde is licensed under the [Modified BSD license](COPYING). Note that
+Concorde and QSOpt are released under different licenses, and that PyConcorde
+does not include any code from these packages.
