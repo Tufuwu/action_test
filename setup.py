@@ -1,35 +1,23 @@
 from setuptools import setup
 
-
 setup(
-    name='bashlex',
-    version='0.16',
-    url='https://github.com/idank/bashlex.git',
-    license='GPLv3+',
-    author='Idan Kamara',
-    author_email='idankk86@gmail.com',
-    description='Python parser for bash',
-    long_description='''bashlex is a Python port of the parser used internally by GNU bash.
-
-For the most part it's transliterated from C, the major differences are:
-
-1. it does not execute anything
-2. it is reentrant
-3. it generates a complete AST
-
-See https://github.com/idank/bashlex/blob/master/README.md for more info.''',
+    name="pytest-structlog",
+    version="0.5",
+    url="https://github.com/wimglenn/pytest-structlog",
+    description="Structured logging assertions",
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst; charset=UTF-8",
+    author="Wim Glenn",
+    author_email="hey@wimglenn.com",
+    license="MIT",
+    install_requires=["pytest", "structlog"],
+    py_modules=["pytest_structlog"],
+    entry_points={"pytest11": ["pytest-structlog=pytest_structlog"]},
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: System :: System Shells',
-        'Topic :: Text Processing',
+        "Framework :: Pytest",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
     ],
-    python_requires=">=2.7, !=3.0, !=3.1, !=3.2, !=3.3, !=3.4",
-    install_requires=['enum34; python_version < "3.4"'],
-    packages=['bashlex'],
+    options={"bdist_wheel": {"universal": "1"}},
 )
