@@ -1,50 +1,158 @@
-# About
+# Digital Marketplace Supplier Frontend
 
-Source for Google Click to Deploy solutions listed on Google Cloud Marketplace.
+![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)
 
-# Disclaimer
+Frontend application for the Digital Marketplace.
 
-This is not an officially supported Google product.
+- Python app, based on the [Flask framework](http://flask.pocoo.org/)
 
-# Cloud Build CI
+This app contains:
 
-This repository uses Cloud Build for continuous integration. Each type of application has its own configuration file.
+- the supplier dashboard
+- the supplier framework application journey
 
-For detailed information on each configuration, see the following documentations:
+## Quickstart
 
-*   [Docker images](docker/README.md#cloud-build-ci)
-*   [K8s applications](k8s/README.md#cloud-build-ci)
-*   [VM applications](vm/README.md#cloud-build-ci)
+It's recommended to use the [DM Runner](https://github.com/alphagov/digitalmarketplace-runner)
+tool, which will install and run the app as part of the full suite of apps.
 
-## GCB custom worker pools
+If you want to run the app as a stand-alone process, clone the repo then run:
 
-The Cloud Build configurations use Google Cloud Build (GCB) custom worker pools.
-
-If you want to create a new worker pool, run the following command:
-
-```shell
-gcloud alpha builds worker-pools create gcb-workers-pool \
-  --project=[PROJECT_ID] \
-  --regions=us-central1,us-west1,us-east1,us-east-4 \
-  --worker-count=2 \
-  --worker-machine-type=n1-standard-1 \
-  --worker-tag=gcb-worker \
-  --worker-network-name=default \
-  --worker-network-project=[PROJECT_ID] \
-  --worker-network-subnet=default
+```
+make run-all
 ```
 
-Where:
+This command will install dependencies and start the app.
 
-*   `[PROJECT_ID]` is the GCP project ID where you want to create your custom worker pool.
+By default, the app will be served at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers).
 
-If you want to update the number of workers in an existing pool, run the following command:
 
-```shell
-gcloud alpha builds worker-pools update gcb-workers-pool \
-  --project=[PROJECT_ID] \
-  --worker-count=4 \
+### API dependencies
+
+(If you are using DM Runner you can skip this section.)
+
+The Supplier Frontend app requires access to the [API app](https://github.com/alphagov/digitalmarketplace-api). The location and access token for
+this service are set with environment variables in `config.py`.
+
+For development, you can either point the environment variables to use the
+preview environment's `API` box, or use a local API instance if you have one running:
+
+```
+export DM_DATA_API_URL=http://localhost:5000
+export DM_DATA_API_AUTH_TOKEN=<auth_token_accepted_by_api>
 ```
 
-For more information, see the
-[gcloud alpha builds worker-pools commands](https://cloud.google.com/sdk/gcloud/reference/alpha/builds/worker-pools/).
+Where `DM_DATA_API_AUTH_TOKEN` is a token accepted by the Data API instance pointed to by `DM_API_URL`.
+
+Note: The login is handled in the [User Frontend app](https://github.com/alphagov/digitalmarketplace-user-frontend),
+so this needs to be running as well, to login as a supplier.
+
+
+### Configuring AWS access
+
+The Supplier Frontend app uses [boto](https://github.com/boto/boto) as a Python interface for our AWS S3 buckets.
+
+You will need to have AWS access keys set up on your local machine (which `boto` will automatically detect), otherwise
+some pages in the app will give an error message.
+
+Full instructions on how to do this can be found in the
+[Developer Manual](https://alphagov.github.io/digitalmarketplace-manual/infrastructure/aws-accounts.html#programmatic-access).
+
+If you're experiencing problems connecting, make sure to `unset` any `env` variables used by boto (e.g. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+`AWS_SECURITY_TOKEN` and `AWS_PROFILE`) as they may be overriding the values in your credentials file.
+
+
+## Testing
+
+Run the full test suite:
+
+```
+make test
+```
+
+To only run the Python or Javascript tests:
+
+```
+make test-python
+make test-javascript
+```
+
+To run the `flake8` linter:
+
+```
+make test-flake8
+```
+
+### Updating Python dependencies
+
+`requirements.txt` file is generated from the `requirements.in` in order to pin
+versions of all nested dependencies. If `requirements.in` has been changed (or
+we want to update the unpinned nested dependencies) `requirements.txt` should be
+regenerated with
+
+```
+make freeze-requirements
+```
+
+`requirements.txt` should be committed alongside `requirements.in` changes.
+
+## Frontend assets
+
+Front-end code (both development and production) is compiled using [Node](http://nodejs.org/) and [Gulp](http://gulpjs.com/).
+
+### Requirements
+
+You need Node (try to install the version we use in production -
+ see the [base docker image](https://github.com/alphagov/digitalmarketplace-docker-base/blob/master/base.docker)).
+
+To check the version you're running, type:
+
+```
+node --version
+```
+
+### Frontend tasks
+
+[npm](https://docs.npmjs.com/cli/run-script) is used for all frontend build tasks. The commands available are:
+
+- `npm run frontend-build:development` (compile the frontend files for development)
+- `npm run frontend-build:production` (compile the frontend files for production)
+- `npm run frontend-build:watch` (watch all frontend+framework files & rebuild when anything changes)
+
+### Updating NPM dependencies
+
+Update the relevant version numbers in `package.json`, then run
+
+```
+npm install
+```
+
+Commit the changes to `package.json` and `package-lock.json`.
+
+You can also run `npm audit fix` to make minor updates to `package-lock.json`.
+
+## Contributing
+
+This repository is maintained by the Digital Marketplace team at the [Government Digital Service](https://github.com/alphagov).
+
+If you have a suggestion for improvement, please raise an issue on this repo.
+
+### Reporting Vulnerabilities
+
+If you have discovered a security vulnerability in this code, we appreciate your help in disclosing it to us in a
+responsible manner.
+
+Please follow the [GDS vulnerability reporting steps](https://github.com/alphagov/.github/blob/master/SECURITY.md),
+giving details of any issue you find. Appropriate credit will be given to those reporting confirmed issues.
+
+## Licence
+
+Unless stated otherwise, the codebase is released under [the MIT License][mit].
+This covers both the codebase and any sample code in the documentation.
+
+The documentation is [&copy; Crown copyright][copyright] and available under the terms
+of the [Open Government 3.0][ogl] licence.
+
+[mit]: LICENCE
+[copyright]: http://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/
+[ogl]: http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/

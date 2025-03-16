@@ -1,44 +1,81 @@
-# Copyright 2019 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+SHELL := /bin/bash
+VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo $$(pwd)/venv || echo $$VIRTUAL_ENV)
+DM_ENVIRONMENT ?= development
 
-# TODO(wgrzelak): Invoke targets into the container.
+ifeq ($(DM_ENVIRONMENT),development)
+	GULP_ENVIRONMENT := development
+else
+	GULP_ENVIRONMENT := production
+endif
 
-.DEFAULT_GOAL := help
+.PHONY: run-all
+run-all: requirements npm-install frontend-build run-app
 
-.PHONY: help
-help: ## Shows help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+.PHONY: run-app
+run-app: show-environment virtualenv
+	${VIRTUALENV_ROOT}/bin/flask run
 
-.PHONY: python-test
-python-test: ## Runs tests for Python scripts
-	@python --version
-	@python -m unittest discover -s scripts -p "*_test.py"
+.PHONY: virtualenv
+virtualenv:
+	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && python3 -m venv venv || true
 
-.PHONY: vm-lint
-vm-lint: ## Runs lint for Chef cookbooks
-	@docker pull chef/chefdk
-	# cookstyle print version
-	@docker run --rm --entrypoint cookstyle -v $(PWD)/vm/chef:/chef:ro chef/chefdk --version
-	# cookstyle on cookbooks
-	@docker run --rm --entrypoint cookstyle -v $(PWD)/vm/chef:/chef:ro chef/chefdk /chef/cookbooks
-	# cookstyle on tests
-	@docker run --rm --entrypoint cookstyle -v $(PWD)/vm/tests:/tests:ro chef/chefdk /tests/solutions
-	# foodcritic print version
-	@docker run --rm --entrypoint foodcritic -v $(PWD)/vm/chef:/chef:ro chef/chefdk --version
-	# foodcritic on cookbooks
-	@docker run --rm --entrypoint foodcritic -v $(PWD)/vm/chef:/chef:ro chef/chefdk --cookbook-path=/chef/cookbooks --rule-file=/chef/.foodcritic --epic-fail=any
+.PHONY: upgrade-pip
+upgrade-pip: virtualenv
+	${VIRTUALENV_ROOT}/bin/pip install --upgrade pip
 
-.PHONY: vm-generate-triggers
-vm-generate-triggers: ## Generates and displays GCB triggers for VM
-	@python scripts/triggers_vm_generator.py
+.PHONY: requirements
+requirements: virtualenv upgrade-pip requirements.txt
+	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt
+
+.PHONY: requirements-dev
+requirements-dev: virtualenv upgrade-pip requirements.txt requirements-dev.txt
+	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt -r requirements-dev.txt
+
+.PHONY: freeze-requirements
+freeze-requirements: virtualenv requirements-dev requirements.in requirements-dev.in
+	${VIRTUALENV_ROOT}/bin/pip-compile requirements.in
+	${VIRTUALENV_ROOT}/bin/pip-compile requirements-dev.in
+
+.PHONY: npm-install
+npm-install:
+	npm ci # If dependencies in the package lock do not match those in package.json, npm ci will exit with an error, instead of updating the package lock. (https://docs.npmjs.com/cli/ci.html)
+
+.PHONY: frontend-build
+frontend-build: npm-install
+	npm run --silent frontend-build:${GULP_ENVIRONMENT}
+
+.PHONY: test
+test: show-environment frontend-build test-flake8 test-mypy test-python test-javascript
+
+.PHONY: test-flake8
+test-flake8: virtualenv requirements-dev
+	${VIRTUALENV_ROOT}/bin/flake8 .
+
+.PHONY: test-mypy
+test-mypy: virtualenv requirements-dev
+	${VIRTUALENV_ROOT}/bin/mypy app/
+
+.PHONY: test-python
+test-python: virtualenv requirements-dev
+	${VIRTUALENV_ROOT}/bin/py.test ${PYTEST_ARGS}
+
+.PHONY: test-javascript
+test-javascript: frontend-build
+	npm test
+
+.PHONY: show-environment
+show-environment:
+	@echo "Environment variables in use:"
+	@env | grep DM_ || true
+
+.PHONY: docker-build
+docker-build:
+	$(if ${RELEASE_NAME},,$(eval export RELEASE_NAME=$(shell git describe)))
+	@echo "Building a docker image for ${RELEASE_NAME}..."
+	docker build -t digitalmarketplace/supplier-frontend --build-arg release_name=${RELEASE_NAME} .
+	docker tag digitalmarketplace/supplier-frontend digitalmarketplace/supplier-frontend:${RELEASE_NAME}
+
+.PHONY: docker-push
+docker-push:
+	$(if ${RELEASE_NAME},,$(eval export RELEASE_NAME=$(shell git describe)))
+	docker push digitalmarketplace/supplier-frontend:${RELEASE_NAME}
