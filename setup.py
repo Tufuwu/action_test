@@ -1,100 +1,68 @@
-"""Static memory-efficient and fast Trie-like structures for Python."""
+# setuptools installation of GromacsWrapper
+# Copyright (c) 2008-2011 Oliver Beckstein <orbeckst@gmail.com>
+# Released under the GNU Public License 3 (or higher, your choice)
+#
+# See the files INSTALL and README for details or visit
+# https://github.com/Becksteinlab/GromacsWrapper
+from __future__ import with_statement
+from setuptools import setup, find_packages
 
-import glob
-import itertools
-import os.path
+import versioneer
 
-from setuptools import setup, Extension
+with open("README.rst") as readme:
+    long_description = readme.read()
 
-# Note: keep requirements here to ease distributions packaging
-tests_require = [
-    "pytest",
-    "hypothesis",
-]
-install_requires = [
-    "setuptools",
-]
 
-MARISA_ROOT_DIR = "marisa-trie"
-MARISA_SOURCE_DIR = os.path.join(MARISA_ROOT_DIR, "lib")
-MARISA_INCLUDE_DIR = os.path.join(MARISA_ROOT_DIR, "include")
-MARISA_FILES = [
-    "marisa/*.cc",
-    "marisa/grimoire.cc",
-    "marisa/grimoire/io/*.cc",
-    "marisa/grimoire/trie/*.cc",
-    "marisa/grimoire/vector/*.cc",
-]
-
-MARISA_FILES[:] = itertools.chain(
-    *(glob.glob(os.path.join(MARISA_SOURCE_DIR, path)) for path in MARISA_FILES)
-)
-
-DESCRIPTION = __doc__
-with open("README.rst", encoding="utf-8") as f1, open(
-    "CHANGES.rst", encoding="utf-8"
-) as f2:
-    LONG_DESCRIPTION = f1.read() + f2.read()
-LICENSE = "MIT"
-
-CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Cython",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.4",
-    "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Scientific/Engineering :: Information Analysis",
-    "Topic :: Text Processing :: Linguistic",
-]
-
-setup(
-    name="marisa-trie",
-    version="0.7.5",
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    author="Mikhail Korobov",
-    author_email="kmike84@gmail.com",
-    license=LICENSE,
-    url="https://github.com/kmike/marisa-trie",
-    classifiers=CLASSIFIERS,
-    libraries=[
-        (
-            "libmarisa-trie",
-            {
-                "sources": MARISA_FILES,
-                "include_dirs": [MARISA_SOURCE_DIR, MARISA_INCLUDE_DIR],
-            },
-        )
-    ],
-    ext_modules=[
-        Extension(
-            "marisa_trie",
-            [
-                "src/agent.cpp",
-                "src/base.cpp",
-                "src/iostream.cpp",
-                "src/key.cpp",
-                "src/keyset.cpp",
-                "src/marisa_trie.cpp",
-                "src/query.cpp",
-                "src/std_iostream.cpp",
-                "src/trie.cpp",
-            ],
-            include_dirs=[MARISA_INCLUDE_DIR],
-        )
-    ],
-    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
-    install_requires=install_requires,
-    extras_require={
-        "test": tests_require,
-    },
-)
+setup(name="GromacsWrapper",
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
+      description="A Python wrapper around the Gromacs tools.",
+      long_description=long_description,
+      author="Oliver Beckstein",
+      author_email="orbeckst@gmail.com",
+      license="GPLv3",
+      url="https://github.com/Becksteinlab/GromacsWrapper",
+      download_url="https://github.com/Becksteinlab/GromacsWrapper/downloads",
+      keywords="science Gromacs analysis 'molecular dynamics'",
+      classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: POSIX',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows ',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Chemistry',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+      ],
+      packages=find_packages(
+          exclude=['scripts', 'tests', 'tests.*', 'extras', 'doc/examples']),
+      scripts=[
+          'scripts/gw-join_parts.py',
+          'scripts/gw-merge_topologies.py',
+          'scripts/gw-forcefield.py',
+          'scripts/gw-partial_tempering.py',
+      ],
+      package_data={'gromacs': ['templates/*.sge', 'templates/*.pbs',  # template files
+                                'templates/*.ll', 'templates/*.sh',
+                                'templates/*.mdp', 'templates/*.cfg'
+                                ],
+                    },
+      install_requires=['numpy>=1.0',
+                        'six',          # towards py 3 compatibility
+                        'numkit',       # numerical helpers
+                        'matplotlib',
+                        ],
+      tests_require=['pytest', 'numpy>=1.0', 'pandas>=0.17'],
+      zip_safe=True,
+      )
