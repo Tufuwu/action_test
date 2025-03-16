@@ -1,0 +1,45 @@
+{% load static %}
+{% load raven %}
+
+<!DOCTYPE html>
+<html
+        dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}"
+        xml:lang="{% firstof LANGUAGE_CODE 'en' %}"
+        lang="{% firstof LANGUAGE_CODE 'en' %}"
+        class="embedded">
+<head>
+    <base target="_blank" />
+    <!-- Open all links in a new tab, not in the iframe -->
+
+    <link href='{% static 'fonts/OPENSANS-REGULAR.TTF' %}'>
+
+    <link rel="stylesheet" type="text/css" href="{% static "css/screen.css" %}">
+
+    <script src="{% static 'js/jquery.js' %}"></script>
+    <script src="{% static 'js/raven.js' %}"></script>
+    <script>Raven.config('{% sentry_public_dsn %}').install()</script>
+
+</head>
+
+<body>
+{% include "analytics.html" %}
+<div class="embed_container">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.level_tag }} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+</div>
+{% block js %}
+{% endblock %}
+</body>
+</html>

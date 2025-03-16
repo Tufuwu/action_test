@@ -1,0 +1,26 @@
+{% load button from filters %}
+<div class="text-right py-2">
+    {% if create or edit and object %}
+    <!--edit-->
+    {% button 'submit' %}
+    {% elif duplicate %}
+    <!--duplicate-->
+    <button type="submit" class="btn btn-success"><i class="fas fa-tick"></i> Create Duplicate</button>
+    {% else %}
+    <!--detail view-->
+    <div class="btn-group">
+        {% button 'edit' url='asset_update' pk=object.asset_id %}
+        {% button 'duplicate' url='asset_duplicate' pk=object.asset_id %}
+        <a type="button" class="btn btn-info" href="{% url 'asset_audit' object.asset_id %}"><i class="fas fa-certificate"></i> Audit</a>
+    </div>
+    {% endif %}
+    {% if create or edit or duplicate %}
+    <br>
+    <button type="reset" class="btn btn-link" onclick="
+    {% if duplicate %}
+        {% url 'asset_detail' previous_asset_id %}
+    {% else %}
+        history.back()
+    {% endif %}">Cancel</button>
+    {% endif %}
+</div>
