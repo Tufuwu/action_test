@@ -1,58 +1,30 @@
-#!/usr/bin/env python
-""" Setup to allow pip installs of edx-rest-api-client module """
-
-from setuptools import setup, find_packages
-
-from edx_rest_api_client import __version__
-
-with open('README.rst') as readme:
-    long_description = readme.read()
-
-
-def load_requirements(*requirements_paths):
-    """
-    Load all requirements from the specified requirements files.
-    Returns a list of requirement strings.
-    """
-    requirements = set()
-    for path in requirements_paths:
-        with open(path) as reqs:
-            requirements.update(
-                line.split('#')[0].strip() for line in reqs
-                if is_requirement(line.strip())
-            )
-    return list(requirements)
-
-
-def is_requirement(line):
-    """
-    Return True if the requirement line is a package requirement;
-    that is, it is not blank, a comment, a URL, or an included file.
-    """
-    return line and not line.startswith(('-r', '#', '-e', 'git+', '-c'))
+from setuptools import setup
 
 
 setup(
-    name='edx-rest-api-client',
-    version=__version__,
-    description='Slumber client used to access various edX Platform REST APIs.',
-    long_description=long_description,
-    long_description_content_type="text/x-rst",
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Internet',
-        'Intended Audience :: Developers',
-        'Environment :: Web Environment',
+    name='wtf-peewee',
+    version='3.0.1',
+    url='https://github.com/coleifer/wtf-peewee/',
+    license='MIT',
+    author='Charles Leifer',
+    author_email='coleifer@gmail.com',
+    description='WTForms integration for peewee models',
+    packages=['wtfpeewee'],
+    zip_safe=False,
+    platforms='any',
+    install_requires=[
+        'peewee>=3.0.0', 'wtforms',
     ],
-    keywords='edx rest api client',
-    url='https://github.com/edx/edx-rest-api-client',
-    author='edX',
-    author_email='oscm@edx.org',
-    license='Apache',
-    packages=find_packages(exclude=['*.tests']),
-    install_requires=load_requirements('requirements/base.in'),
+    classifiers=[
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ],
+    test_suite='runtests.runtests'
 )
