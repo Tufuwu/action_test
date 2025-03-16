@@ -1,279 +1,158 @@
-.. _Thingy: https://github.com/Refty/thingy
-.. _PyMongo: https://github.com/mongodb/mongo-python-driver
+NiaAML
+======
 
-============
-Mongo-Thingy
-============
+.. image:: https://travis-ci.com/lukapecnik/NiaAML.svg?branch=master
+    :target: https://travis-ci.com/lukapecnik/NiaAML
 
-.. image:: https://img.shields.io/pypi/v/mongo-thingy.svg
-   :target: https://pypi.python.org/pypi/Mongo-Thingy
-.. image:: https://img.shields.io/github/license/Refty/mongo-thingy.svg
-   :target: https://github.com/Refty/mongo-thingy/blob/master/LICENSE
-.. image:: https://img.shields.io/github/checks-status/Refty/mongo-thingy/master.svg
-   :target: https://github.com/Refty/mongo-thingy/actions
-.. image:: https://img.shields.io/coveralls/Refty/mongo-thingy.svg
-   :target: https://coveralls.io/github/Refty/mongo-thingy
-.. image:: https://readthedocs.org/projects/mongo-thingy/badge
-   :target: http://mongo-thingy.readthedocs.io
+.. image:: https://coveralls.io/repos/github/lukapecnik/NiaAML/badge.svg?branch=travisCI_integration
+    :target: https://coveralls.io/github/lukapecnik/NiaAML?branch=travisCI_integration
 
-|
+.. image:: https://img.shields.io/pypi/v/niaaml.svg
+    :target: https://pypi.python.org/pypi/niaaml
 
-Mongo-Thingy is the most idiomatic and friendly-yet-powerful way to use
-MongoDB with Python.
+.. image:: https://img.shields.io/pypi/pyversions/niaaml.svg
+    :target: https://pypi.org/project/NiaPy/
 
-It is an "Object-Document Mapper" that gives you full advantage of MongoDB
-schema-less design by **not** asking you to define schemas in your code, but
-with all the powerful features you would expect from such a library.
+.. image:: https://img.shields.io/github/license/lukapecnik/niaaml.svg
+    :target: https://github.com/lukapecnik/niaaml/blob/master/LICENSE
 
-Mongo-Thingy has:
+.. image:: https://zenodo.org/badge/289322337.svg
+   :target: https://zenodo.org/badge/latestdoi/289322337
 
-- a simple and robust code base, with 100% coverage and few dependencies;
-- PyMongo_ query language - no need to learn yet another one;
-- Thingy_ views - control what to show, and create fields based on other fields;
-- versioning (optional) - rollback to any point in any thingy history;
-- and more!
+.. image:: https://joss.theoj.org/papers/10.21105/joss.02949/status.svg
+   :target: https://doi.org/10.21105/joss.02949
 
-Documentation: http://mongo-thingy.readthedocs.io
+NiaAML is an automated machine learning Python framework based on
+nature-inspired algorithms for optimization. The name comes from the
+automated machine learning method of the same name [1]. Its
+goal is to efficiently compose the best possible classification pipeline
+for the given task using components on the input. The components are
+divided into three groups: feature seletion algorithms, feature
+transformation algorithms and classifiers. The framework uses
+nature-inspired algorithms for optimization to choose the best set of
+components for the classification pipeline on the output and optimize
+their parameters. We use `NiaPy framework <https://github.com/NiaOrg/NiaPy>`_ for the optimization process
+which is a popular Python collection of nature-inspired algorithms. The
+NiaAML framework is easy to use and customize or expand to suit your
+needs.
 
+The NiaAML framework allows you not only to run full pipeline optimization, but also separate implemented components such as classifiers, feature selection algorithms, etc. **It supports numerical and categorical features as well as missing values in datasets.**
 
-Compatibility
-=============
+- **Documentation:** https://niaaml.readthedocs.io/en/latest/,
+- **Tested OS:** Windows, Ubuntu, Fedora, Linux Mint and CentOS. **However, that does not mean it does not work on others.**
 
-Mongo-Thingy is pure-Python.
+Installation
+------------
 
-It supports all Python and MongoDB versions supported by PyMongo_, namely:
+pip
+~~~
 
-- CPython 2.7, 3.4+, PyPy, and PyPy3
-- MongoDB 2.6, 3.0, 3.2, 3.4, 3.6, 4.0, and 4.2
+Install NiaAML with pip3:
 
+.. code:: sh
 
-Install
-=======
+    pip3 install niaaml
 
-.. code-block:: sh
+In case you would like to try out the latest pre-release version of the framework, install it using:
 
-   $ pip install mongo-thingy
+.. code:: sh
 
+    pip3 install niaaml --pre
 
-Examples
-========
+Graphical User Interface
+------------------------
 
-First steps
------------
+You can find a simple graphical user interface for NiaAML package `here <https://github.com/lukapecnik/NiaAML-GUI>`_.
 
-Connect, insert and find thingies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Usage
+-----
 
-.. code-block:: python
+See the project's `repository <https://github.com/lukapecnik/NiaAML>`_ for usage examples.
 
-   >>> from mongo_thingy import connect, Thingy
-   >>> connect("mongodb://localhost/test")
-
-   >>> class User(Thingy):
-   ...     pass
-
-   >>> user = User({"name": "Mr. Foo", "age": 42}).save()
-   >>> User.count()
-   1
-   >>> User.find_one({"age": 42})
-   User({'_id': ObjectId(...), 'name': 'Mr. Foo', 'age': 42})
-
-
-Update a thingy
-~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> user.age
-   42
-   >>> user.age = 1337
-   >>> user.save()
-   User({'_id': ObjectId(...), 'name': 'Mr. Foo', 'age': 1337})
-
-
-Thingy views power
-------------------
-
-Complete information with properties
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> class User(Thingy):
-   ...     @property
-   ...     def username(self):
-   ...         return "".join(char for char in self.name if char.isalpha())
-
-   >>> User.add_view(name="everything", defaults=True, include="username")
-   >>> user = User.find_one()
-   >>> user.view("everything")
-   {'_id': ObjectId(...), 'name': 'Mr. Foo', 'age': 1337, 'username': 'MrFoo'}
-
-
-Hide sensitive stuff
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> User.add_view(name="public", defaults=True, exclude="password")
-   >>> user.password = "t0ps3cr3t"
-   >>> user.view()
-   {'_id': ObjectId(...), 'name': 'Mr. Foo', 'age': 1337, 'password': 't0ps3cr3t'}
-   >>> user.view("public")
-   {'_id': ObjectId(...), 'name': 'Mr. Foo', 'age': 1337}
-
-
-Only use certain fields/properties
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> User.add_view(name="credentials", include=["username", "password"])
-   >>> user.view("credentials")
-   {'username': 'MrFoo', 'password': 't0ps3cr3t'}
-
-
-Apply views on cursors
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> for credentials in User.find().view("credentials"):
-   ...     print(credentials)
-   {'username': 'MrFoo', 'password': 't0ps3cr3t'}
-   {'username': 'MrsBar', 'password': '123456789'}
-   ...
-
-
-Versioning
+Components
 ----------
 
-.. code-block:: python
+In the following sections you can see a list of currently implemented 
+components divided into groups: classifiers, feature selection 
+algorithms and feature transformation algorithms. At the end you can 
+also see a list of currently implemented fitness functions for the optimization process, 
+categorical features' encoders, and missing values' imputers.
 
-   >>> from mongo_thingy.versioned import Versioned
+Classifiers
+~~~~~~~~~~~
 
-   >>> class Article(Versioned, Thingy):
-   ...     pass
+-  Adaptive Boosting (AdaBoost),
+-  Bagging (Bagging),
+-  Extremely Randomized Trees (ExtremelyRandomizedTrees),
+-  Linear SVC (LinearSVC),
+-  Multi Layer Perceptron (MultiLayerPerceptron),
+-  Random Forest Classifier (RandomForest),
+-  Decision Tree Classifier (DecisionTree),
+-  K-Neighbors Classifier (KNeighbors),
+-  Gaussian Process Classifier (GaussianProcess),
+-  Gaussian Naive Bayes (GaussianNB),
+-  Quadratic Discriminant Analysis (QuadraticDiscriminantAnalysis).
 
-   >>> article = Article(content="Cogito ergo sum")
-   >>> article.version
-   0
+Feature Selection Algorithms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   >>> article.save()
-   Article({'_id': ObjectId('...'), 'content': 'Cogito ergo sum'})
-   >>> article.version
-   1
+-  Select K Best (SelectKBest),
+-  Select Percentile (SelectPercentile),
+-  Variance Threshold (VarianceThreshold).
 
-   >>> article.content = "Sum ergo cogito"
-   >>> article.save()
-   Article({'_id': ObjectId('...'), 'content': 'Sum ergo cogito'})
-   >>> article.version
-   2
+Nature-Inspired
+^^^^^^^^^^^^^^^
 
-   >>> article.revert()
-   Article({'_id': ObjectId('...'), 'content': 'Cogito ergo sum'})
-   >>> article.version
-   3
+-  Bat Algorithm (BatAlgorithm),
+-  Differential Evolution (DifferentialEvolution),
+-  Self-Adaptive Differential Evolution (jDEFSTH),
+-  Grey Wolf Optimizer (GreyWolfOptimizer),
+-  Particle Swarm Optimization (ParticleSwarmOptimization).
 
+Feature Transformation Algorithms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Database/collection "discovery"
--------------------------------
+-  Normalizer (Normalizer),
+-  Standard Scaler (StandardScaler),
+-  Maximum Absolute Scaler (MaxAbsScaler),
+-  Quantile Transformer (QuantileTransformer),
+-  Robust Scaler (RobustScaler).
 
-Default behaviour
-~~~~~~~~~~~~~~~~~
-.. code-block:: python
+Fitness Functions based on
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   >>> class AuthenticationGroup(Thingy):
-   ...     pass
+-  Accuracy (Accuracy),
+-  Cohen's kappa (CohenKappa),
+-  F1-Score (F1),
+-  Precision (Precision).
 
-   >>> connect("mongodb://localhost/")
-   >>> AuthenticationGroup.collection
-   Collection(Database(MongoClient(host=['localhost:27017'], ...), 'authentication'), 'group')
+Categorical Feature Encoders
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use mismatching names for Thingy class and database collection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- One-Hot Encoder (OneHotEncoder).
 
-You can either specify the collection name:
+Feature Imputers
+~~~~~~~~~~~~~~~~
 
-.. code-block:: python
+- Simple Imputer (SimpleImputer).
 
-   >>> class Foo(Thingy):
-   ...   collection_name = "bar" 
-
-or the collection directly:
-
-.. code-block:: python
-
-   >>> class Foo(Thingy):
-   ...   collection = db.bar
-
-You can then check what collection is being used with:
-
-.. code-block:: python
-
-   >>> Foo.collection
-   Collection(Database(MongoClient('localhost', 27017), 'database'), 'bar')
-
-
-Indexes
+Licence
 -------
 
-Create an index
-~~~~~~~~~~~~~~~
+This package is distributed under the MIT License. This license can be
+found online at http://www.opensource.org/licenses/MIT.
 
-.. code-block:: python
+Disclaimer
+----------
 
-   >>> User.create_index("email", sparse=True, unique=True)
+This framework is provided as-is, and there are no guarantees that it
+fits your purposes or that it is bug-free. Use it at your own risk!
 
+References
+----------
 
-Add one or more indexes, create later
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> User.add_index("email", sparse=True, unique=True)
-   >>> User.add_index("username")
-
-   >>> User.create_indexes()
-
-
-Create all indexes of all thingies at once
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   >>> from mongo_thingy import create_indexes
-   >>> create_indexes()
-
-
-Tests
-=====
-
-To run Mongo-Thingy tests:
-
-* make sure you have a MongoDB database running on ``localhost:27017`` (you can
-  spawn one with ``docker-compose up -d``);
-* install developers requirements with ``pip install -r requirements.txt``;
-* run ``pytest``.
-
-
-Sponsors
-========
-
-.. image:: https://raw.githubusercontent.com/Refty/mongo-thingy/master/img/numberly.png
-    :alt: Numberly
-    :align: center
-    :target: https://numberly.com/
-
-|
-
-.. image:: https://raw.githubusercontent.com/Refty/mongo-thingy/master/img/refty.png
-    :alt: Refty
-    :align: center
-    :target: https://refty.co/
-
-
-License
-=======
-
-MIT
+[1] Iztok Fister Jr., Milan Zorman, Dušan Fister, Iztok Fister.
+Continuous optimizers for automatic design and evaluation of
+classification pipelines. In: Frontier applications of nature inspired
+computation. Springer tracts in nature-inspired computing, pp.281-301,
+2020.
