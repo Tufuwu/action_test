@@ -1,0 +1,715 @@
+# Validates a deployed CDK
+
+# V2 ------------------------------------------------------------------------- #
+- job:
+    name: 'validate-ck'
+    node: runner-cloud
+    description: |
+      Validates CDK edge on amd64, supports last three recent releases.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@daily"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: channel
+          values:
+            - edge
+      - axis:
+          type: user-defined
+          name: arch
+          values:
+            - amd64
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+             bash jobs/validate/spec $snap_version $series $channel $arch
+
+- job:
+    name: 'validate-ck-arm64'
+    node: runner-arm64
+    description: |
+      Validates CDK edge on arm64, supports last three recent releases.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@monthly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-arm64
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: channel
+          values:
+            - edge
+      - axis:
+          type: user-defined
+          name: arch
+          values:
+            - arm64
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/spec $snap_version $series $channel $arch
+
+
+- job:
+    name: 'validate-ck-stable'
+    node: runner-validate
+    description: |
+      Validates CDK stable on amd64 and arm64, supports last three recent releases additionally.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@weekly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.18/stable
+            - 1.17/stable
+            - 1.16/stable
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: channel
+          values:
+            - stable
+      - axis:
+          type: user-defined
+          name: arch
+          values:
+            - amd64
+            - arm64
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/spec $snap_version $series $channel $arch
+
+
+- job:
+    name: 'validate-ck-upgrade'
+    node: runner-validate
+    description: |
+      Validates CK upgrades from previous 2 stables to latest edge
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@weekly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.18/stable
+            - 1.17/stable
+            - 1.16/stable
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: channel
+          values:
+            - edge
+      - axis:
+          type: user-defined
+          name: arch
+          values:
+            - amd64
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/upgrade-spec $snap_version $series $channel $arch
+
+- job:
+    name: 'validate-ck-upgrade-arm64'
+    node: runner-arm64
+    description: |
+      Validates CK upgrades from previous 2 stables to latest edge
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@monthly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-arm64
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.18/stable
+            - 1.17/stable
+            - 1.16/stable
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: channel
+          values:
+            - edge
+      - axis:
+          type: user-defined
+          name: arch
+          values:
+            - arm64
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/upgrade-spec $snap_version $series $channel $arch
+
+
+- job:
+    name: 'validate-ck-snapd-upgrade'
+    node: runner-amd64
+    description: |
+      Validates CK release using an upgrade snapcore.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@daily"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-amd64
+      - axis:
+           type: user-defined
+           name: snap_version
+           values:
+             - 1.18/stable
+      - axis:
+           type: user-defined
+           name: series
+           values:
+             - focal
+             - bionic
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/snapd-upgrade-spec $snap_version $series
+
+
+- job:
+    name: 'validate-ck-series-upgrade'
+    node: runner-validate
+    description: |
+      Validates CK machine series upgrades.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 7
+    triggers:
+        - timed: "@weekly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.18/stable
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/series-upgrade-spec $snap_version $series
+
+
+# ADDONS --------------------------------------------------------------------- #
+- job:
+    name: 'validate-ck-localhost'
+    node: runner-validate
+    description: |
+      Validates CDK edge, supports last three recent releases on localhost.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@daily"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+           type: user-defined
+           name: snap_version
+           values:
+             - 1.19/edge
+             - 1.18/edge
+             - 1.17/edge
+             - 1.16/edge
+      - axis:
+           type: user-defined
+           name: series
+           values:
+             - focal
+             - bionic
+             - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/localhost-spec $snap_version $series
+
+- job:
+    name: 'validate-ck-s390x'
+    node: runner-validate
+    description: |
+      Validates CDK edge, supports last three recent releases on s390x localhost.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "0 0 */2 * *"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+           type: user-defined
+           name: snap_version
+           values:
+             - 1.18/edge
+      - axis:
+           type: user-defined
+           name: series
+           values:
+             - bionic
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/ck-s390-spec $snap_version $series
+
+
+- job:
+    name: 'validate-ck-calico'
+    description: |
+      Validates CK, with calico.
+    node: runner-validate
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@weekly"
+    execution-strategy:
+      sequential: true
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: channel
+          values:
+            - edge
+      - axis:
+          type: user-defined
+          name: test_bgp
+          values:
+            - 0
+            - 1
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/calico-spec $snap_version $series $channel amd64 $test_bgp
+
+- job:
+    name: 'validate-ck-tigera-secure-ee'
+    description: |
+      Validates CK, with tigera.
+    node: runner-validate
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@weekly"
+    execution-strategy:
+      sequential: true
+    axes:
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/tigera-ee-spec $snap_version $series
+
+- job:
+    name: 'validate-ck-vault'
+    node: runner-validate
+    description: |
+      Validates CK, with vault.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@weekly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/vault-spec $snap_version $series
+
+- job:
+    name: 'validate-ck-nvidia'
+    node: runner-validate
+    description: |
+      Validates CK, with NVidia.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@monthly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/nvidia-spec $snap_version $series
+
+
+- job:
+    name: 'validate-ck-aws-iam'
+    description: |
+      Validates CK, with AWS IAM.
+    node: runner-validate
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@monthly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/aws-iam-spec $snap_version $series
+
+
+- job:
+    name: 'validate-ck-multus'
+    node: runner-validate
+    description: |
+      Validates CK, with Multus.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    triggers:
+        - timed: "@weekly"
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.19/edge
+            - 1.18/edge
+            - 1.17/edge
+            - 1.16/edge
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+            bash jobs/validate/multus-spec $snap_version $series

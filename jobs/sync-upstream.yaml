@@ -1,0 +1,158 @@
+# Syncs upstream charms, layers, snap branches, whatevs
+
+- job:
+    name: 'sync-snap-branches'
+    node: runner-cloud
+    description: |
+      Sync all release tags from upstream.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    triggers:
+        - timed: "@daily"
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/build-snaps"
+      - run-venv:
+          COMMAND: |
+            snapcraft login --with /var/lib/jenkins/snapcraft-creds
+            $WORKSPACE/venv/bin/python jobs/build-snaps/snap.py sync-branches \
+                --snap-list jobs/includes/k8s-snap-list.inc
+            $WORKSPACE/venv/bin/python jobs/build-snaps/snap.py sync-branches-list
+            $WORKSPACE/venv/bin/python jobs/build-snaps/snap.py build-summaries \
+                --snap-list jobs/includes/k8s-snap-list.inc \
+                --snap-versions jobs/includes/k8s-snap-support-versions.inc
+
+- job:
+    name: 'sync-upstream'
+    node: runner-cloud
+    description: |
+      Syncs the upstream components into a controlled organization
+      (github/charmed-kubernetes). This allows more control over release
+      process.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    wrappers:
+      - ansicolor
+      - workspace-cleanup
+      - ci-creds
+    triggers:
+        - timed: "@daily"
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/sync-upstream"
+      - run-venv:
+          COMMAND: |
+            $WORKSPACE/venv/bin/python jobs/sync-upstream/sync.py forks \
+               --layer-list jobs/includes/charm-layer-list.inc \
+               --charm-list jobs/includes/charm-support-matrix.inc
+
+- job:
+    name: 'sync-stable-tag-bundle-rev'
+    description: |
+      Tags all downstream stable branches with bundle revision
+    project-type: freestyle
+    node: runner-amd64
+    scm:
+      - k8s-jenkins-jenkaas
+    properties:
+      - build-discarder:
+          days-to-keep: 1
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    parameters:
+      - string:
+          name: K8S_VERSION
+          description: Stable K8S version to tag branches against.
+      - string:
+          name: BUNDLE_REV
+          description: bundle revision to tag stable branches with
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/sync-upstream"
+      - run-venv:
+          COMMAND: |
+            IS_DRY_RUN=""
+            if [ ! -z ${DRY_RUN+x} ]; then
+              IS_DRY_RUN="--dry-run"
+            fi
+            $WORKSPACE/venv/bin/python jobs/sync-upstream/sync.py tag-stable \
+                     --layer-list jobs/includes/charm-layer-list.inc \
+                     --charm-list jobs/includes/charm-support-matrix.inc \
+                     --bundle-revision $BUNDLE_REV \
+                     --k8s-version $K8S_VERSION \
+                     --filter-by-tag k8s
+
+- job:
+    name: 'sync-stable-tag-bugfix-rev'
+    description: |
+      Tags all downstream stable branches with bugfix revision
+    project-type: freestyle
+    node: runner-amd64
+    scm:
+      - k8s-jenkins-jenkaas
+    properties:
+      - build-discarder:
+          days-to-keep: 1
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    parameters:
+      - string:
+          name: K8S_VERSION
+          description: Stable K8S version to tag branches against.
+      - string:
+          name: BUGFIX_REV
+          description: bugfix revision to tag stable branches with, (ie ck1)
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/sync-upstream"
+      - run-venv:
+          COMMAND: |
+            IS_DRY_RUN=""
+            if [ ! -z ${DRY_RUN+x} ]; then
+              IS_DRY_RUN="--dry-run"
+            fi
+            $WORKSPACE/venv/bin/python jobs/sync-upstream/sync.py tag-stable \
+              --layer-list jobs/includes/charm-layer-list.inc \
+              --charm-list jobs/includes/charm-support-matrix.inc \
+              --bundle-revision $BUGFIX_REV \
+              --k8s-version $K8S_VERSION \
+              --filter-by-tag k8s \
+              --bugfix
+- job:
+    name: 'cut-stable-release'
+    description: |
+      Refreshes all layer stable branches on top of master.
+    project-type: freestyle
+    node: runner-amd64
+    scm:
+      - k8s-jenkins-jenkaas
+    properties:
+      - build-discarder:
+          days-to-keep: 1
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/sync-upstream"
+      - run-venv:
+          COMMAND: |
+            IS_DRY_RUN=""
+            if [ ! -z ${DRY_RUN+x} ]; then
+              IS_DRY_RUN="--dry-run"
+            fi
+            $WORKSPACE/venv/bin/python jobs/sync-upstream/sync.py cut-stable-release \
+               --layer-list jobs/includes/charm-layer-list.inc \
+               --charm-list jobs/includes/charm-support-matrix.inc \
+               --ancillary-list jobs/includes/ancillary-list.inc \
+               --filter-by-tag k8s $IS_DRY_RUN

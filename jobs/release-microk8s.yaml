@@ -1,0 +1,142 @@
+# Tests and releases microk8s to beta
+
+- parameter:
+    name: microk8s-params
+    parameters:
+      - string:
+          name: DRY_RUN
+          default: "no"
+          description: |
+            Do not release. Run all tests but do not release.
+      - string:
+          name: ALWAYS_RELEASE
+          default: "no"
+          description: |
+            Run all tests and release.
+      - string:
+          name: TRACKS
+          description: |
+            The tracks you want to test and release. For example latest 1.10
+            1.11 1.12. Leave empty to iterate over all tracks.
+      - string:
+          name: TESTS_BRANCH
+          description: |
+            You might want to test with a set of tests that are in your own
+            branch. Here is where you set the branch name.
+      - string:
+          name: PROXY
+          description: |
+            Proxy endpoint
+      - choice:
+          name: ARCH_TRACK
+          description: |
+            Choose a specific architecture and track to release against
+          choices:
+            - all
+            - amd64/beta
+            - arm64/beta
+            - amd64/stable
+            - arm64/stable
+            - amd64/prerelease
+            - arm64/prerelease
+
+- job-template:
+    name: 'release-microk8s-{arch}'
+    description: |
+      Tests and releases microk8s. Affects all tracks on {arch}.
+    project-type: freestyle
+    node: runner-{arch}
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    parameters:
+      - microk8s-params
+    triggers:
+        - timed: "@daily"
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+      - build-blocker:
+          use-build-blocker: true
+          blocking-jobs:
+            - "infra.*"
+          block-level: 'NODE'
+
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/release-microk8s"
+      - shell: |-
+          #!/bin/bash
+          set -eux
+          set -o allexport
+          [[ -f $WORKSPACE/.env ]] && source $WORKSPACE/.env
+          set +o allexport
+
+          TAG="-t {arch}"
+          if [ "$ARCH_TRACK" != "all" ]; then
+              TAG="-t $ARCH_TRACK"
+          fi
+
+          virtualenv venv -p python3.6
+          venv/bin/python -m pip install pip-tools
+          venv/bin/pip-sync requirements.txt
+          venv/bin/ogc --spec jobs/release-microk8s/spec.yml $TAG
+
+- project:
+    name: release-microk8s
+    arch:
+      - amd64
+      - arm64
+    jobs:
+      - 'release-microk8s-{arch}'
+
+- job:
+    name: 'release-microk8s-edge'
+    node: runner-cloud
+    description: |
+      Builds, releases and promotes microk8s to the snapstore on the edge channel.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    triggers:
+        - timed: "@hourly"
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/release-microk8s"
+      - run-venv:
+          JOB_SPEC_DIR: "jobs/release-microk8s"
+          COMMAND: |
+            venv/bin/python jobs/microk8s/release-to-edge-on-new-upstream-release.py
+
+
+- job:
+    name: 'build-microk8s'
+    node: runner-cloud
+    description: |
+      On new upstream releases creates code branches and LP builders.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    triggers:
+        - timed: "@hourly"
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/release-microk8s"
+      - run-venv:
+          JOB_SPEC_DIR: "jobs/release-microk8s"
+          COMMAND: |
+            venv/bin/python jobs/microk8s/update-gh-branches-and-lp-builders.py

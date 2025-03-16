@@ -1,0 +1,243 @@
+# Builds and releases latest snaps
+- job:
+    name: 'build-snaps'
+    node: runner-cloud
+    description: |
+      Sync all release tags from upstream, then create snap recipes to be built
+      and promoted into the snap store.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    # triggers:
+    #   - timed: "@daily"
+    parameters:
+      - choice:
+          name: SNAP_K8S_VERSION
+          description: |
+            Select the k8s version to apply the built snap to. This determines
+            the <major.minor>/<risk> when setting the tracks to publish to.
+          choices: !include: jobs/includes/k8s-snap-support-versions.inc
+      - choice:
+          name: SNAP_BRANCH_VERSION
+          description: |
+            Select the branch to build the snaps from. The branches represent
+            the upstream versions we know about and can build against.
+          choices: !include: jobs/includes/k8s-snap-branches-list.inc
+      - bool:
+          name: TRACK_STABLE
+          description: |
+            Release to MAJOR.MINOR/stable
+      - bool:
+          name: TRACK_CANDIDATE
+          description: |
+            Release to MAJOR.MINOR/candidate
+      - bool:
+          name: TRACK_BETA
+          description: |
+            Release to MAJOR.MINOR/beta
+      - bool:
+          name: TRACK_EDGE
+          description: |
+            Release to MAJOR.MINOR/edge
+      - string:
+          name: TRACK_CUSTOM
+          description: |
+            Release to a custom ver/risk
+
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/build-snaps"
+      - shell: |-
+          #!/bin/bash
+          set -eux
+          set -o allexport
+          [[ -f $WORKSPACE/.env ]] && source $WORKSPACE/.env
+          set +o allexport
+
+          TRACKS=""
+          if [ "$TRACK_STABLE" = "true" ]; then
+              TRACKS="$TRACKS --tracks $SNAP_K8S_VERSION/stable"
+          fi
+
+          if [ "$TRACK_CANDIDATE" = "true" ]; then
+              TRACKS="$TRACKS --tracks $SNAP_K8S_VERSION/candidate"
+          fi
+
+          if [ "$TRACK_BETA" = "true" ]; then
+              TRACKS="$TRACKS --tracks $SNAP_K8S_VERSION/beta"
+          fi
+
+          if [ "$TRACK_EDGE" = "true" ]; then
+              TRACKS="$TRACKS --tracks $SNAP_K8S_VERSION/edge"
+          fi
+
+          if [ ! -z "${TRACK_CUSTOM+x}" ]; then
+              TRACKS="$TRACKS --tracks $TRACK_CUSTOM"
+          fi
+
+          export TRACKS="$TRACKS"
+          python3.8 -m venv venv
+          venv/bin/python -m pip install pip-tools
+          venv/bin/pip-sync requirements.txt
+          venv/bin/python jobs/build-snaps/snap.py sync-snaps \
+              --snap-list jobs/includes/k8s-snap-list.inc \
+              --version "$SNAP_K8S_VERSION" \
+              --branch-version "$SNAP_BRANCH_VERSION" \
+              $TRACKS
+
+- job:
+    name: 'promote-snaps'
+    description: |
+      Performs a snap promotion
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    parameters:
+      - string:
+          name: FROM_TRACK
+          description: Snap track to promote from
+      - string:
+          name: TO_TRACK
+          description: Snap track(s) to promote to, separated by space.
+      - string:
+          name: SNAP_ARCH
+          default: "'amd64 ppc64el s390x arm64'"
+          description: Architectures to promote in snap store, separated by space.
+      - choice:
+          name: SNAP_SELECTION
+          description: |
+            Choose a specific snap to promote
+          choices:
+            - all
+            - kube-apiserver
+            - kube-controller-manager
+            - kube-proxy
+            - kube-scheduler
+            - kubeadm
+            - kubectl
+            - kubelet
+            - kubernetes-test
+            - cdk-addons
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/build-snaps"
+      - run-venv:
+          JOB_SPEC_DIR: "jobs/build-snaps"
+          COMMAND: |
+            if [ "$SNAP_SELECTION" != "all" ]; then
+                echo "- $SNAP_SELECTION" > "jobs/includes/k8s-snap-list.inc"
+            fi
+            snapcraft login --with /var/lib/jenkins/snapcraft-creds
+            python jobs/build-snaps/snap.py promote-snaps \
+                            --snap-list "jobs/includes/k8s-snap-list.inc" \
+                            --arch "$SNAP_ARCH" \
+                            --from-track "$FROM_TRACK" \
+                            --to-track "$TO_TRACK" \
+                            --exclude-pre
+
+- job-template:
+    name: 'build-release-cdk-addons-{arch}-{version}'
+    description: |
+      Builds, releases and promotes cdk-addons for supported k8s versions on {arch} to the snapstore.
+      Container images required by CDK are known during the build, so this job also tags and pushes
+      those to the Canonical image registry.
+
+      The full version of the cdk-addons snap is tied to the upstream k8s tag used during the build.
+      Explicitly set this with the `k8s_tag` parameter, or this job will determine it using the
+      `version` parameter and the contents of https://dl.k8s.io/release/[stable|latest]-`version`.txt.
+    project-type: pipeline
+    pipeline-scm:
+      scm:
+        - k8s-jenkins-jenkaas
+      script-path: jobs/build-snaps/build-release-cdk-addons.groovy
+    parameters:
+      - string:
+          name: arch
+          default: '{arch}'
+      - string:
+          name: build_node
+          default: 'runner-{arch}'
+      - string:
+          name: version
+          default: '{version}'
+          description: |
+            Version to build and release. This job will clone (or create as needed) the
+            cdk-addons release-`version` branch, then build and release the snap to the
+            `version`/edge channel.
+      - string:
+          name: k8s_tag
+          default: ''
+          description: |
+            Source tag from https://github.com/kubernetes/kubernetes. If not specified,
+            the tag will be set to https://dl.k8s.io/release/[stable|latest]-`version`.txt.
+      - string:
+          name: channels
+          default: '{version}/edge,{version}/beta,{version}/candidate'
+          description: |
+            Comma separated snap store channels to release the built snap to.
+      - bool:
+          name: dry_run
+          default: false
+          description: only report what would be pushed to github / snapstore / image registry
+    properties:
+      - build-discarder:
+          num-to-keep: 7
+    triggers:
+        - timed: "@daily"
+
+
+- job:
+    name: 'build-release-eks-snaps'
+    node: runner-amd64
+    description: |
+      Builds, releases and promotes Amazon EKS snaps for {version} to the snapstore.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/build-snaps"
+      - run-venv:
+          JOB_SPEC_DIR: "jobs/build-snaps"
+          COMMAND: |
+            snapcraft logout
+            snapcraft login --with /var/lib/jenkins/snapcraft-cpc-creds
+
+            docker image prune -a --filter "until=24h" --force
+            docker container prune --filter "until=24h" --force
+
+            python jobs/build-snaps/build-eks-snaps.py build \
+                 --version $VERSION \
+                 --snap kubelet \
+                 --snap kubectl \
+                 --snap kube-proxy \
+                 --snap kubernetes-test
+            python jobs/build-snaps/build-eks-snaps.py push --version $VERSION
+
+            docker image prune -a --filter "until=24h" --force
+            docker container prune --filter "until=24h" --force
+    parameters:
+      - string:
+          name: VERSION
+          default: '1.14.8'
+          description: snap eks version to build/promote
+    properties:
+      - build-discarder:
+          num-to-keep: 2
+
+- project:
+    name: build-release-snaps
+    # arch: ['amd64', 's390x', 'arm64', 'ppc64le']
+    arch: ['amd64']
+    version: ['1.15', '1.16', '1.17', '1.18', '1.19']
+    jobs:
+      - 'build-release-cdk-addons-{arch}-{version}'

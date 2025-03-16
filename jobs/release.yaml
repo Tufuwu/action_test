@@ -1,0 +1,115 @@
+# Release Job for k8s
+#
+# Doc: http://jenkaas.s3-website-us-east-1.amazonaws.com/docs/releases/stable/
+
+
+- job:
+    name: 'validate-minor-release'
+    description: |
+      Promote, Validate, Release to stable. This job will run through all
+      necessary steps to validate a particular version of k8s and make sure the
+      charms and snaps are published accordingly.
+    node: runner-validate
+    project-type: freestyle
+    parameters:
+      - global-params
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    scm:
+      - k8s-jenkins-jenkaas
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/release"
+      - run-env:
+          COMMAND: |
+            parallel --timeout 200% --ungroup bash jobs/validate/spec {1} {2} {3} {4} ::: 1.19/beta ::: focal bionic xenial ::: beta ::: arm64 amd64
+            parallel --timeout 200% --ungroup bash jobs/validate/upgrade-spec {1} {2} {3} {4} {5} ::: 1.18/stable 1.17/stable 1.16/stable ::: focal bionic xenial ::: beta ::: arm64 amd64 ::: 1.19/beta
+
+- job:
+    name: 'validate-charm-bugfix'
+    node: runner-validate
+    description: |
+      Validates charms from their stable branch/channels in order to release a
+      bug/hotfix to stable.
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.18/stable
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/release"
+      - run-venv:
+          COMMAND: |
+            bash jobs/release/bugfix-spec $snap_version $series
+
+- job:
+    name: 'validate-charm-bugfix-upgrade'
+    node: runner-validate
+    description: |
+      Validates CK upgrades from previous 2 stables to latest candidate
+    project-type: matrix
+    scm:
+      - k8s-jenkins-jenkaas
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    properties:
+      - build-discarder:
+          num-to-keep: 3
+    axes:
+      - axis:
+          type: slave
+          name: node
+          values:
+            - runner-validate
+      - axis:
+          type: user-defined
+          name: snap_version
+          values:
+            - 1.17/stable
+            - 1.16/stable
+      - axis:
+          type: user-defined
+          name: series
+          values:
+            - focal
+            - bionic
+            - xenial
+      - axis:
+          type: user-defined
+          name: arch
+          values:
+            - amd64
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/validate"
+      - run-venv:
+          COMMAND: |
+           bash jobs/release/bugfix-upgrade-spec $snap_version $series

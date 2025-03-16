@@ -1,0 +1,101 @@
+#!/bin/bash
+# shellcheck disable=SC2034,SC1090
+
+set -ex
+
+###############################################################################
+# INITIALIZE
+###############################################################################
+: "${WORKSPACE:=$(pwd)}"
+
+. "$WORKSPACE/ci.bash"
+. "$WORKSPACE/juju.bash"
+
+###############################################################################
+# FUNCTION OVERRIDES
+###############################################################################
+function juju::bootstrap
+{
+    python $WORKSPACE/jobs/integration/tigera_aws.py cleanup
+
+    export NUM_SUBNETS=1
+    if [ "$TEST_BGP" = "1" ]; then
+      export NUM_SUBNETS=2
+      export JOB_NAME_CUSTOM="validate-ck-calico-bgp-router-$SERIES-$SNAP_VERSION"
+    fi
+
+    python $WORKSPACE/jobs/integration/tigera_aws.py bootstrap
+
+    if [ "$TEST_BGP" = "1" ]; then
+      echo "Deploying bgp router"
+      python3 $WORKSPACE/jobs/integration/tigera_aws.py deploy-bgp-router
+    fi
+}
+
+function juju::deploy::overlay
+{
+    cat <<EOF > overlay.yaml
+series: $SERIES
+applications:
+  kubernetes-master:
+    options:
+      channel: $SNAP_VERSION
+      service-cidr: "10.152.183.0/24,fd00:c00b:2::/112"
+  kubernetes-worker:
+    options:
+      channel: $SNAP_VERSION
+  flannel:
+  calico:
+    charm: cs:~containers/calico
+    options:
+      cidr: "192.168.0.0/16,fd00:c00b:1::/112"
+relations:
+- [calico:etcd, etcd:db]
+- [calico:cni, kubernetes-master:cni]
+- [calico:cni, kubernetes-worker:cni]
+EOF
+}
+
+function juju::deploy::after
+{
+    python $WORKSPACE/jobs/integration/tigera_aws.py disable-source-dest-check
+
+    python $WORKSPACE/jobs/integration/tigera_aws.py assign-ipv6-addrs
+
+    if [ "$TEST_BGP" = "1" ]; then
+      python $WORKSPACE/jobs/integration/tigera_aws.py configure-bgp
+    fi
+}
+
+function ci::cleanup
+{
+    local log_name_custom=$(echo "$JOB_NAME_CUSTOM" | tr '/' '-')
+    {
+        python $WORKSPACE/jobs/integration/tigera_aws.py cleanup
+        if ! timeout 2m juju destroy-controller -y --destroy-all-models --destroy-storage "$JUJU_CONTROLLER"; then
+            timeout 2m juju kill-controller -y "$JUJU_CONTROLLER" || true
+        fi
+    } 2>&1 | sed -u -e "s/^/[$log_name_custom] /" | tee -a "ci.log"
+}
+
+###############################################################################
+# ENV
+###############################################################################
+SNAP_VERSION=${1:-1.19/edge}
+SERIES=${2:-bionic}
+JUJU_DEPLOY_BUNDLE=cs:~containers/charmed-kubernetes
+JUJU_DEPLOY_CHANNEL=${3:-edge}
+JUJU_CLOUD=aws/us-east-2
+JUJU_CONTROLLER=validate-$(identifier::short)
+JUJU_MODEL=validate-calico
+ARCH=${4:-amd64}
+TEST_BGP=${5:0}
+JOB_NAME_CUSTOM="validate-ck-calico-$SERIES-$SNAP_VERSION"
+JOB_ID=$(identifier)
+
+
+
+###############################################################################
+# START
+###############################################################################
+ci::run

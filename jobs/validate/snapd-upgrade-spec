@@ -1,0 +1,58 @@
+#!/bin/bash
+# shellcheck disable=SC2034,SC1090
+
+set -x
+
+# Init
+: "${WORKSPACE:=$(pwd)}"
+
+. "$WORKSPACE/ci.bash"
+. "$WORKSPACE/juju.bash"
+
+function test::execute
+{
+    declare -n is_pass=$1
+    timeout 3h pytest \
+                jobs/integration/validation.py \
+                --cloud "$JUJU_CLOUD" \
+                --model "$JUJU_MODEL" \
+                --controller "$JUJU_CONTROLLER" \
+                --snapd-upgrade \
+                --snapd-channel "$TEST_UPGRADE_SNAPD_CHANNEL"
+
+    ret=$?
+    is_pass="True"
+    if (( $ret > 0 )); then
+        is_pass="False"
+    fi
+}
+
+# Setup Environment
+SNAP_VERSION=${1:-1.19/edge}
+SERIES=${2:-bionic}
+JUJU_DEPLOY_BUNDLE=cs:~containers/charmed-kubernetes
+JUJU_DEPLOY_CHANNEL=${3:-edge}
+JUJU_CLOUD=aws/us-east-2
+JUJU_CONTROLLER=validate-$(identifier::short)
+JUJU_MODEL=validate-ck-snapd-upgrade
+TEST_UPGRADE_SNAPD_CHANNEL=beta
+ARCH=${4:-amd64}
+JOB_NAME_CUSTOM="validate-ck-snapd-upgrade-$SERIES-$SNAP_VERSION"
+JOB_ID=$(identifier)
+
+compile::env
+log_name_custom=$(echo "$JOB_NAME_CUSTOM" | tr '/' '-')
+{
+    build_starttime=$(timestamp)
+    kv::set "build_starttime" "$build_starttime"
+
+    juju::bootstrap
+
+    test::execute result
+    deploy_endtime=$(timestamp)
+    kv::set "deploy_endtime" "$deploy_endtime"
+
+    test::report "$result" "$build_starttime" "$deploy_endtime"
+    test::capture
+
+} 2>&1 | sed -u -e "s/^/[$log_name_custom] /" | tee "ci.log"

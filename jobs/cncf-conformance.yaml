@@ -1,0 +1,40 @@
+# CNCF Conformance Project
+# https://github.com/cncf/k8s-conformance
+#
+
+# - job:
+#     name: 'conformance-s390x'
+#     description: |
+#       CNCF Conformance testing for Kubernetes on s390x.
+
+#       Please see https://git.io/fNwXY for more information.
+#     project-type: freestyle
+#     scm:
+#       - k8s-jenkins-jenkaas
+#     properties:
+#       - build-discarder:
+#           num-to-keep: 7
+
+
+- job:
+    name: 'conformance'
+    node: runner-amd64
+    description: |
+      CNCF Conformance testing for Kubernetes.
+
+      Please see https://git.io/fNwXY for more information.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    properties:
+      - build-discarder:
+          num-to-keep: 4
+    wrappers:
+      - default-job-wrapper
+      - ci-creds
+    builders:
+      - set-env:
+          JOB_SPEC_DIR: "jobs/cncf-conformance"
+      - run-env:
+          COMMAND: |
+           TOX_WORK_DIR=$WORKSPACE/.tox tox -e py36 -- bash jobs/cncf-conformance/conformance-spec
