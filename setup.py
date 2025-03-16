@@ -1,37 +1,29 @@
-#!/usr/bin/env python
-import s3path
-from setuptools import setup
+# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-with open("README.rst", "r") as fh:
-    long_description = fh.read()
-setup(
-    name=s3path.__name__,
-    version=s3path.__version__,
-    url='https://github.com/liormizr/s3path',
-    author='Lior Mizrahi',
-    author_email='li.mizr@gmail.com',
-    py_modules=['s3path'],
-    install_requires=[
-        'boto3>=1.16.35',
-        'smart-open',
-    ],
-    license='Apache 2.0',
-    long_description=long_description,
-    long_description_content_type='text/x-rst',
-    python_requires='>= 3.4',
-    include_package_data=True,
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-    ],
-)
+# THIS FILE IS MANAGED BY THE GLOBAL REQUIREMENTS REPO - DO NOT EDIT
+import setuptools
+
+# In python < 2.7.4, a lazy loading of package `pbr` will break
+# setuptools if some other modules registered functions in `atexit`.
+# solution from: http://bugs.python.org/issue15881#msg170215
+try:
+    import multiprocessing  # noqa
+except ImportError:
+    pass
+
+setuptools.setup(
+    setup_requires=['pbr>=2.0.0'],
+    pbr=True)
