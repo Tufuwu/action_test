@@ -1,43 +1,27 @@
-SHELL := bash
-PYFILES := ged2dot.py inlineize.py test/test.py libreoffice/base.py libreoffice/loader.py libreoffice/importer.py libreoffice/dialog.py
-
-check-type: $(patsubst %.py,%.mypy,$(PYFILES))
-
-check-lint: $(patsubst %.py,%.lint,$(PYFILES))
-
-test.png: test.dot
-	dot -Tpng -o test.png test.dot
-
-test.svg: test-noinline.svg inlineize.py
-	./inlineize.py test-noinline.svg test.svg
-
-test-noinline.svg: test.dot
-	dot -Tsvg -o test-noinline.svg test.dot
-
-test.dot: test.ged ged2dot.py ged2dotrc Makefile
-	./ged2dot.py > test.dot
-
-%.mypy : %.py Makefile
-	mypy --python-version 3.5 --strict $< && touch $@
-
-%.lint : %.py Makefile
-	pylint \
-		--max-line-length=120 \
-		--disable=import-error,too-many-instance-attributes,missing-docstring,too-many-branches,too-many-statements,fixme,line-too-long,too-many-arguments,protected-access,too-many-locals \
-		$< && touch $@
-
-check: check-type check-lint
-	cd test && PYTHONPATH=$(PWD) ./test.py
-	pycodestyle $(PYFILES)
+.PHONY: all test clean docs
 
 clean:
-	rm -f $(patsubst %.py,%.mypy,$(PYFILES))
+	find . -name "*.pyc" -type f -delete
+	find . -name "__pycache__" -type d -exec rm -rf {} \;
+	find . -name "*.egg-info" -type d -exec rm -rf {} \; || true
+	rm -rf build/ dist/ \
+	       coverage_html_report .coverage \
+	       *.egg
 
-# In case ged2dotrc or test.dot is missing, create a copy based on the
-# screenshot sample.
+test:
+	python runtests.py
 
-test.ged :| test/screenshot.ged
-	cat test/screenshot.ged > test.ged
+install:
+	python setup.py install
 
-ged2dotrc :| test/screenshotrc
-	sed 's/screenshot.ged/test.ged/' test/screenshotrc > ged2dotrc
+build:
+	python setup.py build
+
+docs:
+	cd docs/ && make clean
+	cd docs/ && make html
+
+upload:
+	make clean
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
