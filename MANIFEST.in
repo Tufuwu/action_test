@@ -1,4 +1,8 @@
-include versioneer.py
-include src/nexusformat/_version.py
-include src/notebooks/*.ipynb
-include COPYING
+# Windows note: folders should not end with a slash
+include AUTHORS
+include README.rst
+include LICENSE
+recursive-include fluent_blogs/static *.gif *.css
+recursive-include fluent_blogs/locale *.po *.mo
+recursive-include fluent_blogs/templates *.html
+recursive-include fluent_blogs/pagetypes/blogpage/templates *.html
