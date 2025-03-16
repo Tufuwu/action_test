@@ -1,17 +1,14 @@
-# vim swap files
-*.swp
-
-# python bytecode files
 *.pyc
-__pycache__/
-
-# setuptools files
-*.egg-info/
-
-# testing files
-.tox/
+pycache
+htmlcov
+*egg-info
 .coverage
-
-# files generated for release
+*.swp
+build/
 dist/
-README.rst
+.idea/
+env/
+.cache/
+.tox/
+.eggs/
+site/
