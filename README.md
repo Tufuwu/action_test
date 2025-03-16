@@ -1,156 +1,129 @@
-## wagtail-markdown: Markdown fields and blocks for Wagtail
+List of disposable email domains
+========================
 
-[![Build status](https://img.shields.io/github/workflow/status/torchbox/wagtail-markdown/CI/main?style=for-the-badge)](https://github.com/torchbox/wagtail-markdown/actions)
-[![PyPI](https://img.shields.io/pypi/v/wagtail-markdown.svg?style=for-the-badge)](https://pypi.org/project/wagtail-markdown/)
-[![black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white&style=for-the-badge)](https://github.com/pre-commit/pre-commit)
+[![Licensed under CC0](https://licensebuttons.net/p/zero/1.0/88x31.png)](https://creativecommons.org/publicdomain/zero/1.0/)
 
+This repo contains a [list of disposable and temporary email address domains](disposable_email_blocklist.conf) often used to register dummy users in order to spam or abuse some services.
 
-Tired of annoying rich text editors getting in the way of your content
-input?  Wish Wagtail worked more like a wiki?  Well, now it can.
+We cannot guarantee all of these can still be considered disposable but we do basic checking so chances are they were disposable at one point in time.
 
-`wagtail-markdown` provides Markdown field support for [Wagtail](https://github.com/torchbox/wagtail/).
-Specifically, it provides:
+Allowlist
+=========
+The file [allowlist.conf](allowlist.conf) gathers email domains that are often identified as disposable but in fact are not.
 
-* A `wagtailmarkdown.blocks.MarkdownBlock` for use in streamfields.
-* A `wagtailmarkdown.fields.MarkdownField` for use in page models.
-* A `wagtailmarkdown.edit_handlers.MarkdownPanel` for use in the editor interface.
-* A `markdown` template tag.
+Example Usage
+=============
+**Python**
+```Python
+blocklist = ('disposable_email_blocklist.conf')
+blocklist_content = [line.rstrip() for line in blocklist.readlines()]
+if email.split('@')[1] in blocklist_content:
+    message = "Please enter your permanent email address."
+    return (False, message)
+else:
+    return True
+```
 
-The markdown rendered is based on `python-markdown`, but with several
-extensions to make it actually useful in Wagtail:
-
-* Tables.
-* [Code highlighting](#syntax-highlighting).
-* Inline links to pages (`<:My page name|link title>`) and documents
-  (`<:doc:My fancy document.pdf>`), and inline images
-  (`<:image:My pretty image.jpeg>`).
-* Inline Markdown preview using [EasyMDE](https://github.com/Ionaru/easy-markdown-editor)
-
-These are implemented using the `python-markdown` extension interface.
-
-You can configure wagtail-markdown to use additional Markdown extensions using the `WAGTAILMARKDOWN_EXTENSIONS` setting.
-
-For example, to enable the [Table of
-Contents](https://python-markdown.github.io/extensions/toc/) and [Sane
-Lists](https://python-markdown.github.io/extensions/sane_lists/) extensions:
+Available as [PyPI module](https://pypi.org/project/disposable-email-domains) thanks to [@di](https://github.com/di)
 ```python
-WAGTAILMARKDOWN_EXTENSIONS = ["toc", "sane_lists"]
+>>> from disposable_email_domains import blocklist
+>>> 'bearsarefuzzy.com' in blocklist
+True
 ```
 
-Extensions can be configured too:
+**PHP** contributed by [@txt3rob](https://github.com/txt3rob), [@deguif](https://github.com/deguif), [@pjebs](https://github.com/pjebs) and [@Wruczek](https://github.com/Wruczek)
 
-```python
-WAGTAILMARKDOWN_EXTENSIONs_CONFIG = {'pymdownx.arithmatex': {'generic': True}}
+1. Make sure the passed email is valid. You can check that with [filter_var](https://secure.php.net/manual/en/function.filter-var.php)
+2. Make sure you have the mbstring extension installed on your server
+```php
+function isDisposableEmail($email, $blocklist_path = null) {
+    if (!$blocklist_path) $blocklist_path = __DIR__ . '/disposable_email_blocklist.conf';
+    $disposable_domains = file($blocklist_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $domain = mb_strtolower(explode('@', trim($email))[1]);
+    return in_array($domain, $disposable_domains);
+}
+```
+**Ruby on Rails** contributed by [@MitsunChieh](https://github.com/MitsunChieh)
+
+In resource model, usually it is `user.rb`
+```Ruby
+before_validation :reject_email_blocklist
+
+def reject_email_blocklist
+  blocklist = File.read('config/disposable_email_blocklist.conf').split("\n")
+
+  if blocklist.include?(email.split('@')[1])
+    errors[:email] << 'invalid email'
+    return false
+  else
+    return true
+  end
+end
+```
+**NodeJs** contributed by [@martin-fogelman](https://github.com/martin-fogelman)
+
+```Node
+'use strict';
+
+const readline = require('readline'),
+  fs = require('fs');
+
+const input = fs.createReadStream('./disposable_email_blocklist.conf'),
+  output = [],
+  rl = readline.createInterface({input});
+
+// PROCESS LINES
+rl.on('line', (line) => {
+  console.log(`Processing line ${output.length}`);
+  output.push(line);
+});
+
+// SAVE AS JSON
+rl.on('close', () => {
+  try {
+    const json = JSON.stringify(output);
+    fs.writeFile('disposable_email_blocklist.json', json, () => console.log('--- FINISHED ---'));
+  } catch (e) {
+    console.log(e);
+  }
+});
 ```
 
-### Installation
-Available on PyPi - https://pypi.org/project/wagtail-markdown/ - installable via `pip install wagtail-markdown`.
+**C#**
+```C#
+private static readonly Lazy<HashSet<string>> _emailBlockList = new Lazy<HashSet<string>>(() =>
+{
+  var lines = File.ReadLines("disposable_email_blocklist.conf")
+    .Where(line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith("//"));
+  return new HashSet<string>(lines, StringComparer.OrdinalIgnoreCase);
+});
 
-The EasyMDE editor is compatible with [FontAwesome 5](https://fontawesome.com/how-to-use/graphql-api/intro/getting-started).
-By default EasyMDE will get version 4.7.0 from a CDN. To specify your own version, set
-`WAGTAILMARKDOWN_AUTODOWNLOAD_FONTAWESOME = False` in your settings.
+private static bool IsBlocklisted(string domain) => _emailBlockList.Value.Contains(domain);
 
-Then get the desired FontAwesome version. For the latest version you can use:
+...
 
-```sh
-curl -H "Content-Type: application/json" \
--d '{ "query": "query { release(version: \"latest\") { version } }" }' \
-https://api.fontawesome.com
+var addr = new MailAddress(email);
+if (IsBlocklisted(addr.Host)))
+  throw new ApplicationException("Email is blocklisted.");
 ```
 
-then add the following to a `wagtail_hooks` module in a registered app in your application:
+Contributing
+============
+Feel free to create PR with additions or request removal of some domain (with reasons).
 
-```python
-# Content of app_name/wagtail_hooks.py
-from wagtail.core import hooks
-from django.conf import settings
-from django.utils.html import format_html
+Specifically, if adding more than one new domain, please cite in your PR where one can generate a disposable email address which uses that domain, so the maintainers can verify it.
 
-@hooks.register('insert_global_admin_css')
-def import_fontawesome_stylesheet():
-    elem = '<link rel="stylesheet" href="{}path/to/font-awesome.min.css">'.format(
-        settings.STATIC_URL
-    )
-    return format_html(elem)
-```
+Please add new disposable domains directly into [disposable_email_blocklist.conf](disposable_email_blocklist.conf) in the same format (only second level domains on new line without @), then run [maintain.sh](maintain.sh). The shell script will help you convert uppercase to lowercase, sort, remove duplicates and remove allowlisted domains.
 
-Note that due to the way EasyMDE defines the toolbar icons it is not compatible with [Wagtail FontAwesome](https://gitlab.com/alexgleason/wagtailfontawesome)
+Changelog
+============
 
-#### Syntax highlighting
+* 2/11/21 We created a github [org account](https://github.com/disposable-email-domains) and transferred the repository to it.
 
-Syntax highlighting using codehilite is an optional feature, which works by
-adding CSS classes to the generated HTML. To use these classes, you will need
-to install Pygments (`pip install Pygments`), and to generate an appropriate
-stylesheet. You can generate one as per the [Pygments documentation](http://pygments.org/docs/quickstart/), with:
+* 4/18/19 [@di](https://github.com/di) [joined](https://github.com/martenson/disposable-email-domains/issues/205) as a core maintainer of this project. Thank you!
 
-```python
->>> from pygments.formatters import HtmlFormatter
->>> print HtmlFormatter().get_style_defs('.codehilite')
-```
+* 7/31/17 [@deguif](https://github.com/deguif) [joined](https://github.com/martenson/disposable-email-domains/issues/106) as a core maintainer of this project. Thanks!
 
-Save the output to a file and reference it somewhere that will be
-picked up on pages rendering the relevant output, e.g. your base template:
+* 12/6/16 - Available as [PyPI module](https://pypi.org/project/disposable-email-domains) thanks to [@di](https://github.com/di)
 
-```html+django
-<link rel="stylesheet" type="text/css" href="{% static 'path/to/pygments.css' %}">
-```
-
-
-### Using it
-
-Add it to `INSTALLED_APPS`:
-
-```python
-INSTALLED_APPS += [
-    'wagtailmarkdown',
-]
-```
-
-Use it as a `StreamField` block:
-
-```python
-from wagtailmarkdown.blocks import MarkdownBlock
-
-class MyStreamBlock(StreamBlock):
-    markdown = MarkdownBlock(icon="code")
-```
-
-<img src="https://i.imgur.com/4NFcfHd.png" width="728px" alt="">
-
-Or use as a page field:
-
-```python
-from wagtailmarkdown.edit_handlers import MarkdownPanel
-from wagtailmarkdown.fields import MarkdownField
-
-class MyPage(Page):
-    body = MarkdownField()
-
-    content_panels = [
-        FieldPanel("title", classname="full title"),
-        MarkdownPanel("body"),
-    ]
-```
-
-And render the content in a template:
-
-```html+django
-{% load wagtailmarkdown %}
-<article>
-{{ self.body|markdown }}
-</article>
-```
-
-<img src="https://i.imgur.com/Sj1f4Jh.png" width="728px" alt="">
-
-To enable syntax highlighting please use the Pygments (`pip install Pygments`) library.
-
-NB: The current version was written in about an hour and is probably completely
-unsuitable for production use.  Testing, comments and feedback are welcome:
-<kevin.howbrook@torchbox.com> (or open a Github issue).
-
-
-### Roadmap for 0.5
-
-* Set up tests: https://github.com/torchbox/wagtail-markdown/issues/28
+* 7/27/16 - Converted all domains to the second level. This means that starting from [this commit](https://github.com/martenson/disposable-email-domains/commit/61ae67aacdab0b19098de2e13069d7c35b74017a) the implementers should take care of matching the second level domain names properly i.e. `@xxx.yyy.zzz` should match `yyy.zzz` in blocklist more info in [#46](https://github.com/martenson/disposable-email-domains/issues/46)
