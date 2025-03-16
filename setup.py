@@ -1,68 +1,113 @@
-# To increment version
-# Check you have ~/.pypirc filled in
-# git tag x.y.z
-# git push && git push --tags
-# rm -rf dist; python setup.py sdist bdist_wheel
-# TEST: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-# twine upload dist/*
-
-from codecs import open
-import re
-
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 import sys
+import numpy
+import os
+import os.path as path
+import multiprocessing
 
-author = "Danny Price, Ellert van der Velden and contributors"
+use_cython = True
+force = False
+profile = False
+line_profile = False
+install_rates = False
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+if "--skip-cython" in sys.argv:
+    use_cython = False
+    del sys.argv[sys.argv.index("--skip-cython")]
 
-with open("requirements.txt", 'r') as fh:
-    requirements = fh.read().splitlines()
+if "--force" in sys.argv:
+    force = True
+    del sys.argv[sys.argv.index("--force")]
 
-with open("requirements_test.txt", 'r') as fh:
-    test_requirements = fh.read().splitlines()
+if "--profile" in sys.argv:
+    profile = True
+    del sys.argv[sys.argv.index("--profile")]
 
-# Read the __version__.py file
-with open('hickle/__version__.py', 'r') as f:
-    vf = f.read()
+if "--line-profile" in sys.argv:
+    line_profile = True
+    del sys.argv[sys.argv.index("--line-profile")]
 
-# Obtain version from read-in __version__.py file
-version = re.search(r"^_*version_* = ['\"]([^'\"]*)['\"]", vf, re.M).group(1)
+if "--install-rates" in sys.argv:
+    install_rates = True
+    del sys.argv[sys.argv.index("--install-rates")]
 
-setup(name='hickle',
-      version=version,
-      description='Hickle - an HDF5 based version of pickle',
-      long_description=long_description,
-      long_description_content_type='text/markdown',
-      author=author,
-      author_email='dan@thetelegraphic.com',
-      url='http://github.com/telegraphic/hickle',
-      download_url=('https://github.com/telegraphic/hickle/archive/v%s.zip'
-                    % (version)),
-      platforms='Cross platform (Linux, Mac OSX, Windows)',
-      classifiers=[
-          'Development Status :: 5 - Production/Stable',
-          'Intended Audience :: Developers',
-          'Intended Audience :: Science/Research',
-          'License :: OSI Approved',
-          'Natural Language :: English',
-          'Operating System :: MacOS',
-          'Operating System :: Microsoft :: Windows',
-          'Operating System :: Unix',
-          'Programming Language :: Python',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8',
-          'Topic :: Software Development :: Libraries :: Python Modules',
-          'Topic :: Utilities',
-          ],
-      keywords=['pickle', 'hdf5', 'data storage', 'data export'],
-      install_requires=requirements,
-      tests_require=test_requirements,
-      python_requires='>=3.5',
-      packages=find_packages(),
-      zip_safe=False,
+source_paths = ['cherab', 'demos']
+compilation_includes = [".", numpy.get_include()]
+compilation_args = []
+cython_directives = {
+    'language_level': 3
+}
+setup_path = path.dirname(path.abspath(__file__))
+
+if line_profile:
+    compilation_args.append("-DCYTHON_TRACE=1")
+    compilation_args.append("-DCYTHON_TRACE_NOGIL=1")
+    cython_directives["linetrace"] = True
+
+if use_cython:
+
+    from Cython.Build import cythonize
+
+    # build .pyx extension list
+    extensions = []
+    for package in source_paths:
+        for root, dirs, files in os.walk(path.join(setup_path, package)):
+            for file in files:
+                if path.splitext(file)[1] == ".pyx":
+                    pyx_file = path.relpath(path.join(root, file), setup_path)
+                    module = path.splitext(pyx_file)[0].replace("/", ".")
+                    extensions.append(Extension(module, [pyx_file], include_dirs=compilation_includes, extra_compile_args=compilation_args),)
+
+    if profile:
+        cython_directives["profile"] = True
+
+    # generate .c files from .pyx
+    extensions = cythonize(extensions, nthreads=multiprocessing.cpu_count(), force=force, compiler_directives=cython_directives)
+
+else:
+
+    # build .c extension list
+    extensions = []
+    for package in source_paths:
+        for root, dirs, files in os.walk(path.join(setup_path, package)):
+            for file in files:
+                if path.splitext(file)[1] == ".c":
+                    c_file = path.relpath(path.join(root, file), setup_path)
+                    module = path.splitext(c_file)[0].replace("/", ".")
+                    extensions.append(Extension(module, [c_file], include_dirs=compilation_includes, extra_compile_args=compilation_args),)
+
+# parse the package version number
+with open(path.join(path.dirname(__file__), 'cherab/core/VERSION')) as version_file:
+    version = version_file.read().strip()
+
+setup(
+    name="cherab",
+    version=version,
+    license="EUPL 1.1",
+    namespace_packages=['cherab'],
+    description='Cherab spectroscopy framework',
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Education",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Cython",
+        "Programming Language :: Python :: 3",
+        "Topic :: Scientific/Engineering :: Physics"
+    ],
+    install_requires=['numpy>=1.14', 'scipy', 'matplotlib', 'raysect>=0.7.1', 'cython>=0.28'],
+    packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
+    ext_modules=extensions
 )
+
+# setup a rate repository with common rates
+if install_rates:
+    try:
+        from cherab.openadas import repository
+        repository.populate()
+    except ImportError:
+        pass
