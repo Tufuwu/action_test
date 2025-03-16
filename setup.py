@@ -1,43 +1,30 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-# vim:fenc=utf-8
-#
-"""
-"""
+from platform import python_version
+from setuptools import setup
 
-from setuptools import setup, find_packages
 
-# Setuptools config
-NAME = "numerizer"
-DESCRIPTION = "Python module for converting natural language numbers into ints and floats."
-with open('README.rst', encoding='utf-8') as f:
-    LONG_DESCRIPTION = f.read()
-MAINTAINER = 'Jaidev Deshpande'
-MAINTAINER_EMAIL = 'deshpande.jaidev@gmail.com'
-URL = "https://github.com/jaidevd/numerizer"
-DOWNLOAD_URL = 'https://pypi.org/project/numerizer/#files'
-LICENSE = 'MIT'
-PROJECT_URLS = {
-    'Bug Tracker': 'https://github.com/jaidevd/numerizer/issues',
-    'Documentation': 'https://github.com/jaidevd/numerizer/tree/master/README.rst',
-    'Source Code': 'https://github.com/jaidevd/numerizer'
-}
-VERSION = '0.2.3'
+def readme():
+    with open('README.md') as readme_file:
+        return readme_file.read()
 
-# Requirements
-install_requires = []
 
-# Setup
 setup(
-    name=NAME,
-    maintainer=MAINTAINER,
-    maintainer_email=MAINTAINER_EMAIL,
-    description=DESCRIPTION,
-    license=LICENSE,
-    url=URL,
-    download_url=DOWNLOAD_URL,
-    version=VERSION,
-    long_description=LONG_DESCRIPTION,
-    packages=find_packages(),
-    install_requires=install_requires
+    name='comment_parser',
+    version='1.2.5',
+    description='Parse comments from various source files.',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Programming Language :: Python :: 3',
+        'Topic :: Software Development :: Documentation',
+        'License :: OSI Approved :: MIT License'
+    ],
+    url='http://github.com/jeanralphaviles/comment_parser',
+    author='Jean-Ralph Aviles',
+    author_email='jeanralph.aviles+pypi@gmail.com',
+    license='MIT',
+    long_description=readme(),
+    long_description_content_type='text/markdown',
+    packages=['comment_parser', 'comment_parser.parsers'],
+    install_requires=['python-magic>=0.4.27'],
+    zip_safe=False,
+    python_requires='>=3.13',
 )
