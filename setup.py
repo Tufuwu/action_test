@@ -1,77 +1,73 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""A setuptools based setup module.
 
-"""pyFAT package definition."""
-
-import io
-import re
+See:
+https://packaging.python.org/en/latest/distributing.html
+https://github.com/pypa/sampleproject
+"""
+import os
+import sys
 
 from setuptools import setup, find_packages
 
-try:
-    # pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError:
-    # pip <= 9.0.3
-    from pip.req import parse_requirements
+# pylint: disable=redefined-builtin
 
+here = os.path.abspath(os.path.dirname(__file__))  # pylint: disable=invalid-name
 
-def load_requirements(fname):
-    reqs = parse_requirements(fname, session="test")
-    return [getattr(r, 'requirement',
-            str(getattr(r, 'req', None))) for r in reqs]
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as fid:
+    long_description = fid.read()  # pylint: disable=invalid-name
 
+with open(os.path.join(here, "requirements.txt"), encoding="utf-8") as fid:
+    install_requires = [line for line in fid.read().splitlines() if line.strip()]
 
-def _get_attribute(name):
-    """Get version information from __init__.py."""
-    with io.open('pyfatfs/__init__.py') as f:
-        return re.search(r"{}\s*=\s*'([^']+)'\s*".format(name),
-                         f.read()).group(1)
-
-
-def _get_readme():
-    """Get contents of README.rst."""
-    with io.open('README.rst') as readme:
-        return readme.read()
-
-
-setup(name=_get_attribute('__name__'),
-      use_scm_version=True,
-      description='FAT12/16/32 implementation with VFAT support',
-      long_description=_get_readme(),
-      long_description_content_type='text/x-rst',
-      author=_get_attribute('__author__'),
-      author_email=_get_attribute('__author_email__'),
-      license=_get_attribute('__license__'),
-      url='https://github.com/nathanhi/pyfatfs',
-      project_urls={'Documentation': f'https://pyfatfs.readthedocs.io',
-                    'Changelog': 'https://github.com/nathanhi/pyfatfs/blob/master/CHANGELOG.rst',
-                    'Issues': 'https://github.com/nathanhi/pyfatfs/issues',
-                    'Source': 'https://github.com/nathanhi/pyfatfs',
-      },
-      packages=find_packages(),
-      keywords=['filesystem', 'PyFilesystem2', 'FAT12',
-                'FAT16', 'FAT32', 'VFAT', 'LFN'],
-      python_requires='~=3.6',
-      test_suite='tests',
-      install_requires=load_requirements("requirements/install.txt"),
-      setup_requires=['pytest-runner', 'setuptools_scm~=5.0.0'],
-      tests_require=load_requirements("requirements/test.txt"),
-      entry_points={
-          'fs.opener': ['fat = pyfatfs.PyFatFSOpener:PyFatFSOpener'],
-      },
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Intended Audience :: Developers',
-          'License :: OSI Approved :: MIT License',
-          'Operating System :: OS Independent',
-          'Programming Language :: Python :: 3 :: Only',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8',
-          'Programming Language :: Python :: 3.9',
-          'Topic :: Software Development :: Libraries',
-          'Topic :: Software Development :: Libraries :: Python Modules',
-          'Topic :: System :: Filesystems'],
-      )
+# Please keep the meta information in sync with icontract/__init__.py.
+#
+# (mristin, 2020-10-09) We had to denormalize icontract_meta module (which
+# used to be referenced from setup.py and this file) since readthedocs had
+# problems with installing icontract through pip on their servers with
+# imports in setup.py.
+setup(
+    name='icontract',
+    # Don't forget to update the version in __init__.py and CHANGELOG.rst!
+    version='2.5.0',
+    description='Provide design-by-contract with informative violation messages.',
+    long_description=long_description,
+    url='https://github.com/Parquery/icontract',
+    author='Marko Ristin',
+    author_email='marko.ristin@gmail.com',
+    classifiers=[
+        # yapf: disable
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8'
+        # yapf: enable
+    ],
+    license='License :: OSI Approved :: MIT License',
+    keywords='design-by-contract precondition postcondition validation',
+    packages=find_packages(exclude=['tests']),
+    install_requires=install_requires,
+    extras_require={
+        'dev': [
+            # yapf: disable
+            'mypy==0.812',
+            'pylint==2.3.1',
+            'yapf==0.20.2',
+            'tox>=3.0.0',
+            'pydocstyle>=2.1.1,<3',
+            'coverage>=4.5.1,<5',
+            'docutils>=0.14,<1',
+            'pygments>=2.2.0,<3',
+            'dpcontracts==0.6.0',
+            'tabulate>=0.8.7,<1',
+            'py-cpuinfo>=5.0.0,<6',
+            'typeguard>=2,<3'
+            # yapf: enable
+        ] + (['deal==4.1.0'] if sys.version_info >= (3, 8) else []) + (['asyncstdlib==3.9.1']
+                                                                       if sys.version_info >= (3, 8) else []),
+    },
+    py_modules=['icontract'],
+    package_data={"icontract": ["py.typed"]},
+    data_files=[(".", ["LICENSE.txt", "README.rst", "requirements.txt"])])
