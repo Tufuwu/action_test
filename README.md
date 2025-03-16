@@ -1,89 +1,95 @@
-[![PyPI version](https://badge.fury.io/py/alns.svg)](https://badge.fury.io/py/alns)
-[![ALNS](https://github.com/N-Wouda/ALNS/actions/workflows/alns.yml/badge.svg)](https://github.com/N-Wouda/ALNS/actions/workflows/alns.yml)
-[![codecov](https://codecov.io/gh/N-Wouda/ALNS/branch/master/graph/badge.svg)](https://codecov.io/gh/N-Wouda/ALNS)
+[![pytest](https://github.com/amccaugh/phidl/actions/workflows/pytest.yml/badge.svg)](https://github.com/amccaugh/phidl/actions/workflows/pytest.yml)
+[![pre-commit](https://github.com/amccaugh/phidl/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/amccaugh/phidl/actions/workflows/pre-commit.yml)
 
-This package offers a general, well-documented and tested
-implementation of the adaptive large neighbourhood search (ALNS)
-meta-heuristic, based on the description given in [Pisinger and Ropke
-(2010)][1]. It may be installed in the usual way as
+# PHIDL
+GDS scripting for Python that's intuitive, fast, and powerful.
+
+- [**Installation / requirements**](#installation--requirements)
+- [**Tutorial + examples**](https://phidl.readthedocs.io/en/latest/tutorials.html) (or [try an interactive notebook](https://mybinder.org/v2/gh/amccaugh/phidl/master?filepath=phidl_tutorial_example.ipynb))
+- [**Geometry library + function documentation**](https://phidl.readthedocs.io/en/latest/geometry_reference.html)
+- [Changelog](https://github.com/amccaugh/phidl/blob/master/CHANGELOG.md) (latest update 1.6.0 on Sept 28, 2021)
+    - Huge new routing rewrite for `phidl.routing`, including automatic manhattan routing with custom cross-sections!  See [the routing documentation](https://phidl.readthedocs.io/en/latest/tutorials/routing.html) for details. Big thanks to Jeffrey Holzgrafe @jolzgrafe for this contribution
+    - `Path`s can now be used to produce sharp angles, in addition to smooth bends. See [the Path documentation](https://phidl.readthedocs.io/en/latest/tutorials/waveguides.html#Sharp/angular-paths)
+
+```python
+import phidl.routing as pr
+D_left = pr.route_smooth(port1, port2, radius=8, layer = 2)
+D_right = pr.route_sharp(port1, port2, layer = 2)
 ```
-pip install alns
+
+![phidl example image](https://amccaugh.github.io/phidl/readme_9.png)
+
+# Citation
+
+If you found PHIDL useful, please consider citing it in (just one!) of your publications -- we appreciate it greatly. ([BibTeX](https://raw.githubusercontent.com/amccaugh/phidl/master/CITATION.bib))
+ - McCaughan, A. N., et. al. PHIDL: Python-based layout and geometry creation for nanolithography. *J. Vac. Sci. Technol. B* 39, 062601 (2021). http://dx.doi.org/10.1116/6.0001203
+
+# Gallery
+
+<img src="https://amccaugh.github.io/phidl/phidl1.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl2.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl3.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl4.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl5.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl6.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl7.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl8.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl9.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl10.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl11.png" width="30%"></img> <img src="https://amccaugh.github.io/phidl/phidl12.png" width="30%"></img>
+
+# Installation / requirements
+- Install or upgrade with `pip install -U phidl`
+- Python version >=3.5
+- If you are on Windows or Mac and don't already have `gdspy` installed, you will need a C++ compiler
+    - For Windows + Python 3, install ["Build Tools for Visual Studio"](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019) (make sure to check the "C++ build tools" checkbox when installing)
+    - For Mac, install "Xcode" from the App Store, then run the command `xcode-select --install` in the terminal
+
+# About PHIDL
+
+*fiddle (verb) - /ˈfidl/ - to make minor manual movements, especially to adjust something*
+
+PHIDL is an open-source GDS-based CAD tool for Python that significantly extends the excellent [gdspy](https://github.com/heitzmann/gdspy).  The base installation includes a large library of simple shapes (e.g. rectangles, circles), photonic structures (e.g. sine curve waveguides), and superconducting nanowire shapes (e.g. single photon detectors) that are fully parameterized. It also has a built-in quick-plotting function based on matplotlib (or Qt) that allows you view the state of any GDS object, useful when scripting geometry-making functions. It also has a [__geometry library reference__](https://phidl.readthedocs.io/) and a set of [__very thorough tutorials__](https://phidl.readthedocs.io/en/latest/tutorials.html) that will walk you through the process of getting acquainted with PHIDL.
+
+The goal is to bring the usability of Illustrator / Inkscape drawing programs to the GDS scripting world. Like Python itself, it aims to be readable, and intuitive.  For instance, when building a geometry you don't have to worry about what the exact coordinates are anymore. If you want to separate two ellipses in the x direction by 5 units, you can do things like this:
+
+`ellipse1.xmin = ellipse2.xmax + 5`
+
+or if you want to move then rotate one ellipse by 45 degrees you can do
+
+`ellipse2.move([1,7]).rotate(45)`
+
+There's a few dozen shortcuts like this that make life easier built into PHIDL--they're simple, but they make a world of difference when you just want to e.g. space a ring resonator some distance from a waveguide without having to track each and every coordinate of the shape.
+
+[](http://amccaugh.github.io/phidl)
+
+![phidl example image](https://amccaugh.github.io/phidl/readme_1.png)
+
+
+There's also a "port" functionality that allows you to snap together geometry like Legos without caring about where exactly the absolute coordinates of either geometry is.  For instance, connecting the above misaligned rectangles is a two-line command:
+
+![phidl example image](https://amccaugh.github.io/phidl/readme_2.png)
+
+It also allows you to do things like add text and create smooth or straight routing curves between "ports" of different devices, convenient for making electrical or optical connections:
+
+![phidl example image](https://amccaugh.github.io/phidl/readme_3.png)
+![phidl example image](https://amccaugh.github.io/phidl/readme_4.png)
+
+
+Other useful functionality available are standard operations like booleans:
+
+![phidl example image](https://amccaugh.github.io/phidl/readme_8.png)
+
+ and less standard ones like creating outlines. A whole layout can be outlined directly in the GDS without requiring you to use Beamer (useful for positive-tone resist structures):
+
+`pg.outline(D, distance = 0.7, layer = 4)`
+
+![phidl example image](https://amccaugh.github.io/phidl/readme_5.png)
+
+The geometry library also has useful resolution test-structures built into it, for instance
+
+```
+pg.litho_calipers(num_notches = 7, offset_per_notch = 0.1)
+pg.litho_steps(line_widths = [1,2,4,8,16])
+pg.litho_star(num_lines = 16, line_width = 3)
 ```
 
-### Examples
-If you wish to dive right in, the `examples/` directory contains example notebooks
-showing how the ALNS library may be used. These include:
+![phidl example image](https://amccaugh.github.io/phidl/readme_7.png)
 
-- The travelling salesman problem (TSP), [here][2]. We solve an
-  instance of 131 cities to within 2.1% of optimality, using simple
-  destroy and repair heuristics with a post-processing step.
-- The cutting-stock problem (CSP), [here][4]. We solve an instance with
-  180 beams over 165 distinct sizes to within 1.35% of optimality in
-  only a very limited number of iterations.
-- The resource-constrained project scheduling problem, [here][6]. We solve an
-  instance with 90 jobs and 4 resources to within 4% of the best known solution,
-  using a number of different operators and enhancement techniques from the 
-  literature.
+There are also handy functions to help pack shapes into as small an area as possible:
 
-Finally, the weight schemes and acceptance criteria notebook gives an overview
-of various options available in the `alns` package (explained below). In the
-notebook we use these different options to solve a toy 0/1-knapsack problem. The
-notebook is a good starting point for when you want to use the different schemes
-and criteria yourself. It is available [here][5].
+```
+pg.packer(D_list, spacing = 1.25, aspect_ratio = (2,1))
+```
 
-## How to use
-The `alns` package exposes two classes, `ALNS` and `State`. The first
-may be used to run the ALNS algorithm, the second may be subclassed to
-store a solution state - all it requires is to define an `objective`
-member function, returning an objective value.
-
-The ALNS algorithm must be supplied with a _weight scheme_ and an _acceptance
-criterion_.
-
-### Weight scheme
-The weight scheme determines how to select destroy and repair operators in each
-iteration of the ALNS algorithm. Several have already been implemented for you,
-in `alns.weight_schemes`:
-
-- `SimpleWeights`. This weight scheme applies a convex combination of the 
-   existing weight vector, and a reward given for the current candidate 
-   solution.
-- `SegmentedWeights`. This weight scheme divides the iteration horizon into
-   segments. In each segment, scores are summed for each operator. At the end
-   of each segment, the weight vector is updated as a convex combination of 
-   the existing weight vector, and these summed scores.
-
-Each weight scheme inherits from `WeightScheme`, which may be used to write 
-your own.
-
-### Acceptance criterion
-The acceptance criterion determines the acceptance of a new solution state at
-each iteration. An overview of common acceptance criteria is given in
-[Santini et al. (2018)][3]. Several have already been implemented for you, in
-`alns.criteria`:
-
-- `HillClimbing`. The simplest acceptance criterion, hill-climbing solely
-  accepts solutions improving the objective value.
-- `RecordToRecordTravel`. This criterion accepts solutions when the improvement
-  meets some updating threshold.
-- `SimulatedAnnealing`. This criterion accepts solutions when the
-  scaled probability is bigger than some random number, using an
-  updating temperature.
-
-Each acceptance criterion inherits from `AcceptanceCriterion`, which may
-be used to write your own.
-
-## References
-- Pisinger, D., and Ropke, S. (2010). Large Neighborhood Search. In M.
-  Gendreau (Ed.), _Handbook of Metaheuristics_ (2 ed., pp. 399-420).
-  Springer.
-- Santini, A., Ropke, S. & Hvattum, L.M. (2018). A comparison of
-  acceptance criteria for the adaptive large neighbourhood search
-  metaheuristic. *Journal of Heuristics* 24 (5): 783-815.
-
-[1]: http://orbit.dtu.dk/en/publications/large-neighborhood-search(61a1b7ca-4bf7-4355-96ba-03fcdf021f8f).html
-[2]: https://github.com/N-Wouda/ALNS/blob/master/examples/travelling_salesman_problem.ipynb
-[3]: https://link.springer.com/article/10.1007%2Fs10732-018-9377-x
-[4]: https://github.com/N-Wouda/ALNS/blob/master/examples/cutting_stock_problem.ipynb
-[5]: https://github.com/N-Wouda/ALNS/blob/master/examples/weight_schemes_acceptance_criteria.ipynb
-[6]: https://github.com/N-Wouda/ALNS/blob/master/examples/resource_constrained_project_scheduling_problem.ipynb
+![phidl example image](https://amccaugh.github.io/phidl/packer.png)
