@@ -1,8 +1,5 @@
+*.swp
 *.pyc
-*.egg-info
-dist/
-.DS_Store
-.mypy_cache
-.coverage
-env/
-build/
+test/build/*
+.vscode
+
