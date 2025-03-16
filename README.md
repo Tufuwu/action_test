@@ -1,99 +1,66 @@
-# Vault
+[![Build Status](https://travis-ci.org/iqbal-lab-org/minos.svg?branch=master)](https://travis-ci.org/iqbal-lab-org/minos)
 
-[![Pypi](https://img.shields.io/pypi/v/pyvault.svg)](https://pypi.org/project/pyvault)
-[![Build Status](https://github.com/gabfl/vault/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gabfl/vault/actions)
-[![codecov](https://codecov.io/gh/gabfl/vault/branch/main/graph/badge.svg)](https://codecov.io/gh/gabfl/vault)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/gabfl/vault/main/LICENSE)
+# minos
+Variant call adjudication.
 
-Vault is a simple Python password manager. It allows you to securely save secrets with a simple CLI interface.
+Minimal instructions are below. Please see the [minos wiki page](https://github.com/iqbal-lab-org/minos/wiki)
+for more details.
 
-## Features
+## Installation
 
- - Secrets are stored in an encrypted SQLite database with [SQLCipher](https://www.zetetic.net/sqlcipher/)
- - Within the database, each password and notes are encrypted with a unique salt using AES-256 encryption with [pycryptodome](http://legrandin.github.io/pycryptodome/)
- - Master key is hashed with a unique salt
- - Possibility to create an unlimited number of vaults
- - Clipboard cleared automatically
- - Automatic vault locking after inactivity
- - Password suggestions with [password-generator-py](https://github.com/gabfl/password-generator-py)
- - Import / Export in Json
+Dependencies:
 
-## Basic usage
+* Python 3 (tested on version 3.6.9)
+* [gramtools](https://github.com/iqbal-lab-org/gramtools) commit
+  8af53f6c8c0d72ef95223e89ab82119b717044f2
+* [bcftools](https://samtools.github.io/bcftools/)
+* [vt](https://github.com/atks/vt.git)
+* [vcflib](https://github.com/vcflib/vcflib.git). Specifically,
+  either `vcflib`, or all three of
+  `vcfbreakmulti`, `vcfallelicprimitives`, and `vcfuniq` must be installed.
+* Optionally, [nextflow](https://www.nextflow.io/) and [ivcfmerge](https://github.com/iqbal-lab-org/ivcfmerge) if you want to use the
+  pipeline to regenotype a large number of samples.
 
-![Demo](https://github.com/gabfl/vault/blob/main/img/demo.gif?raw=true)
-
-## Installation and setup
-
-### Install sqlcipher
-
-Vault 2.x requires `sqlcipher` to be installed on your machine.
-
-On MacOS, you can install it with [brew](https://brew.sh/):
-```bash
-brew install sqlcipher
-
-# Install sqlcipher3
-pip3 install sqlcipher3==0.4.5
-
-# If you are getting an error "Failed to build sqlcipher3", you would need to fix the build flags:
-SQLCIPHER_PATH="$(brew --cellar sqlcipher)/$(brew list --versions sqlcipher | tr ' ' '\n' | tail -1)"
-C_INCLUDE_PATH=$SQLCIPHER_PATH/include LIBRARY_PATH=$SQLCIPHER_PATH/lib pip3 install sqlcipher3==0.4.5
-```
-
-On Ubuntu/Debian, you can install it with apt-get:
-```bash
-sudo apt-get update
-sudo apt-get install --yes gcc python3-dev libsqlcipher-dev
-```
-
-### Using PyPI
-
-```bash
-pip3 install pyvault
-
-# Run setup
-vault
-```
-
-### Cloning the project
-
-```bash
-# Clone project
-git clone https://github.com/gabfl/vault && cd vault
-
-# Installation
-python3 setup.py install
-
-# Run setup
-vault
-```
-
-## Advanced settings:
+Install by cloning this repository (or downloading the latest release), and
+running:
 
 ```
-usage: vault [-h] [-t [CLIPBOARD_TTL]] [-p [HIDE_SECRET_TTL]]
-             [-a [AUTO_LOCK_TTL]] [-v VAULT_LOCATION] [-c CONFIG_LOCATION]
-             [-k] [-i IMPORT_ITEMS] [-x EXPORT] [-f [{json}]] [-e]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -t [CLIPBOARD_TTL], --clipboard_TTL [CLIPBOARD_TTL]
-                        Set clipboard TTL (in seconds, default: 15)
-  -p [HIDE_SECRET_TTL], --hide_secret_TTL [HIDE_SECRET_TTL]
-                        Set delay before hiding a printed password (in
-                        seconds, default: 15)
-  -a [AUTO_LOCK_TTL], --auto_lock_TTL [AUTO_LOCK_TTL]
-                        Set auto lock TTL (in seconds, default: 900)
-  -v VAULT_LOCATION, --vault_location VAULT_LOCATION
-                        Set vault path
-  -c CONFIG_LOCATION, --config_location CONFIG_LOCATION
-                        Set config path
-  -k, --change_key      Change master key
-  -i IMPORT_ITEMS, --import_items IMPORT_ITEMS
-                        File to import credentials from
-  -x EXPORT, --export EXPORT
-                        File to export credentials to
-  -f [{json}], --file_format [{json}]
-                        Import/export file format (default: 'json')
-  -e, --erase_vault     Erase the vault and config file
+pip3 install .
 ```
+
+Alternatively, instead of running `pip3`, build a
+[Singularity](https://sylabs.io/singularity/) container by running:
+
+```
+singularity build minos.simg Singularity.def
+```
+
+Build a Docker container by running:
+```
+sudo docker build --network=host .
+```
+
+
+## Quick start
+
+Supposing you have variant calls for one sample, called by two different tools
+in the files `calls1.vcf` and `calls2.vcf`. Run:
+
+```
+minos adjudicate --reads reads1.fq --reads reads2.fq out ref.fasta calls1.vcf calls2.vcf
+```
+
+where `reads1.fq` and `reads2.fq` are FASTQ files of the reads and `ref.fasta`
+is a FASTA of the reference corresponding to the two input VCF files.
+The final call set will be `out/final.vcf`.
+
+
+## Unit tests
+
+Run `tox` to run all unit tests.
+They require `nextflow`, `gramtools`, `vt`, `vcfbreakmulti`,
+`vcfallelicprimitives`, `vcfuniq`  in your `$PATH`.
+
+Run an individual test file with `tox tests/for_test.py::TestSpam::test_eggs`.
+
+Run the main entry point with `python3 -m minos`.
