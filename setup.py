@@ -1,25 +1,47 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
+with open("README.rst") as readme_file:
+    readme = readme_file.read()
+
+with open("HISTORY.rst") as history_file:
+    history = history_file.read()
 
 setup(
-    name='panoptescli',
-    version='1.1.3',
-    url='https://github.com/zooniverse/panoptes-cli',
-    author='Adam McMaster',
-    author_email='adam@zooniverse.org',
-    description=(
-        'A command-line client for Panoptes, the API behind the Zooniverse'
-    ),
-    packages=find_packages(),
+    # Project information
+    name="mixsea",
+    version="0.1.0",
+    author="mixsea Developers",
+    author_email="",
+    url="https://github.com/modscripps/mixsea",
+    license="MIT License",
+    # Description
+    description="Ocean mixing parameterizations",
+    long_description=f"{readme}\n\n{history}",
+    long_description_content_type="text/x-rst",
+    # Requirements
+    python_requires=">=3.6",
+    install_requires=["numpy", "gsw", "scipy"],
+    extras_require={
+        "test": ["pytest"],  # install these with: pip install mixsea[test]
+    },
+    # Packaging
+    packages=find_packages(include=["mixsea", "mixsea.*"], exclude=["*.tests"]),
+    package_data={"mixsea": ["tests/data/*.csv"]},
     include_package_data=True,
-    install_requires=[
-        'Click>=6.7,<7.1',
-        'PyYAML>=5.1,<5.5',
-        'panoptes-client>=1.3,<2.0',
-        'humanize>=0.5.1,<1.1',
-        'pathvalidate>=0.29.0,<0.30',
+    zip_safe=False,
+    platforms=["any"],  # or more specific, e.g. "win32", "cygwin", "osx"
+    # Metadata
+    project_urls={"Documentation": "https://mixsea.readthedocs.io"},
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Physics",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
-    entry_points='''
-        [console_scripts]
-        panoptes=panoptes_cli.scripts.panoptes:cli
-    ''',
 )
