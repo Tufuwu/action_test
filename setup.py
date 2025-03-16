@@ -1,81 +1,142 @@
-from setuptools import setup, find_packages
-
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
+import sys
+import setuptools
 import os
 
-install_requires = [
-    "colorama",
-    "pyyaml",
-    "python-dateutil",
-    "requests",
-    "requests_toolbelt",
-    "tqdm",
-    "stevedore>1.20.0",
+__version__ = "0.2"
+
+# Prepare and send a new release to PyPI
+if "release" in sys.argv[-1]:
+    os.system("python setup.py sdist")
+    os.system("twine upload dist/*")
+    os.system("rm -rf dist/riskparityportfolio*")
+    sys.exit()
+
+class get_pybind_include(object):
+    """Helper class to determine the pybind11 include path
+
+    The purpose of this class is to postpone importing pybind11
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self, user=False):
+        self.user = user
+
+    def __str__(self):
+        import pybind11
+        return pybind11.get_include(self.user)
+
+
+ext_modules = [
+    Extension(
+        'riskparityportfolio.vanilla',
+        ['riskparityportfolio/vanilla.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+#        extra_link_args=["-stdlib=libc++"],
+        language='c++'
+    ),
 ]
 
-extras_require = {"config": ["tomlkit", "typeguard"]}
 
-for p in ("darwin", "linux", "linux2", "win32"):
-    platform_string = ":sys_platform=='%s'" % p
-    extras_require[platform_string] = ["psutil"]
-    if p in ("linux", "linux2"):
-        extras_require[platform_string].append("ld")
+# As of Python 3.6, CCompiler has a `has_flag` method.
+# cf http://bugs.python.org/issue26689
+def has_flag(compiler, flagname):
+    """Return a boolean indicating whether a flag name is supported on
+    the specified compiler.
+    """
+    import tempfile
+    with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
+        f.write('int main (int argc, char **argv) { return 0; }')
+        try:
+            compiler.compile([f.name], extra_postargs=[flagname])
+        except setuptools.distutils.errors.CompileError:
+            return False
+    return True
 
-# Get e3 version from the VERSION file.
-version_file = os.path.join(os.path.dirname(__file__), "VERSION")
-with open(version_file) as f:
-    e3_version = f.read().strip()
 
-with open(os.path.join(os.path.dirname(__file__), "README.md")) as f:
-    long_description = f.read()
+def cpp_flag(compiler):
+    """Return the -std=c++[11/14/17] compiler flag.
+    The newer version is prefered over c++11 (when it is available).
+    """
+    if sys.platform == 'darwin':
+        flags = ['-std=c++14', '-std=c++11']
+    else:
+        flags = ['-std=c++17', '-std=c++14', '-std=c++11']
 
+    for flag in flags:
+        if has_flag(compiler, flag): return flag
+
+    raise RuntimeError('Unsupported compiler -- at least C++11 support '
+                       'is needed!')
+
+class BuildExt(build_ext):
+    """A custom build extension for adding compiler-specific options."""
+    c_opts = {
+        'msvc': ['/EHsc'],
+        'unix': [],
+    }
+    l_opts = {
+        'msvc': [],
+        'unix': [],
+    }
+    if sys.platform == 'darwin':
+        darwin_opts = ['-stdlib=libc++', '-mmacosx-version-min=10.9']
+        c_opts['unix'] += darwin_opts
+        l_opts['unix'] += darwin_opts
+
+    def build_extensions(self):
+        ct = self.compiler.compiler_type
+        opts = self.c_opts.get(ct, [])
+        link_opts = self.l_opts.get(ct, [])
+        if ct == 'unix':
+            opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
+            opts.append(cpp_flag(self.compiler))
+            if has_flag(self.compiler, '-fvisibility=hidden'):
+                opts.append('-fvisibility=hidden')
+        elif ct == 'msvc':
+            opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
+        for ext in self.extensions:
+            ext.extra_compile_args = opts
+            ext.extra_link_args = link_opts
+        # third-party libraries flags
+        localincl = "third-party"
+        if not os.path.exists(os.path.join(localincl, "eigen_3.3.7", "Eigen",
+                                           "Core")):
+            raise RuntimeError("couldn't find Eigen headers")
+        include_dirs = [
+            os.path.join(localincl, "eigen_3.3.7"),
+        ]
+        for ext in self.extensions:
+            ext.include_dirs = include_dirs + ext.include_dirs
+        # run standard build procedure
+        build_ext.build_extensions(self)
 setup(
-    name="e3-core",
-    version=e3_version,
-    url="https://github.com/AdaCore/e3-core",
-    license="GPLv3",
-    author="AdaCore",
-    author_email="info@adacore.com",
-    description="E3 core. Tools and library for building and testing software",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    namespace_packages=["e3"],
+    name='riskparityportfolio',
+    version=__version__,
+    author='Ze Vinicius & Dani Palomar',
+    author_email='jvmirca@gmail.com',
+    url='https://github.com/dppalomar/riskparity.py',
+    description='Blazingly fast design of risk parity portfolios',
+    license='MIT',
+    package_dir={'riskparityportfolio' : 'riskparityportfolio'},
+    packages=['riskparityportfolio'],
+    long_description='',
+    ext_modules=ext_modules,
+    install_requires=['pybind11>=2.4', 'numpy', 'jaxlib', 'jax', 'quadprog', 'tqdm'],
+    setup_requires=['pybind11>=2.4', 'numpy', 'jaxlib', 'jax', 'quadprog', 'tqdm'],
+    cmdclass={'build_ext': BuildExt},
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Topic :: Software Development :: Build Tools",
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Financial and Insurance Industry',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3.0',
     ],
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    package_data={"e3": ["py.typed", "os/data/rlimit-*"]},
-    install_requires=install_requires,
-    extras_require=extras_require,
-    entry_points={
-        "e3.anod.sandbox.sandbox_action": [
-            "exec = e3.anod.sandbox.action:SandBoxExec",
-            "create = e3.anod.sandbox.action:SandBoxCreate",
-            "show-config = e3.anod.sandbox.action:SandBoxShowConfiguration",
-            "migrate = e3.anod.sandbox.migrate:SandBoxMigrate",
-        ],
-        "e3.event.handler": [
-            "smtp = e3.event.handler.smtp:SMTPHandler",
-            "logging = e3.event.handler.logging:LoggingHandler",
-            "file = e3.event.handler.file:FileHandler",
-            "s3 = e3.event.handler.s3:S3Handler",
-        ],
-        "e3.store": [
-            "http-simple-store = e3.store.backends." "http_simple_store:HTTPSimpleStore"
-        ],
-        "e3.store.cache.backend": [
-            "file-cache = e3.store.cache.backends.filecache:FileCache"
-        ],
-        "sandbox_scripts": ["anod = e3.anod.sandbox.scripts:anod"],
-        "console_scripts": [
-            "e3 = e3.sys:main",
-            "e3-sandbox = e3.anod.sandbox.main:main",
-        ],
-    },
+    zip_safe=False,
+    include_package_data=True,
 )
