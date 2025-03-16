@@ -1,2 +1,0 @@
-typing_inspect;python_version<'3.9'
-dataclasses;python_version<'3.7'

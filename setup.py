@@ -1,35 +1,32 @@
 import sys
-import setuptools
-import versioneer
+from setuptools import setup, find_packages
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-packages = setuptools.find_namespace_packages(include=["simple_parsing*"])
-print("PACKAGES FOUND:", packages)
-print(sys.version_info)
-
-with open("requirements.txt", "r") as req_file:
-    install_requires = req_file.read().splitlines(keepends=False)
-
-
-setuptools.setup(
-    name="simple_parsing",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
-    author="Fabrice Normandin",
-    author_email="fabrice.normandin@gmail.com",
-    description="A small utility for simplifying and cleaning up argument parsing scripts.",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/lebrice/SimpleParsing",
-    packages=packages,
-    package_data={"simple_parsing": ["py.typed"]},
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+setup(
+    name = "python-dispatch",
+    version = "v0.1.31",
+    author = "Matthew Reid",
+    author_email = "matt@nomadic-recording.com",
+    description = "Lightweight Event Handling",
+    url='https://github.com/nocarryr/python-dispatch',
+    license='MIT',
+    packages=find_packages(exclude=['tests*']),
+    include_package_data=True,
+    keywords='event properties dispatch',
+    platforms=['any'],
+    classifiers = [
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Software Development',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
-    python_requires=">=3.6",
-    install_requires=install_requires,
-    setup_requires=["pre-commit"],
 )
