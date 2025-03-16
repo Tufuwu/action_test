@@ -1,259 +1,291 @@
-.. image:: docs/_static/logo.png
-    :align: center
-    :alt: Q logo
-    :target: https://django-q.readthedocs.org/
+==========
+django-tos
+==========
 
-A multiprocessing distributed task queue for Django
----------------------------------------------------
+.. image:: https://secure.travis-ci.org/revsys/django-tos.png
+    :alt: Build Status
+    :target: http://travis-ci.org/revsys/django-tos
 
-|image0| |image1| |docs| |image2|
+This project gives the admin the ability to reset terms of agreement with the end users. It tracks when TOS are changed and when users agree to the new TOS.
 
-Features
-~~~~~~~~
+Summary
+=======
 
--  Multiprocessing worker pool
--  Asynchronous tasks
--  Scheduled, cron and repeated tasks
--  Signed and compressed packages
--  Failure and success database or cache
--  Result hooks, groups and chains
--  Django Admin integration
--  PaaS compatible with multiple instances
--  Multi cluster monitor
--  Redis, Disque, IronMQ, SQS, MongoDB or ORM
--  Rollbar and Sentry support
+- Keeps track of when TOS is changed
+- Users need to be informed and agree/re-agree when they login (custom login is provided)
+- Just two models (TOS and user agreement)
 
-Requirements
-~~~~~~~~~~~~
+Terms Of Service Installation
+=============================
 
--  `Django <https://www.djangoproject.com>`__ > = 2.2
--  `Django-picklefield <https://github.com/gintas/django-picklefield>`__
--  `Arrow <https://github.com/crsmithdev/arrow>`__
--  `Blessed <https://github.com/jquast/blessed>`__
+1. ``pip install django-tos``
 
-Tested with: Python 3.7, 3.8 Django 2.2.X and 3.1.X
+2. Add ``tos`` to your ``INSTALLED_APPS`` setting.
 
-.. warning:: Since Python 3.7 `async` became a reserved keyword and was refactored to `async_task`
-
-Brokers
-~~~~~~~
-- `Redis <https://django-q.readthedocs.org/en/latest/brokers.html#redis>`__
-- `Disque <https://django-q.readthedocs.org/en/latest/brokers.html#disque>`__
-- `IronMQ <https://django-q.readthedocs.org/en/latest/brokers.html#ironmq>`__
-- `Amazon SQS <https://django-q.readthedocs.org/en/latest/brokers.html#amazon-sqs>`__
-- `MongoDB <https://django-q.readthedocs.org/en/latest/brokers.html#mongodb>`__
-- `Django ORM <https://django-q.readthedocs.org/en/latest/brokers.html#django-orm>`__
-
-Installation
-~~~~~~~~~~~~
-
--  Install the latest version with pip::
-
-    $ pip install django-q
-
-
--  Add `django_q` to your `INSTALLED_APPS` in your projects `settings.py`::
-
-       INSTALLED_APPS = (
-           # other apps
-           'django_q',
-       )
-
--  Run Django migrations to create the database tables::
-
-    $ python manage.py migrate
-
--  Choose a message `broker <https://django-q.readthedocs.org/en/latest/brokers.html>`__ , configure and install the appropriate client library.
-
-Read the full documentation at `https://django-q.readthedocs.org <https://django-q.readthedocs.org>`__
-
+3. Sync your database with ``python manage.py migrate`` or ``python manage.py syncdb`` for Django < 1.7.
 
 Configuration
-~~~~~~~~~~~~~
+=============
 
-All configuration settings are optional. e.g:
+Options
+```````
 
-.. code:: python
+There are two ways to configure ``django-tos`` - either enable the TOS check when users sign in, or use middleware to enable the TOS check on every ``GET`` request.
 
-    # settings.py example
-    Q_CLUSTER = {
-        'name': 'myproject',
-        'workers': 8,
-        'recycle': 500,
-        'timeout': 60,
-        'compress': True,
-        'cpu_affinity': 1,
-        'save_limit': 250,
-        'queue_limit': 500,
-        'label': 'Django Q',
-        'redis': {
-            'host': '127.0.0.1',
-            'port': 6379,
-            'db': 0, }
-    }
+If you cannot override your login view (for instance, if you're using `django-allauth <https://django-allauth.readthedocs.io/en/latest/>`_) you should use the second option.
 
-For full configuration options, see the `configuration documentation <https://django-q.readthedocs.org/en/latest/configure.html>`__.
+Option 1: TOS Check On Sign In
+``````````````````````````````
 
-Management Commands
-~~~~~~~~~~~~~~~~~~~
+In your root urlconf file ``urls.py`` add:
 
-Start a cluster with::
+.. code-block:: python
 
-    $ python manage.py qcluster
+    from tos.views import login
 
-Monitor your clusters with::
+    # terms of service links
+    urlpatterns += patterns('',
+        url(r'^login/$', login, {}, 'auth_login',),
+        url(r'^terms-of-service/', include('tos.urls')),
+    )
 
-    $ python manage.py qmonitor
+Option 2: Middleware Check
+``````````````````````````
 
-Check overall statistics with::
+This option uses the ``incr`` methods for the configured Django cache. If you are using ``django-tos`` in a complex or parallel environment, be sure to use a cache backend that supports atomic increment operations. For more information, see the notes at the end of `this section of the Django documentation <https://docs.djangoproject.com/en/1.9/topics/cache/#basic-usage>`_.
 
-    $ python manage.py qinfo
+Also, to ensure that warming the cache with users who can skip the agreement check works properly, you will need to include ``tos`` before your app (``myapp`` in the example) in your ``INSTALLED_APPS`` setting:
 
-Creating Tasks
-~~~~~~~~~~~~~~
+.. code-block:: python
 
-Use `async_task` from your code to quickly offload tasks:
+    INSTALLED_APPS = (
+        ...
+        'tos',
+        ...
+        'myapp',  # Example app name
+        ...
+    )
 
-.. code:: python
+Advantages
+----------
 
-    from django_q.tasks import async_task, result
+* Can optionally use a separate cache for TOS agreements (necessary if your default cache does not support atomic increment operations)
+* Allow some of your users to skip the TOS check (eg: developers, staff, admin, superusers, employees)
+* Uses signals to invalidate cached agreements
+* Skips the agreement check when the user is anonymous or not signed in
+* Skips the agreement check when the request is AJAX
+* Skips the agreement check when the request isn't a ``GET`` request (to avoid getting in the way of data mutations)
+  
+Disadvantages
+-------------
 
-    # create the task
-    async_task('math.copysign', 2, -2)
+* Requires a cache key for each user who is signed in
+* Requires an additional cache key for each staff user
+* May leave keys in the cache when the active ``TermsOfService`` changes
 
-    # or with a reference
-    import math.copysign
+Efficiency
+----------
 
-    task_id = async_task(copysign, 2, -2)
+* Best case for staff users: 2 cache hits
+* Best case for non-staff users: 1 cache miss, 2 cache hits
+* Worst case: 1 cache hit, 2 cache misses, 1 database query, 1 cache set (this should only happen when the user signs in)
 
-    # get the result
-    task_result = result(task_id)
+Option 2 Configuration
+----------------------
 
-    # result returns None if the task has not been executed yet
-    # you can wait for it
-    task_result = result(task_id, 200)
+1. In your root urlconf file ``urls.py`` only add the terms-of-service URLs:
 
-    # but in most cases you will want to use a hook:
+   .. code-block:: python
 
-    async_task('math.modf', 2.5, hook='hooks.print_result')
+       # terms of service links
+       urlpatterns += patterns('',
+           url(r'^terms-of-service/', include('tos.urls')),
+       )
 
-    # hooks.py
-    def print_result(task):
-        print(task.result)
+2. Optional: Since the cache used by TOS will be overwhelmingly read-heavy, you can use a separate cache specifically for TOS. To do so, create a new cache in your project's ``settings.py``:
 
-For more info see `Tasks <https://django-q.readthedocs.org/en/latest/tasks.html>`__
+   .. code-block:: python
+   
+       CACHES = {
+           ...
+           # The cache specifically for django-tos
+           'tos': {  # Can use any name here
+               'BACKEND': ...,
+               'LOCATION': ...,
+               'NAME': 'tos-cache',  # Can use any name here
+           },
+       }
+
+   and configure ``django-tos`` to use the new cache:
+
+   .. code-block:: python
+
+       TOS_CACHE_NAME = 'tos'  # Must match the key name in in CACHES
+
+   this setting defaults to the ``default`` cache.
+
+4. Then in your project's ``settings.py`` add the middleware to ``MIDDLEWARE_CLASSES``:
+
+   .. code-block:: python
+
+       MIDDLEWARE_CLASSES = (
+           ...
+           # Terms of service checks
+           'tos.middleware.UserAgreementMiddleware',
+       )
+
+5. Optional: To allow users to skip the TOS check, you will need to set corresponding cache keys for them in the TOS cache. The cache key for each user will need to be prefixed with ``django:tos:skip_tos_check:``, and have the user ID appended to it.
+
+   Here is an example app configuration that allows staff users and superusers to skip the TOS agreement check:
+
+   .. code-block:: python
+
+       from django.apps import AppConfig, apps
+       from django.conf import settings
+       from django.contrib.auth import get_user_model
+       from django.core.cache import caches
+       from django.db.models import Q
+       from django.db.models.signals import post_save, pre_save
+       from django.dispatch import receiver
+
+       class MyAppConfig(AppConfig):
+           name = 'myapp'
+
+           def ready(self):
+               if 'tos' in settings.INSTALLED_APPS:
+                   cache = caches[getattr(settings, 'TOS_CACHE_NAME', 'default')]
+                   tos_app = apps.get_app_config('tos')
+                   TermsOfService = tos_app.get_model('TermsOfService')
+
+                   @receiver(post_save, sender=get_user_model(), dispatch_uid='set_staff_in_cache_for_tos')
+                   def set_staff_in_cache_for_tos(user, instance, **kwargs):
+                       if kwargs.get('raw', False):
+                           return
+
+                       # Get the cache prefix
+                       key_version = cache.get('django:tos:key_version')
+
+                       # If the user is staff allow them to skip the TOS agreement check
+                       if instance.is_staff or instance.is_superuser:
+                           cache.set('django:tos:skip_tos_check:{}'.format(instance.id), version=key_version)
+
+                       # But if they aren't make sure we invalidate them from the cache
+                       elif cache.get('django:tos:skip_tos_check:{}'.format(instance.id), False):
+                           cache.delete('django:tos:skip_tos_check:{}'.format(instance.id), version=key_version)
+
+                   @receiver(post_save, sender=TermsOfService, dispatch_uid='add_staff_users_to_tos_cache')
+                   def add_staff_users_to_tos_cache(*args, **kwargs):
+                       if kwargs.get('raw', False):
+                           return
+
+                       # Get the cache prefix
+                       key_version = cache.get('django:tos:key_version')
+
+                       # Efficiently cache all of the users who are allowed to skip the TOS
+                       # agreement check
+                       cache.set_many({
+                           'django:tos:skip_tos_check:{}'.format(staff_user.id): True
+                           for staff_user in get_user_model().objects.filter(
+                               Q(is_staff=True) | Q(is_superuser=True))
+                       }, version=key_version)
+
+                   # Immediately add staff users to the cache
+                   add_staff_users_to_tos_cache()
+
+===============
+django-tos-i18n
+===============
+
+django-tos internationalization using django-modeltranslation.
+
+Terms Of Service i18n Installation
+==================================
+
+Assuming you have correctly installed django-tos in your app you only need to
+add following apps to ``INSTALLED_APPS``:
+
+.. code-block:: python
+
+    INSTALLED_APPS += ('modeltranslation', 'tos_i18n')
+
+and also you should also define your languages in Django ``LANGUAGES``
+variable, e.g.:
+
+.. code-block:: python
+
+    LANGUAGES = (
+        ('pl', 'Polski'),
+        ('en', 'English'),
+    )
+
+Please note that adding those to ``INSTALLED_APPS`` **changes** Django models.
+Concretely it adds for every registered ``field`` that should translated,
+additional fields with name ``field_<lang_code>``, e.g. for given model:
+
+.. code-block:: python
+
+    class MyModel(models.Model):
+        name = models.CharField(max_length=10)
+
+There will be generated fields: ``name`` , ``name_en``, ``name_pl``.
+
+You should probably migrate your database, and if you're using Django < 1.7 using South is recommended. These migrations should be kept in your local project.
+
+How to migrate tos with South
+`````````````````````````````
+
+Here is some step-by-step example how to convert your legacy django-tos
+instalation synced using syncdb into a translated django-tos-i18n with South
+migrations.
+
+1. Inform South that you want to store migrations in custom place by putting
+   this in your Django settings file:
+
+   .. code-block:: python
+
+       SOUTH_MIGRATION_MODULES = {
+           'tos': 'YOUR_APP.migrations.tos',
+       }
+
+2. Add required directory (package):
+
+   .. code-block:: bash
+
+       mkdir -p YOUR_APP/migrations/tos
+       touch YOUR_APP/migrations/tos/__init__.py
+
+3. Create initial migration (referring to the database state as it is now):
+
+   .. code-block:: bash
+
+       python manage.py schemamigration --initial tos
+
+4. Fake migration (because the changes are already in the database):
+
+   .. code-block:: bash
+
+       python manage.py migrate tos --fake
+
+5. Install tos_i18n (and modeltranslation) to ``INSTALLED_APPS``:
+
+   .. code-block:: python
+
+       INSTALLED_APPS += ('modeltranslation', 'tos_i18n',)
+
+6. Make sure that the Django ``LANGUAGES`` setting is properly configured.
+
+7. Migrate what changed:
+
+   .. code-block:: bash
+
+    $ python manage.py schemamigration --auto tos
+    $ python migrate tos
 
 
-Schedule
-~~~~~~~~
+That's it. You are now running tos in i18n mode with the languages you declared
+in ``LANGUAGES`` setting. This will also make all required adjustments in the
+Django admin.
 
-Schedules are regular Django models. You can manage them through the
-Admin page or directly from your code:
-
-.. code:: python
-
-    # Use the schedule function
-    from django_q.tasks import schedule
-
-    schedule('math.copysign',
-             2, -2,
-             hook='hooks.print_result',
-             schedule_type=Schedule.DAILY)
-
-    # Or create the object directly
-    from django_q.models import Schedule
-
-    Schedule.objects.create(func='math.copysign',
-                            hook='hooks.print_result',
-                            args='2,-2',
-                            schedule_type=Schedule.DAILY
-                            )
-
-    # Run a task every 5 minutes, starting at 6 today
-    # for 2 hours
-    import arrow
-
-    schedule('math.hypot',
-             3, 4,
-             schedule_type=Schedule.MINUTES,
-             minutes=5,
-             repeats=24,
-             next_run=arrow.utcnow().replace(hour=18, minute=0))
-
-    # Use a cron expression
-    schedule('math.hypot',
-             3, 4,
-             schedule_type=Schedule.CRON,
-             cron = '0 22 * * 1-5')
-
-For more info check the `Schedules <https://django-q.readthedocs.org/en/latest/schedules.html>`__ documentation.
-
-
-Testing
-~~~~~~~
-
-To run the tests you will need the following in addition to install requirements:
-
-* `py.test <http://pytest.org/latest/>`__
-* `pytest-django <https://github.com/pytest-dev/pytest-django>`__
-* disque from https://github.com/antirez/disque.git
-* Redis
-* MongoDB
-
-The following commands can be used to run the tests:
-
-.. code:: bash
-
-    # Create virtual environment
-    python -m venv venv
-
-    # Install requirements
-    venv/bin/pip install -r requirements.txt
-
-    # Install test dependencies
-    venv/bin/pip install pytest pytest-django
-
-    # Install django-q
-    venv/bin/python setup.py develop
-
-    # Run required services (you need to have docker-compose installed)
-    docker-compose -f test-services-docker-compose.yaml up -d
-
-    # Run tests
-    venv/bin/pytest
-
-    # Stop the services required by tests (when you no longer plan to run tests)
-    docker-compose -f test-services-docker-compose.yaml down
-
-Locale
-~~~~~~
-
-Currently available in English and French.
-Translation pull requests are always welcome.
-
-Todo
-~~~~
-
--  Better tests and coverage
--  Less dependencies?
-
-Acknowledgements
-~~~~~~~~~~~~~~~~
-
--  Django Q was inspired by working with
-   `Django-RQ <https://github.com/ui/django-rq>`__ and
-   `RQ <https://github.com/ui/django-rq>`__
--  Human readable hashes by
-   `HumanHash <https://github.com/zacharyvoase/humanhash>`__
--  Redditors feedback at `r/django <https://www.reddit.com/r/django/>`__
-
-.. |image0| image:: https://github.com/koed00/django-q/workflows/Tests/badge.svg?branche=master
-   :target: https://github.com/Koed00/django-q/actions?query=workflow%3Atests
-.. |image1| image:: http://codecov.io/github/Koed00/django-q/coverage.svg?branch=master
-   :target: http://codecov.io/github/Koed00/django-q?branch=master
-.. |image2| image:: http://badges.gitter.im/Join%20Chat.svg
-   :target: https://gitter.im/Koed00/django-q
-.. |docs| image:: https://readthedocs.org/projects/docs/badge/?version=latest
-    :alt: Documentation Status
-    :scale: 100
-    :target: https://django-q.readthedocs.org/
+For more info on how translation works in details please refer to the
+`django-modeltranslation documentation
+<https://django-modeltranslation.readthedocs.org/en/latest/>`_.
