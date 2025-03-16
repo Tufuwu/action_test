@@ -1,49 +1,45 @@
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
+from codecs import open
+from os import path
 
-# from setuptools.command.install import install
-#
-# class Modulenstalltio
+from setuptools import find_packages, setup
 
+here = path.abspath(path.dirname(__file__))
 
-__version__ = '2.1.0'
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
+
+__version__ = None
+with open("sendgrid_backend/version.py") as f:
+    exec(f.read())
 
 setup(
-    name='photonai',
-    packages=find_packages(),
-    include_package_data=True,
-    version=__version__,
-    description="""
-PHOTONAI
-is a rapid prototyping framework enabling (not so experienced) users to build, train, optimize, evaluate,
-and share even complex machine learning (ML) pipelines with very high efficiency.
-""",
-    author='PHOTONAI Team',
-    author_email='hahnt@wwu.de',
-    url='https://github.com/mmll-wwu/photonai.git',
-    download_url='https://github.com/wwu-mmll/photonai/archive/' + __version__ + '.tar.gz',
-    keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
-    classifiers=[],
+    name="django-sendgrid-v5",
+    version=str(__version__),
+    description="An implementation of Django's EmailBackend compatible with sendgrid-python v5+",
+    long_description=long_description,
+    url="https://github.com/sklarsa/django-sendgrid-v5",
+    license="MIT",
+    author="Steven Sklar",
+    author_email="sklarsa@gmail.com",
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+    ],
+    keywords="django email sendgrid backend",
+    packages=find_packages(
+        exclude=[
+            "test",
+        ]
+    ),
     install_requires=[
-        'numpy',
-        'matplotlib',
-        'scikit-learn',
-        'keras',
-        'pandas',
-        'plotly',
-        'imbalanced-learn',
-        'pymodm',
-        'scipy',
-        'statsmodels',
-        'prettytable',
-        'seaborn',
-        'joblib',
-        'dask==2.30.0',
-        'distributed==2.30.1',
-        'scikit-optimize',
-        'xlrd']
+        "django >=1.8",
+        "sendgrid >=5.0.0",
+        "python-http-client >=3.0.0",
+    ],
 )
