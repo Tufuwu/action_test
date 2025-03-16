@@ -1,8 +1,13 @@
-# Optional packages
-matplotlib
-pyreadline
-pre-commit
-black[d]
-wheel
-hypothesis
-commitizen
+# Test dependencies
+coveralls
+coverage
+
+# Package dependencies -- keep these reasonably up to date, if not bleeding-
+# edge -- also try to maintain compatibility with all the Python versions we
+# support
+Django
+httplib2
+mysqlclient
+psycopg2 # cffi
+pycrypto
+pycurl
