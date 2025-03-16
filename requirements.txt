@@ -1,2 +1,8 @@
-Sphinx
-sphinx_rtd_theme
+matplotlib
+scipy
+numpy
+sphinx
+numpydoc
+joblib
+tqdm
+getdist
