@@ -1,18 +1,30 @@
-.. include:: ../README.rst
+.. logya documentation master file, created by
+   sphinx-quickstart on Sun Sep  8 18:10:11 2013.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Logya Web Site Generator
+========================
+
+Logya is a command line tool to generate static Web sites, designed to
+be easy to use and flexible.
+
+Contents:
+---------
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents
+   :maxdepth: 2
 
-   file_import_parameters
-   api/index
-   changelog
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   intro
+   installation
+   gettingstarted
+   create
+   documentstructure
+   templates
+   configuration
+   i18n
+   recipes
+   development
+   credits
+   changes
+   modules
