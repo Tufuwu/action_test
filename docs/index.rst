@@ -1,46 +1,25 @@
-Welcome to viresclient's documentation!
-===============================================
 
-Get started `at the introduction <readme.html>`_
+Bakefile Documentation
+======================
 
-.. toctree::
-  :caption: Virtual Research Environments
-
-  🔗 VirES for Swarm <https://vires.services>
-  🔗 How-To Guides [Swarm Notebooks] <https://swarm.magneticearth.org>
-  🔗 VirES for Aeolus <https://aeolus.services>
-  🔗 How-To Guides [Aeolus Notebooks] <https://notebooks.aeolus.services>
-  
+Contents:
 
 .. toctree::
-  :maxdepth: 2
-  :caption: Information on viresclient
+   :maxdepth: 2
+   :numbered:
 
-  readme
-  installation
-  config_details
-  access_token
-  available_parameters
-  available_parameters_aeolus
-  notebook_intro
-  release_notes
+   intro
+   tutorial
+   language
+   ref
+   devel
+   glossary
 
-.. toctree::
-  :maxdepth: 2
-  :caption: API
 
-  api
+Indices and tables
+==================
 
-.. toctree::
-  :maxdepth: 2
-  :caption: CLI
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
-  cli
-
-.. toctree::
-  :maxdepth: 2
-  :caption: External Links
-
-  🔗 GitHub: viresclient <https://github.com/ESA-VirES/VirES-Python-Client/>
-  🔗 GitHub: Swarm-DISC <https://github.com/Swarm-DISC/>
-  🔗 Magnetic Earth <https://magneticearth.org>
