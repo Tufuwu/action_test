@@ -1,0 +1,31 @@
+# Core requirements for using this application
+
+-c constraints.txt
+
+Flask-Dance[sqla]
+Flask-SQLAlchemy
+Flask
+celery
+github3.py
+
+Flask-SSLify
+Flask-Script
+PyYAML
+URLObject
+arrow
+blinker
+cachetools
+click
+cryptography
+glom
+gunicorn
+iso8601
+jira
+logging_tree
+oauthlib[signedtoken]
+psycopg2
+redis
+requests
+requests-oauthlib
+rq
+sentry-sdk[flask]
