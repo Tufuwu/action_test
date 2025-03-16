@@ -1,33 +1,19 @@
 ---
 name: Bug report
-about: Create a bug report to help us improve semver
+about: Always describe a single problem
 title: ''
-labels: bug
+labels: ''
 assignees: ''
 
 ---
 
-<!-- Remove the comments below and adapt it to your needs  -->
+**Reproducer steps**
+1. First step
+2. Second step
+3. Third step
 
-# Situation
-<!-- A clear and concise description of what the bug is. -->
+**Actual result**
+A description of what happens currently.
 
-# To Reproduce
-<!--
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
--->
-
-# Expected Behavior
-<!-- A clear and concise description of what you expected to happen. -->
-
-# Environment
-- OS: [e.g. Linux, MacOS, Windows, ...]
-- Python version [e.g. 3.6, 3.7, ...]
-- Version of semver library [e.g. 3.0.0]
-
-# Additional context
-<!-- Add any other context about the problem here. -->
+**Expected behavior**
+A description of what you expected to happen.
