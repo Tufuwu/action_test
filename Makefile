@@ -1,148 +1,145 @@
-VIRTUAL_ENV ?= venv
-NODE_BIN = node_modules/.bin
-SOURCE_DIRS = adhocracy-plus apps tests
-ARGUMENTS=$(filter-out $(firstword $(MAKECMDGOALS)), $(MAKECMDGOALS))
+# Copyright 2015,2016 Nir Cohen
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-SED = sed
-ifneq (, $(shell command -v gsed;))
-	SED = gsed
-endif
+# Name of this package
+PACKAGENAME = distro
 
-.PHONY: all
-all: help
+# Additional options for Sphinx
+SPHINXOPTS = -v
+
+# Paper format for the Sphinx LaTex/PDF builder.
+# Valid values: a4, letter
+SPHINXPAPER = a4
+
+# Sphinx build subtree.
+SPHINXBUILDDIR = build_docs
+
+# Directory where conf.py is located
+SPHINXCONFDIR = docs
+
+# Directory where input files for Sphinx are located
+SPHINXSOURCEDIR = .
+
+# Sphinx build command (Use 'pip install sphinx' to get it)
+SPHINXBUILD = sphinx-build
+
+# Internal variables for Sphinx
+SPHINXPAPEROPT_a4     = -D latex_paper_size=a4
+SPHINXPAPEROPT_letter = -D latex_paper_size=letter
+ALLSPHINXOPTS = -d $(SPHINXBUILDDIR)/doctrees -c $(SPHINXCONFDIR) \
+                $(SPHINXPAPEROPT_$(SPHINXPAPER)) $(SPHINXOPTS) \
+                $(SPHINXSOURCEDIR)
 
 .PHONY: help
 help:
-	@echo adhocracy+ development tools
-	@echo
-	@echo It will either use an exisiting virtualenv if it was entered
-	@echo before or create a new one in the venv subdirectory.
-	@echo
-	@echo usage:
-	@echo
-	@echo "  make install         -- install dev setup"
-	@echo "  make clean           -- delete node modules and venv"
-	@echo "  make fixtures        -- load example data"
-	@echo "  make server          -- start a dev server"
-	@echo "  make watch           -- start a dev server and rebuild js and css files on changes"
-	@echo "  make background      -- start background processes"
-	@echo "  make test            -- run all test cases with pytest"
-	@echo "  make test-lastfailed -- run test that failed last"
-	@echo "  make test-clean      -- test on new database"
-	@echo "  make coverage        -- write coverage report to dir htmlcov"
-	@echo "  make lint            -- lint all project files"
-	@echo "  make lint-quick      -- lint all files staged in git"
-	@echo "  make lint-fix      	-- fix linting for all js files staged in git"
-	@echo "  make po              -- create new po files from the source"
-	@echo "  make mo              -- create new mo files from the translated po files"
-	@echo "  make release         -- build everything required for a release"
-	@echo
+	@echo 'Please use "make <target>" where <target> is one of'
+	@echo "  release   - build a release and publish it"
+	@echo "  dev       - prepare a development environment (includes tests)"
+	@echo "  instdev   - prepare a development environment (no tests)"
+	@echo "  install   - install into current Python environment"
+	@echo "  html      - generate docs as standalone HTML files in: $(SPHINXBUILDDIR)/html"
+	@echo "  pdf       - generate docs as PDF (via LaTeX) for paper format: $(SPHINXPAPER) in: $(SPHINXBUILDDIR)/pdf"
+	@echo "  man       - generate docs as manual pages in: $(SPHINXBUILDDIR)/man"
+	@echo "  docchanges   - generate an overview of all changed/added/deprecated items in docs"
+	@echo "  doclinkcheck - check all external links in docs for integrity"
+	@echo "  doccoverage  - run coverage check of the documentation"
+	@echo "  clobber   - remove any build products"
+	@echo "  build     - build the package"
+	@echo "  test      - test from this directory using tox, including test coverage"
+	@echo "  publish   - upload to PyPI"
+	@echo "  clean     - remove any temporary build products"
+	@echo "  dry-run   - perform all action required for a release without actually releasing"
 
-.PHONY: install
-install:
-	npm install --no-save
-	npm run build
-	if [ ! -f $(VIRTUAL_ENV)/bin/python3 ]; then python3 -m venv $(VIRTUAL_ENV); fi
-	$(VIRTUAL_ENV)/bin/python3 -m pip install --upgrade -r requirements/dev.txt
-	$(VIRTUAL_ENV)/bin/python3 manage.py migrate
-
-.PHONY: clean
-clean:
-	if [ -f package-lock.json ]; then rm package-lock.json; fi
-	if [ -d node_modules ]; then rm -rf node_modules; fi
-	if [ -d venv ]; then rm -rf venv; fi
-
-.PHONY: fixtures
-fixtures:
-	$(VIRTUAL_ENV)/bin/python3 manage.py loaddata adhocracy-plus/fixtures/site-dev.json
-	$(VIRTUAL_ENV)/bin/python3 manage.py loaddata adhocracy-plus/fixtures/users-dev.json
-	$(VIRTUAL_ENV)/bin/python3 manage.py loaddata adhocracy-plus/fixtures/orga-dev.json
-
-.PHONY: server
-server:
-	$(VIRTUAL_ENV)/bin/python3 manage.py runserver 8004
-
-.PHONY: watch
-watch:
-	trap 'kill %1' KILL; \
-	npm run watch & \
-	$(VIRTUAL_ENV)/bin/python3 manage.py runserver 8004
-
-.PHONY: background
-background:
-	$(VIRTUAL_ENV)/bin/python3 manage.py process_tasks
+.PHONY: release
+release: test clean build publish
+	@echo "$@ done."
 
 .PHONY: test
 test:
-	$(VIRTUAL_ENV)/bin/py.test --reuse-db
+	pip install 'tox>=1.7.2'
+	tox
+	@echo "$@ done."
 
-.PHONY: test-lastfailed
-test-lastfailed:
-	$(VIRTUAL_ENV)/bin/py.test --reuse-db --last-failed
+.PHONY: clean
+clean:
+	rm -rf dist build $(PACKAGENAME).egg-info
+	@echo "$@ done."
 
-.PHONY: test-clean
-test-clean:
-	if [ -f test_db.sqlite3 ]; then rm test_db.sqlite3; fi
-	$(VIRTUAL_ENV)/bin/py.test
+.PHONY: build
+build:
+	python setup.py sdist bdist_wheel
 
-.PHONY: coverage
-coverage:
-	$(VIRTUAL_ENV)/bin/py.test --reuse-db --cov --cov-report=html
+.PHONY: publish
+publish:
+	twine upload -r pypi dist/$(PACKAGENAME)-*
+	@echo "$@ done."
 
-.PHONY: lint
-lint:
-	EXIT_STATUS=0; \
-	$(VIRTUAL_ENV)/bin/isort --diff -c $(SOURCE_DIRS) ||  EXIT_STATUS=$$?; \
-	$(VIRTUAL_ENV)/bin/flake8 $(SOURCE_DIRS) --exclude migrations,settings ||  EXIT_STATUS=$$?; \
-	npm run lint ||  EXIT_STATUS=$$?; \
-	$(VIRTUAL_ENV)/bin/python manage.py makemigrations --dry-run --check --noinput || EXIT_STATUS=$$?; \
-	exit $${EXIT_STATUS}
+.PHONY: dry-run
+dry-run: test clean build
+	@echo "$@ done."
 
-.PHONY: lint-quick
-lint-quick:
-	EXIT_STATUS=0; \
-	npm run lint-staged ||  EXIT_STATUS=$$?; \
-	$(VIRTUAL_ENV)/bin/python manage.py makemigrations --dry-run --check --noinput || EXIT_STATUS=$$?; \
-	exit $${EXIT_STATUS}
+.PHONY: dev
+dev: instdev test
+	@echo "$@ done."
 
-.PHONY: lint-python-files
-lint-python-files:
-	EXIT_STATUS=0; \
-	$(VIRTUAL_ENV)/bin/isort --diff -c $(ARGUMENTS) --filter-files || EXIT_STATUS=$$?; \
-	$(VIRTUAL_ENV)/bin/flake8 $(ARGUMENTS) || EXIT_STATUS=$$?; \
-	exit $${EXIT_STATUS}
+.PHONY: instdev
+instdev:
+	pip install -r dev-requirements.txt
+	python setup.py develop
+	@echo "$@ done."
 
-.PHONY: lint-fix
-lint-fix:
-	EXIT_STATUS=0; \
-	npm run lint-fix ||  EXIT_STATUS=$$?; \
-	exit $${EXIT_STATUS}
+.PHONY: install
+install:
+	python setup.py install
+	@echo "$@ done."
 
-.PHONY: po
-po:
-	$(VIRTUAL_ENV)/bin/python manage.py makemessages -d django --extension html,email,py --ignore '$(CURDIR)/node_modules/adhocracy4/adhocracy4/*'
-	$(VIRTUAL_ENV)/bin/python manage.py makemessages -d djangojs --ignore '$(VIRTUAL_ENV)/*' --ignore '$(CURDIR)/node_modules/dsgvo-video-embed/dist/*'
-	$(foreach file, $(wildcard locale-*/locale/*/LC_MESSAGES/django*.po), \
-		$(SED) -i 's%#: .*/adhocracy4%#: adhocracy4%' $(file);)
-	$(foreach file, $(wildcard locale-*/locale/*/LC_MESSAGES/django*.po), \
-		$(SED) -i 's%#: .*/dsgvo-video-embed/js%#: dsgvo-video-embed/js%' $(file);)
-	msgen locale-source/locale/en/LC_MESSAGES/django.po -o locale-source/locale/en/LC_MESSAGES/django.po
-	msgen locale-source/locale/en/LC_MESSAGES/djangojs.po -o locale-source/locale/en/LC_MESSAGES/djangojs.po
+.PHONY: html
+html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/html
+	@echo "$@ done; the HTML pages are in $(SPHINXBUILDDIR)/html."
 
-.PHONY: mo
-mo:
-	$(VIRTUAL_ENV)/bin/python manage.py compilemessages
+.PHONY: pdf
+pdf:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/pdf
+	@echo "Running LaTeX files through pdflatex..."
+	$(MAKE) -C $(SPHINXBUILDDIR)/pdf all-pdf
+	@echo "$@ done; the PDF files are in $(SPHINXBUILDDIR)/pdf."
 
-.PHONY: tx-mo
-tx-mo:
-	$(VIRTUAL_ENV)/bin/tx pull -a
-	$(VIRTUAL_ENV)/bin/python manage.py compilemessages
+.PHONY: man
+man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/man
+	@echo "$@ done; the manual pages are in $(SPHINXBUILDDIR)/man."
 
-.PHONY: release
-release: export DJANGO_SETTINGS_MODULE ?= adhocracy-plus.config.settings.build
-release:
-	npm install --silent
-	npm run build:prod
-	$(VIRTUAL_ENV)/bin/python3 -m pip install -r requirements.txt -q
-	$(VIRTUAL_ENV)/bin/python3 manage.py compilemessages -v0
-	$(VIRTUAL_ENV)/bin/python3 manage.py collectstatic --noinput -v0
+.PHONY: docchanges
+docchanges:
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/changes
+	@echo
+	@echo "$@ done; the doc changes overview file is in $(SPHINXBUILDDIR)/changes."
+
+.PHONY: doclinkcheck
+doclinkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/linkcheck
+	@echo
+	@echo "$@ done; look for any errors in the above output " \
+	      "or in $(SPHINXBUILDDIR)/linkcheck/output.txt."
+
+.PHONY: doccoverage
+doccoverage:
+	$(SPHINXBUILD) -b coverage $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/coverage
+	@echo "$@ done; the doc coverage results are in $(SPHINXBUILDDIR)/coverage/python.txt."
+
+.PHONY: clobber
+clobber: clean
+	rm -rf $(SPHINXBUILDDIR)
+	@echo "$@ done."
