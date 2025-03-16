@@ -1,0 +1,17 @@
+[
+  {
+    "type": "tag",
+    "key": "BOOKSHOP",
+    "text": "Bookshop"
+  },
+  {
+    "type": "tag",
+    "key": "DIDACTIC_LIBRARY",
+    "text": "Didactic Library"
+  },
+  {
+    "type": "tag",
+    "key": "LEGAL_SERVICE_LIBRARY",
+    "text": "Legal service Library"
+  }
+]
