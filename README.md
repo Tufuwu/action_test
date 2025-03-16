@@ -1,71 +1,88 @@
-[![Build Status](https://github.com/strongswan/strongMan/workflows/CI/badge.svg)](https://github.com/strongswan/strongMan/actions?query=workflow%3ACI)
-[![Coverage Status](https://coveralls.io/repos/github/strongswan/strongMan/badge.svg?branch=master)](https://coveralls.io/github/strongswan/strongMan?branch=master)
 
+# rdap
 
-# strongMan
-strongMan is a management interface for strongSwan. Based on Django and Python, strongMan provides a user friendly graphical  interface to configure and establish IPsec connections. It supports
-- RSA / ECDSA asymmetric encryption
-- EAP with username and password
-- EAP-TLS
-- serveral authentification rounds
+[![PyPI](https://img.shields.io/pypi/v/rdap.svg?maxAge=3600)](https://pypi.python.org/pypi/rdap)
+[![PyPI](https://img.shields.io/pypi/pyversions/rdap.svg?maxAge=3600)](https://pypi.python.org/pypi/rdap)
+[![Tests](https://github.com/20c/rdap/workflows/tests/badge.svg)](https://github.com/20c/rdap)
+[![Codecov](https://img.shields.io/codecov/c/github/20c/rdap/master.svg?maxAge=3600)](https://codecov.io/github/20c/rdap)
 
-The strongMan application implements a persistent connection and asymmetric key management. Several common connection use cases are implemented and can be used in few configuration steps.
+Registration Data Access Protocol tools
 
-## Run it directly from git repository
-Requirements:
-- strongSwan with vici plugin <img src="https://www.strongswan.org/images/strongswan.png" width="30">
-- python3/pip3
-- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-- [virtualenv](https://virtualenv.pypa.io/en/latest/installation.html)
+## Installation
 
-Run the following commands to install strongMan.
-```bash
-git clone https://github.com/strongswan/strongMan.git
-cd strongMan
-sudo ./setup.py install
-```
-We have installed strongMan with all it's requirements in a virtual environment and loaded a default user into the database.
-
-### Configuration Loader
-To guarantee data consistency between strongMan and strongSwan, configure a script in the strongSwan configuration, which will be executed on the startup of strongSwan.
-
-##### Option 1
-If you aren’t planning on setting up a systemd service, do the following: Put these lines into
-in "/etc/strongswan.d/strongMan.conf". Replace ’pathTostrongMan’ with the path, where you
-installed strongMan.
-```
-charon {
-  start-scripts {
-    strongman = /pathTostrongMan/configloader.py
-  }
-}
-```
-##### Option 2
-If you will configure strongMan with a systemd service, follow these instructions to get the
-Configuration Loader running.
-Put the following line into "strongswan-swanctl.service". Replace "pathTostrongMan" with the path, where you installed strongMan.
-```
-ExecStartPost=/pathTostrongMan/configloader.py
+```sh
+pip install rdap
 ```
 
-### Run
 
-Now we can start the strongMan server.
-```bash
-sudo ./run.py
+## Usage
+
+```sh
+usage: rdap [-h] [--debug] [--home HOME] [--verbose] [--quiet] [--version] [--output-format OUTPUT_FORMAT] [--show-requests] [--parse]
+            [--write-bootstrap-data]
+            query [query ...]
+
+rdap
+
+positional arguments:
+  query
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               enable extra debug output
+  --home HOME           specify the home directory, by default will check in order: $RDAP_HOME, ./.rdap, /home/$USER/.rdap,
+                        /home/$USER/.config/rdap
+  --verbose             enable more verbose output
+  --quiet               no output at all
+  --version             show version number and exit
+  --output-format OUTPUT_FORMAT
+                        output format (yaml, json, text)
+  --show-requests       show all requests
+  --parse               parse data into object before display
+  --write-bootstrap-data
+                        write bootstrap data for type (as query)
 ```
-The server is now accessible on http://localhost:1515
-Username: John, Password: Lennon@1940
 
 
-### Add a systemd service
-If you want to run strongMan permanently in the background you can install strongMan as a systemd service.
-```bash
-sudo ./setup.py add-service # Adds the service and additionally a launcher icon
+## Config file
+
+The client uses the `--home` option to point to a directory, by default will check in order: `$RDAP_HOME`, `./.rdap`, `~/.rdap`, `~/.config/rdap`
+
+The directory should have a `config.yaml` file in it, defaults shown below.
+
+```yaml
+rdap:
+  # URL to bootstrap the initial request off
+  bootstrap_url: https://rdap.db.ripe.net/
+  # boolean to use data from bootstrap_data_url instead of a bootstrap server
+  self_bootstrap: False
+  # url to load bootstrap data from
+  bootstrap_data_url: "https://data.iana.org/rdap/"
+  # length of time in hours to keep bootstrap data
+  bootstrap_cache_ttl: 25
+  # how to format the output
+  output_format: yaml
+  # API key for use at rdap.lacnic.net
+  lacnic_apikey: None
+  # role types to recursively query when processing
+  recurse_roles: ["administrative", "technical"]
+  # HTTP request timeout in seconds, used for both connect and read
+  timeout: 0.5
 ```
 
-### Remove service
-Removes the service and the launcher icon
-```bash
-sudo ./setup.py remove-service
-```
+
+### License
+
+Copyright 2016 20C, LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this softare except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
