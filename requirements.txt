@@ -1,2 +1,2 @@
-symstore~=0.3.2
-docutils~=0.17.0
+typing_inspect;python_version<'3.9'
+dataclasses;python_version<'3.7'
