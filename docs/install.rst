@@ -1,79 +1,31 @@
-============
-Installation
-============
+Install TableOne
+================
 
-An obvious prerequisite of django-yubin is Django - 1.9 is the
-minimum supported version.
+You can install tableone with ``conda``, with ``pip``, or by installing
+from source.
 
+Conda
+-----
 
-Installing django_yubin
-==========================
+To install the latest version of tableone from the
+`conda-forge <https://conda-forge.github.io/>`_ repository using
+`conda <https://www.anaconda.com/downloads>`_::
 
-You can install the latest version from Pypi::
+    conda install tableone -c conda-forge
 
-    pip install django-yubin
+Pip
+---
 
+Or install tableone with ``pip``::
 
-or you can download and install from sources http://github.com/APSL/django-yubin.git
+    pip install tableone
 
-If you're using pip__ and a virtual environment, this usually looks like::
+Source
+------
 
-    pip install -e git+http://github.com/APSL/django-yubin.git#egg=django-yubin
+To install distributed from source, clone the repository from `github
+<https://github.com/tompollard/tableone>`_::
 
-.. __: http://pip.openplans.org/
-
-Or for a manual installation, once you've downloaded the package, unpack it
-and run the ``setup.py`` installation script::
-
+    git clone https://github.com/tompollard/tableone.git
+    cd tableone
     python setup.py install
-
-
-.. warning:: ``easy_install`` is untested and not recommended, especially if you
-   mix it with pip. You might run into ``ImportError`` because the app
-   cannot figure out which version is installed.
-
-
-Configuring your project
-========================
-
-In your Django project's settings module, add django_yubin to your
-``INSTALLED_APPS`` setting
-
-.. code:: python
-
-    INSTALLED_APPS = (
-        ...
-        'django_yubin',
-    )
-
-
-
-Note that django yubin doesn't implicitly queue all django mail (unless you
-tell it to).
-
-To queue all django mail you must configure the mail backend as
-
-.. code:: python
-
-    EMAIL_BACKEND = 'django_yubin.smtp_queue.EmailBackend'
-
-More details can be found in the queue documentation.
-
-Add *yubin* urls in your main *urls.py* for use the health check.
-
-.. code:: python
-
-    url(r'^yubin/', include('django_yubin.urls')),
-
-
-Upgrading from previous versions
-================================
-
-Version 0.1.8 has added support for Django 1.9 and syncdb command no longer
-exists. If you are upgrading from a version < 0.1.8 and your models are
-already created you should execute::
-
-    python manage.py migrate django_yubin --fake-initial
-
-
-More details in https://docs.djangoproject.com/en/1.9/topics/migrations/#adding-migrations-to-apps

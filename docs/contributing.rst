@@ -1,71 +1,73 @@
-============
-Contributing
-============
+************************
+Contributing to TableOne
+************************
 
-django-yubin is an open source project and imporvements and bug reports are
-very appreciated.
+We welcome all contributions to the package!
 
-You can contribute in many ways:
-
-* Filling a bug on github
-* Creating a patch and sending the pull request
-* Help on testing and documenting
-
-When sending a pull request, please be sure that all tests and builds passes. On
-the next section you'll find information about how to write the test.
-
-Please follow the PEP8 coventions and in case you write additional features don't
-forget to write the tests for them.
-
-At http://apsl.net we use yubin for most of our own projects, so we'll try to
-mantain it as bug free as stable as possible. That said we can't not guarantee
-that we could patch the program in the way you like, add that new feature, etc.
+.. contents:: Table of contents:
+   :local:
 
 
+Where to start?
+===============
 
-Running the tests
-=================
+Bug reports, bug fixes, documentation improvements, and other contributions
+are welcome. For reporting bugs or suggesting improvements, please use the `GitHub issues
+tab <https://github.com/tompollard/tableone/issues/>`_.
 
-You'll need to run a dummy mail server for some of the tests. You can do this
-by executing::
+Bug reports
+===========
 
-    $ ./bin/fake-server
+Bug reports are core to ensuring the package remains useful for all users.
+A complete bug report greatly improves the ability of others to understand and
+fix it. For information on how to make a complete bug report, we recommend
+you review `this helpful StackOverflow article <https://stackoverflow.com/help/mcve>`_.
 
-This will start a fake server in the shell. You could background this task if
-you wish, or just run it in a separate shell screen/tab.
+Contributing improvements
+=========================
 
-Next, to actually run the tests, you need ``tox``::
+Bug fixes or other enhancements are welcome via pull requests. You can `read more
+about pull requests on GitHub's website <https://help.github.com/articles/about-pull-requests/>`_.
 
-    $ pip install tox
+Contributing to the documentation
+=================================
 
-.. note:: You can also install ``detox`` to parallelize the tests for different
-   versions.
+Rewriting small pieces of the documentation as you read through it is a
+surefire way of improving them for the next user.
 
-Execute ``tox`` to run all the build matrix. This will run the tests for any
-of the Python versions you have installed in your system (Python 2.7, 3.2 until
-3.5 and PyPy). If you don't have all versions, these builds will be skipped::
+About the documentation
+-----------------------
 
-    $ tox
+The documentation is written in *reStructuredText*, and subsequently built
+using the Python package `Sphinx <http://sphinx.pocoo.org/>`__. The Sphinx
+documentation provides `a gentle introduction to
+reStructuredText <http://sphinx.pocoo.org/rest.html>`__.
 
-Run ``detox`` if you prefer parallelizing. To run a single environment, you have
-some options::
+The documentation follows the
+`NumPy Docstring Standard <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`__,
+which are parsed using the
+`napolean extension for sphinx <http://www.sphinx-doc.org/en/1.5.1/ext/napoleon.html>`.
 
-    $ tox -e py36-dj111  # run Python 3.6 and Django 1.11
+How to build the documentation
+------------------------------
 
-or, in a virtualenv for example::
+Requirements
+^^^^^^^^^^^^
 
-    $ python runtests.py
+To build the documentation you will need to additionally install ``sphinx``.
+Furthermore, you'll also need to install the readthedocs theme.
+This is easily done using pip::
 
-If you need to dive into a single test file or test case, you can also run the
-tests via ``manage.py``::
+    pip install sphinx sphinx_rtd_theme
 
-    $ python tests/manage.py test tests.tests.test_backend.TestBackend
+Building the documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Navigate to the ``docs`` subfolder and run::
 
+    sphinx-build -b html . _build
 
-Demo Project
-============
+Which will build the documentation in the subfolder ``_build``.
+Alternatively, you can run the Makefile provided::
 
-A demo project is provided for manual tests and checks, specially for the admin
-site. It is configured to send mails with the same mail fake-server used for
-tests. Username and password for the superuser is "yubin".
+    make html
