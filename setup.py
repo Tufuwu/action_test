@@ -1,101 +1,76 @@
-#!/usr/bin/env python
+# Copyright (c) 2014, Salesforce.com, Inc.  All rights reserved.
+# Copyright (c) 2015, Gamelan Labs, Inc.
+# Copyright (c) 2016, Google, Inc.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# - Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+# - Neither the name of Salesforce.com nor the names of its contributors
+#   may be used to endorse or promote products derived from this
+#   software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+# TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import re
-from setuptools import setup, find_packages
-from setuptools.command.install import install
-import subprocess
 import sys
 
+from setuptools import setup
 
-# This hack is from http://stackoverflow.com/a/7071358/1231454;
-# the version is kept in a seperate file and gets parsed - this
-# way, setup.py doesn't have to import the package.
+VERSION = '0.2.7'
+description = 'Goodness of fit tests for general datatypes'
 
-VERSIONFILE = 'libfaketime/_version.py'
+try:
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+    print(long_description)
+except Exception as e:
+    sys.stderr.write('Failed to convert README.md to rst:\n  {}\n'.format(e))
+    sys.stderr.flush()
+    try:
+        long_description = open('README.md').read()
+    except Exception:
+        long_description = description
 
-version_line = open(VERSIONFILE).read()
-version_re = r"^__version__ = ['\"]([^'\"]*)['\"]"
-match = re.search(version_re, version_line, re.M)
-if match:
-    version = match.group(1)
-else:
-    raise RuntimeError("Could not find version in '%s'" % VERSIONFILE)
-
-
-_vendor_path = 'libfaketime/vendor/libfaketime'
-if sys.platform == "linux" or sys.platform == "linux2":
-    libname = 'libfaketime.so.1'
-elif sys.platform == "darwin":
-    libname = 'libfaketime.1.dylib'
-
-else:
-    raise RuntimeError("libfaketime does not support platform %s" % sys.platform)
-
-faketime_lib = os.path.join(_vendor_path, 'src', libname)
-
-
-class CustomInstall(install):
-    def run(self):
-        self.my_outputs = []
-        subprocess.check_call(['patch', '-p1', '<', '../libfaketime.patch'], cwd=_vendor_path, shell=True)
-        subprocess.check_call(['make', '-C', _vendor_path])
-
-        dest = os.path.join(self.install_purelib, os.path.dirname(faketime_lib))
-        try:
-            os.makedirs(dest)
-        except OSError as e:
-            if e.errno != 17:
-                raise
-        print(faketime_lib, '->', dest)
-        self.copy_file(faketime_lib, dest)
-        self.my_outputs.append(os.path.join(dest, libname))
-
-        install.run(self)
-
-    def get_outputs(self):
-        outputs = install.get_outputs(self)
-        outputs.extend(self.my_outputs)
-        return outputs
-
-setup(
-    name='libfaketime',
-    version=version,
-    author='Simon Weber',
-    author_email='simon@simonmweber.com',
-    url='http://pypi.python.org/pypi/libfaketime/',
-    packages=find_packages(exclude=['test']),
-    scripts=[],
-    license='GPLv2',
-    description='A fast alternative to freezegun that wraps libfaketime.',
-    long_description=(open('README.md').read() + '\n\n' +
-                      open('CHANGELOG.md').read()),
-    long_description_content_type='text/markdown',
-    install_requires=[
-        'python-dateutil >= 1.3, != 2.0',         # 2.0 is python3-only
-        'pytz',                                   # for pytz.timezone and pytz.utc
-    ],
-    classifiers=[
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
+config = {
+    'name': 'goftests',
+    'version': VERSION,
+    'description': description,
+    'long_description': long_description,
+    'classifiers': [
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
-    include_package_data=True,
-    zip_safe=False,
-    cmdclass={'install': CustomInstall},
-    entry_points={
-        'console_scripts': [
-            'python-libfaketime = libfaketime:main',
-        ]
-    },
-)
+    'url': 'https://github.com/posterior/goftests',
+    'author': 'Fritz Obermeyer',
+    'maintainer': 'Fritz Obermeyer',
+    'maintainer_email': 'fritz.obermeyer@gmail.com',
+    'license': 'Revised BSD',
+    'install_requires': ['numpy', 'scipy'],
+    'packages': ['goftests'],
+    'test_suite': 'goftests.test',
+    'include_package_data': True,
+}
+
+setup(**config)
