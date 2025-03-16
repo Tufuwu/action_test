@@ -1,61 +1,39 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""This module contains setup instructions for pytube3."""
-import codecs
-import os
-
 from setuptools import setup
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
-    long_description = "\n" + fh.read()
-
-with open(os.path.join(here, "pytube", "version.py")) as fp:
-    exec(fp.read())
+readme = open('README.rst').read()
 
 setup(
-    name="pytube",
-    version=__version__,  # noqa: F821
-    author="Nick Ficano, Harold Martin",
-    author_email="nficano@gmail.com, harold.martin@gmail.com",
-    packages=["pytube", "pytube.contrib"],
-    package_data={"": ["LICENSE"],},
-    url="https://github.com/nficano/pytube",
-    license="MIT",
-    entry_points={
-        "console_scripts": [
-            "pytube = pytube.cli:main", "pytube3 = pytube.cli:main"],},
-    install_requires=["typing_extensions"],
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft",
-        "Operating System :: POSIX",
-        "Operating System :: Unix",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python",
-        "Topic :: Internet",
-        "Topic :: Multimedia :: Video",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Terminals",
-        "Topic :: Utilities",
+    name='django-newsfeed',
+    version='0.8.4',
+    description="""A news curator and newsletter subscription package for django""",
+    long_description=readme,
+    long_description_content_type='text/markdown',
+    author='Maksudul Haque',
+    author_email='saad.mk112@gmail.com',
+    url='https://github.com/saadmk11/django-newsfeed',
+    packages=[
+        'newsfeed',
     ],
-    description=("Python 3 library for downloading YouTube Videos."),
     include_package_data=True,
-    long_description_content_type="text/markdown",
-    long_description=long_description,
-    zip_safe=True,
-    python_requires=">=3.6",
-    project_urls={
-        "Bug Reports": "https://github.com/nficano/pytube/issues",
-        "Read the Docs": "https://python-pytube.readthedocs.io/en/latest",
-    },
-    keywords=["youtube", "download", "video", "stream",],
+    python_requires='>=3.6',
+    install_requires=[
+        'Django >= 2.2',
+    ],
+    test_suite="runtests.runtests",
+    license="GNU Public License",
+    zip_safe=False,
+    keywords='django-newsfeed news curator newsletter subscription',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+    ],
 )
