@@ -1,65 +1,101 @@
-# <div align="center"> SAPHanaSR-angi - SAP HANA System Replication <br> A New Generation Interface </div>
+# IsoCor - **Iso**tope **Cor**rection for mass spectrometry labeling experiments
 
-The SUSE resource agents to control the SAP HANA database in system replication setups
+[![PyPI version](https://badge.fury.io/py/IsoCor.svg)](https://badge.fury.io/py/IsoCor)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/isocor.svg)](https://pypi.python.org/pypi/isocor/)
+[![Build Status](https://travis-ci.com/MetaSys-LISBP/IsoCor.svg?branch=master)](https://travis-ci.com/MetaSys-LISBP/IsoCor)
+[![Documentation Status](https://readthedocs.org/projects/isocor/badge/?version=latest)](http://isocor.readthedocs.io/?badge=latest)
 
-[![Build Status](https://github.com/SUSE/SAPHanaSR/actions/workflows/ChecksAndLinters.yml/badge.svg?branch=angi)](https://github.com/SUSE/SAPHanaSR/actions/workflows/ChecksAndLinters.yml/badge.svg?branch=angi)
-
-
-## Introduction
-
-SAPHanaSR-angi provides an automatic failover between SAP HANA nodes with configured System Replication in HANA. Currently Scale-Up setups are targeted.
-
-CIB attributes are not backward compatible between SAPHanaSR-angi and SAPHanaSR. So there is currently no easy migration path.
-
-This technology is included in the SUSE Linux Enterprise Server for SAP Applications 15 (as technology preview), via the RPM package with the same name.
-
-System replication will help to replicate the database data from one node to another node in order to compensate for database failures. With this mode of operation, internal SAP HANA high-availability (HA) mechanisms and the Linux cluster have to work together.
-
-The SAPHanaController resource agent performs the actual check of the SAP HANA database instances and is configured as a promotable multi-state resource.
-Managing the two SAP HANA instances means that the resource agent controls the start/stop of the instances. In addition the resource agent is able to monitor the SAP HANA databases on landscape host configuration level.
-
-For this monitoring the resource agent relies on interfaces provided by SAP.
-
-As long as the HANA landscape status is not "ERROR" the Linux cluster will not act. The main purpose of the Linux cluster is to handle the takeover to the other site.
-
-Only if the HANA landscape status indicates that HANA can not recover from the failure and the replication is in sync, then Linux will act.
-
-An important task of the resource agent is to check the synchronisation status of the two SAP HANA databases. If the synchronisation is not "SOK", then the
-cluster avoids to take over to the secondary side, if the primary fails. This is to improve the data consistency.
-
-For more information, refer to the ["Supported High Availability Solutions by SLES for SAP Applications](https://documentation.suse.com/sles-sap/sap-ha-support/html/sap-ha-support/article-sap-ha-support.html) and all the manual pages shipped with the package.
+[![IsoCor graphical user interface](https://raw.githubusercontent.com/MetaSys-LISBP/IsoCor/master/doc/_static/isocor_GUI.png)](https://isocor.readthedocs.io/en/latest/)
 
 
-## File structure of installed package
+## What is IsoCor?
+**IsoCor is a scientific software dedicated to the correction of mass spectrometry (MS) data for naturally
+occuring isotopes**.
+IsoCor corrects raw MS data (mass fractions) for
+naturally-occurring isotopes of all elements and purity of the
+isotopic tracer.
+The output of IsoCor is the isotopologue distribution of the molecule
+(i.e. the relative fractions of molecular entities differing only in the number
+of isotopic substitutions of the tracer). IsoCor also calculates
+the mean enrichment (i.e. the mean isotopic content in the molecule) in metabolites.
 
-- `/usr/share/SAPHanaSR-angi/doc` contains readme and license;
-- `/usr/share/man` and it's subdirectories contains manual pages;
-- `/usr/lib/ocf/resource.d/suse` contains the actual resource agents, `SAPHanaController` and `SAPHanaTopology`;
-- `/usr/lib/SAPHanaSR-angi` contains the libraries for the resource agents;
-- `/usr/share/SAPHanaSR-angi` contains SAP HA/DR provider hook scripts;
-- `/usr/share/SAPHanaSR-angi/samples` contains examples for global ini configuration and various additional stuff;
-- `/usr/bin` contains tools;
+It is one of the routine tools that we use at the [MetaSys team](http://www.lisbp.fr/en/research/molecular-physiology-and-metabolism/metasys.html) and [MetaToul platform](http://www.metatoul.fr) in isotopic studies of metabolic systems.
+
+The code is open-source, and available under a GPLv3 license. Additional information can be found in [IsoCor publication](https://doi.org/10.1093/bioinformatics/btz209).
+
+Detailed documentation can be found online at Read the Docs ([https://isocor.readthedocs.io/](https://isocor.readthedocs.io/)).
+Check out the [Tutorials](https://isocor.readthedocs.io/en/latest/tutorials.html) to use the best correction option!
+
+## Key features
+* **correction of naturally occuring isotopes**, both for non-tracer and tracer elements,
+* **correction of tracer purity**,
+* shipped as a library with both a **graphical and command line interface**,
+* mass-spectrometer and resolution agnostic,
+* can be applied to singly- and multiply-charged ions
+* can be used with any tracer element (having two or more isotopes)
+* account for the contribution of derivatization steps (if any),
+* generate isotopic InChIs of the tracer isotopologues,
+* open-source, free and easy to install everywhere where Python 3 and pip run,
+* biologist-friendly.
+
+## Quick-start
+IsoCor requires Python 3.5 or higher and run on all plate-forms.
+Please check [the documentation](https://isocor.readthedocs.io/en/latest/quickstart.html) for complete
+installation and usage instructions.
+
+Use `pip` to **install IsoCor from PyPi**:
+
+```bash
+$ pip install isocor
+```
+
+Then, start the graphical interface with:
+
+```bash
+$ isocor
+```
+
+IsoCor is also available directly from command-line and as a Python library.
+
+## Bug and feature requests
+If you have an idea on how we could improve IsoCor please submit a new *issue*
+to [our GitHub issue tracker](https://github.com/MetaSys-LISBP/IsoCor/issues).
 
 
-## License
+## Developers guide
+### Contributions
+Contributions are very welcome! :heart:
 
-See the [LICENSE](LICENSE) file for license rights and limitations.
+Please work on your own fork,
+follow [PEP8](https://www.python.org/dev/peps/pep-0008/) style guide,
+and make sure you pass all the tests before a pull request.
 
+### Local install with pip
+In development mode, do a `pip install -e /path/to/IsoCor` to install
+locally the development version.
 
-## Contributing
+### Unit tests
+Isotope correction is a complex task and we use unit tests to make sure
+that critical features are not compromised during development.
 
-If you are interested in contributing to this project, read the [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+You can run all tests by calling `pytest` in the shell at project's root directory.
 
+### Build the documentation locally
+Build the HTML documentation with:
 
-## Feedback
-Do you have suggestions for improvement? Let us know!
+```bash
+$ cd doc
+$ make html
+```
 
-Go to Issues, create a [new issue](https://github.com/SUSE/SAPHanaSR/issues) and describe what you think could be improved.
+The PDF documentation can be built locally by replacing `html` by `latexpdf`
+in the command above. You will need a recent latex installation.
 
-Feedback is always welcome!
+## How to cite
+Millard P., Delépine B., Guionnet M., Heuillet M., Bellvert F. and Letisse F. IsoCor: isotope correction for high-resolution MS labeling experiments. Bioinformatics, 2019, [doi: 10.1093/bioinformatics/btz209](https://doi.org/10.1093/bioinformatics/btz209)
 
+## Authors
+Baudoin Delépine, Matthieu Guionnet, Pierre Millard
 
-## Development and Branches
-Please read [development.md](development.md) for more information.
-
-
+## Contact
+:email: Pierre Millard, millard@insa-toulouse.fr
