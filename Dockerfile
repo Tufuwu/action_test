@@ -1,12 +1,9 @@
-FROM python:3.7-slim-buster
+FROM python:3.7-buster
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends dexdump=8.1.0+r23-3 \
- && rm -rf /var/lib/apt/lists/*
+COPY ./requirements.txt /opt/requirements.txt
+RUN pip3 install -r /opt/requirements.txt
 
-WORKDIR /
-COPY . .
+COPY . /exodus-core
+WORKDIR /exodus-core
 
-RUN pip install --no-cache-dir -r requirements.txt
-
-ENTRYPOINT ["python", "exodus_analyze.py", "app.apk"]
+ENV PATH "${PATH}:/exodus-core/exodus_core/dexdump/"
