@@ -1,88 +1,114 @@
-# Charm Kubernetes Jenkins
+[![Build Status](https://github.com/hypothesis/bouncer/workflows/Continuous%20integration/badge.svg?branch=master)](https://github.com/hypothesis/bouncer/actions?query=branch%3Amaster)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-This project contains the scripts used to build and test the CDK.
+Hypothesis Direct-Link Bouncer Service
+======================================
 
-## What is where
+Installing bouncer in a development environment
+-----------------------------------------------
 
- - *jobs* - All jenkins jobs housed here
- - *jobs/integration* - All integration tests housed here
+### You will need
 
-## How to run tests locally
+* [Git](https://git-scm.com/)
 
-Running the tests locally can be accomplished easily with tox. The tests expect
-certain environment variables to be set. These can be found by looking at the
-help output from `pytest` under the **custom options** section.
+* [Node](https://nodejs.org/) and npm.
+  On Linux you should follow
+  [nodejs.org's instructions for installing node](https://nodejs.org/en/download/package-manager/)
+  because the version of node in the standard Ubuntu package repositories is
+  too old.
+  On macOS you should use [Homebrew](https://brew.sh/) to install node.
 
-> **Note**: Required minimum Python version is 3.6.
+* [pyenv](https://github.com/pyenv/pyenv)
+  Follow the instructions in the pyenv README to install it.
+  The Homebrew method works best on macOS.
 
-```
-> tox -e py3 --workdir .tox -- pytest jobs/integration/validation.py --help
+### Clone the Git repo
 
-custom options:
-  --no-flaky-report     Suppress the report at the end of the run detailing
-                        flaky test results.
-  --no-success-flaky-report
-                        Suppress reporting flaky test successesin the report
-                        at the end of the run detailing flaky test results.
-  --controller=CONTROLLER
-                        Juju controller to use
-  --model=MODEL         Juju model to use
-  --series=SERIES       Base series
-  --cloud=CLOUD         Juju cloud to use
-  --charm-channel=CHARM_CHANNEL
-                        Charm channel to use
-  --bundle-channel=BUNDLE_CHANNEL
-                        Bundle channel to use
-  --snap-channel=SNAP_CHANNEL
-                        Snap channel to use eg 1.16/edge
-  --is-upgrade          This test should be run with snap and charm upgrades
-  --upgrade-snap-channel=UPGRADE_SNAP_CHANNEL
-                        Snap channel to use eg 1.16/edge
-  --upgrade-charm-channel=UPGRADE_CHARM_CHANNEL
-                        Charm channel to use (stable, candidate, beta, edge)
-  --snapd-upgrade       run tests with upgraded snapd
-  --snapd-channel=SNAPD_CHANNEL
-                        Snap channel to install snapcore from
-```
+    git clone https://github.com/hypothesis/bouncer.git
 
-This tells us what the commandline is to run this test and what parameters we
-need to pass to it. These are passed to pytest running in tox. By default, the
-working directory for tox is in /var/lib/jenkins, which probably doesn't exist
-on development machines, so --workdir is used to specify a new directory to use.
+This will download the code into an `bouncer` directory in your current working
+directory. You need to be in the `bouncer` directory from the remainder of the
+installation process:
 
-```
-tox --workdir .tox -e py3 -- \
-    pytest jobs/integration/validation.py \
-      --controller aws-us-east-1 \
-      --model cdk \
-      --cloud aws 2>&1 | tee ~/log.txt
-```
+    cd bouncer
 
-## Developing new tests
+### Start the development server
 
-Jenkins Job Builder is used to generate jobs for Jenkins programmatically. No
-jobs are created by hand in the Jenkins UI.
+    make dev
 
-Adding a new test can be done by copying an existing one and modifying for your needs:
+The first time you run `make dev` it might take a while to start because it'll
+need to install the application dependencies and build the assets.
 
-[Spec](https://github.com/juju-solutions/kubernetes-jenkins/blob/master/jobs/validate/spec)
+This will start the server on port 8000 (http://localhost:8000), reload the
+application whenever changes are made to the source code, and restart it should
+it crash for some reason.
 
-[JJB Validate](https://github.com/juju-solutions/kubernetes-jenkins/blob/master/jobs/validate.yaml)
+**That's it!** You’ve finished setting up your bouncer development environment. Run
+`make help` to see all the commands that're available for running the tests,
+linting, code formatting, etc.
 
-## Documentation
+Configuration
+-------------
 
-### Build
+You can set various environment variables to configure bouncer:
 
-To build the docs do the following:
+<dl>
+<dt>CHROME_EXTENSION_ID</dt>
+<dd>The ID of the Hypothesis Chrome extension that bouncer will communicate with
+(default: the ID of the <a href="https://chrome.google.com/webstore/detail/hypothesis-web-pdf-annota/bjfhmglciegochdpefhhlphglcehbmek" rel="nofollow">official Hypothesis Chrome extension</a>)</dd>
 
-```
-> tox --workdir .tox -e py3 -- inv build-docs
-```
+<dt>DEBUG</dt>
+<dd>If <code>DEBUG</code> is set (to any value) then tracebacks will be printed to the
+terminal for any unexpected Python exceptions. If there is no <code>DEBUG</code>
+variable set in the environment then unexpected Python exceptions will be
+reported to Sentry and a generic error page shown to the user.</dd>
 
-To build and deploy documentation (requires AWS credentials):
+<dt>ELASTICSEARCH_URL</dt>
+<dd>The url (host and port) of the Elasticsearch server that bouncer will read
+annotations from (default: <a href="http://localhost:9200" rel="nofollow">http://localhost:9200</a>)</dd>
 
-```
-> tox --workdir .tox -e docs
-```
+<dt>ELASTICSEARCH_INDEX</dt>
+<dd>The name of the Elasticsearch index that bouncer will read annotations
+from (default: hypothesis)</dd>
 
+<dt>HYPOTHESIS_AUTHORITY</dt>
+<dd>The domain name of the Hypothesis service's first party authority.
+This is usually the same as the domain name of the Hypothesis service
+(default: localhost).</dd>
 
+<dt>HYPOTHESIS_URL</dt>
+<dd>The URL of the Hypothesis front page that requests to bouncer's front page
+will be redirected to (default: <a href="https://hypothes.is" rel="nofollow">https://hypothes.is</a>)</dd>
+
+<dt>SENTRY_DSN</dt>
+<dd>The DSN (Data Source Name) that bouncer will use to report crashes to
+<a href="https://getsentry.com/" rel="nofollow">Sentry</a></dd>
+
+<dt>VIA_BASE_URL</dt>
+<dd>The base URL of the Via service that bouncer will redirect users to if they
+don't have the Hypothesis Chrome extension installed
+(default: <a href="https://via.hypothes.is" rel="nofollow">https://via.hypothes.is</a>)</dd>
+</dl>
+
+Route Syntax/API
+----------------
+
+### Share Annotations on Page/URL (`/go`)
+
+Go to a specified URL and display annotations there. Optionally filter which
+annotations are displayed.
+
+Querystring parameters:
+
+* `url` (required): URL of target page/document
+* `group` (optional): group ID. Show annotations within a specified group.
+* `q` (optional): Search query. Filter annotations at URL to those that match
+  this search query.
+
+### Share an Annotation (`/{id}` or `/{id}/{url}`)
+
+Go to an individual annotation, where `id` is the annotation's unique ID.
+
+Optional `url` path parameter: URL of the annotation's target document.
+This is intended to enhance the readability of shared annotation URLs and
+is functionally identical to the `/{id}` route.
