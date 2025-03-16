@@ -1,3 +1,7 @@
-include README* LICENSE requirements.txt goatools/test_data/nbt_3102/* requirements.txt setup_helper.py
+include LICENSE*
+include README*
+include setup_helper.py
+include requirements.txt
 include versioneer.py
-include goatools/_version.py
+include jcvi/_version.py
+include jcvi/utils/data/*
