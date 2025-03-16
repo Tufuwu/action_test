@@ -1,25 +1,31 @@
-# tftb
+FoxPuppet
+=========
 
-tftb (Time-frequency toolbox) is a Python module for time-frequency analysis and visualization
-build with SciPy and matplotlib.
+FoxPuppet is a library for automating user interactions in `Firefox <https://www.mozilla.org/en-US/firefox/products/>`_ using `Selenium <http://seleniumhq.org/>`_.
 
-The tftb project began as a Python implementation of the TFTB toolbox developed by
-François Auger, Olivier Lemoine, Paulo Gonçalvès and Patrick Flandrin. While this project and the
-MATLAB implementation (henceforth referred to as TFTB) are similar in the core algorithms and the
-basic code organization, the very nature of the Python programming language has motivated a very
-different approach in architecture of PyTFTB (differences between the two packages have been
-discussed in detail [here](https://tftb.readthedocs.io/en/latest/introduction.html#comparison-of-tftb-and-pytftb)).
+.. image:: https://img.shields.io/badge/license-MPL%202.0-blue.svg
+   :target: https://github.com/mozilla/FoxPuppet/blob/master/LICENSE.txt
+   :alt: License
 
+.. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
+   :target: http://foxpuppet.readthedocs.io/en/latest/
+   :alt: Read the Docs
 
-## Installation
+.. image:: https://img.shields.io/travis/mozilla/FoxPuppet.svg
+   :target: https://travis-ci.org/mozilla/FoxPuppet/
+   :alt: Travis
 
-tftb requires:
-  - Python (>= 3.5)
-  - NumPy
-  - SciPy
-  - Matplotlib
+.. image:: https://img.shields.io/coveralls/mozilla/FoxPuppet.svg
+   :target: https://coveralls.io/github/mozilla/FoxPuppet
+   :alt: Coverage
 
-Install tftb with pip as follows:
-```bash
-$ pip install tftb
-```
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+  :target: https://github.com/ambv/black
+
+.. image:: https://img.shields.io/github/issues/mozilla/FoxPuppet.svg
+   :target: https://github.com/mozilla/FoxPuppet/issues
+   :alt: Issues
+
+.. image:: https://api.dependabot.com/badges/status?host=github&repo=mozilla/FoxPuppet
+   :target: https://dependabot.com
+   :alt: Dependabot
