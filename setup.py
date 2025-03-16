@@ -1,33 +1,61 @@
-#!/usr/bin/env python
-
 from setuptools import find_packages, setup
 
+__version__ = "2.1.1"
+
 setup(
-    name="aioapns",
-    version="2.0.2",
-    description="An efficient APNs Client Library for Python/asyncio",
+    # package name in pypi
+    name="django-oscar-api",
+    # extract version from module.
+    version=__version__,
+    description="REST API module for django-oscar",
     long_description=open("README.rst").read(),
-    platforms="all",
     classifiers=[
-        "License :: OSI Approved :: Apache Software License",
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Web Environment",
+        "Framework :: Django",
+        "Framework :: Django :: 2.2",
+        "Framework :: Django :: 3.0",
+        "Framework :: Django :: 3.1",
         "Intended Audience :: Developers",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Programming Language :: Python :: 3 :: Only",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: Unix",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "Development Status :: 5 - Production/Stable",
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
     ],
-    license="Apache License, Version 2.0",
-    author="Alexander Tikhonov",
-    author_email="random.gauss@gmail.com",
-    url="https://github.com/Fatal1ty/aioapns",
-    packages=find_packages(exclude=("tests",)),
+    python_requires=">=3.6",
+    keywords="",
+    author="Lars van de Kerkhof, Martijn Jacobs",
+    author_email="lars@permanentmarkers.nl, martijn@devopsconsulting.nl",
+    url="https://github.com/django-oscar/django-oscar-api",
+    license="BSD",
+    packages=find_packages(
+        exclude=[
+            "*tests.unit",
+            "*tests.serializers*",
+            "*tests.doctests*",
+            "*fixtures",
+            "*fixtures*",
+            "*sandbox*",
+        ]
+    ),
+    # include non python files
+    include_package_data=True,
+    zip_safe=False,
+    # specify dependencies
     install_requires=[
-        "h2>=4.0.0",
-        "pyOpenSSL>=17.5.0",
-        "pyjwt>=2.0.0",
+        "setuptools",
+        "django-oscar>=3.0",
+        "Django>=2.2.13",  # CVE-2020-9402
+        "djangorestframework>=3.9",  # first version to support Django 2.2
     ],
+    # mark test target to require extras.
+    extras_require={
+        "dev": ["coverage", "mock", "twine", "wheel", "easy_thumbnails"],
+        "lint": ["flake8", "flake8-black", "flake8-bugbear", "black>=19.10b0"],
+    },
 )
