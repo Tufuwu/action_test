@@ -1,484 +1,758 @@
-# You-Get
+# Ansible Role: Dokku
 
-[![Build Status](https://github.com/soimort/you-get/workflows/develop/badge.svg)](https://github.com/soimort/you-get/actions)
-[![PyPI version](https://img.shields.io/pypi/v/you-get.svg)](https://pypi.python.org/pypi/you-get/)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/soimort/you-get?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Ansible Role](https://img.shields.io/ansible/role/39276.svg)](https://galaxy.ansible.com/dokku_bot/ansible_dokku) [![Release](https://img.shields.io/github/release/dokku/ansible-dokku.svg)](https://github.com/dokku/ansible-dokku/releases) [![Build Status](https://github.com/dokku/ansible-dokku/workflows/CI/badge.svg)](https://github.com/dokku/ansible-dokku/actions)
 
-**NOTICE: Read [this](https://github.com/soimort/you-get/blob/develop/CONTRIBUTING.md) if you are looking for the conventional "Issues" tab.**
+This Ansible role helps install Dokku on Debian/Ubuntu variants. Apart
+from installing Dokku, it also provides various modules that can be
+used to interface with dokku from your own Ansible playbooks.
 
+
+## Table Of Contents
+
+- [Requirements](#requirements)
+- [Dependencies](#dependencies)
+- [Role Variables](#role-variables)
+- [Libraries](#libraries)
+- [Example Playbooks](#example-playbooks)
+- [License](#license)
+
+## Requirements
+
+Minimum Ansible Version: 2.2
+
+### Platform Requirements
+
+Supported Platforms
+
+- Ubuntu: trusty
+- Ubuntu: utopic
+- Ubuntu: vivid
+- Ubuntu: wily
+- Ubuntu: xenial
+- Ubuntu: yakkety
+- Ubuntu: zesty
+- Ubuntu: artful
+- Ubuntu: bionic
+- Debian: wheezy
+- Debian: jessie
+- Debian: stretch
+- Debian: buster
+
+## Dependencies
+
+- geerlingguy.docker ansible role
+- nginxinc.nginx ansible role
+- Dokku version 0.21.4 (for library usage)
+
+## Role Variables
+
+### dokku_daemon_install
+
+- default: `True`
+- type: `boolean`
+- description: Whether to install the dokku-daemon
+
+### dokku_daemon_version
+
+- default: `0.0.2`
+- type: `string`
+- description: Version of dokku-daemon to install
+
+### dokku_hostname
+
+- default: `dokku.me`
+- type: `string`
+- description: Hostname, used as vhost domain and for showing app URL after deploy
+
+### dokku_key_file
+
+- default: `/root/.ssh/id_rsa.pub`
+- type: `string`
+- description: Path on disk to an SSH key to add to the Dokku user (Will be ignored on `dpkg-reconfigure`)
+
+### dokku_manage_nginx
+
+- default: `True`
+- type: `boolean`
+- description: Whether we should manage the 00-default nginx site
+
+### dokku_plugins
+
+- default: `{}`
+- type: `list`
+- description: A list of plugins to install. The host _must_ have network access to the install url, and git access if required. Plugins should be specified in the following format:
+
+```yaml
+- name: postgres
+  url: https://github.com/dokku/dokku-postgres.git
+
+- name: redis
+  url: https://github.com/dokku/dokku-redis.git
+```
+
+### dokku_skip_key_file
+
+- default: `false`
+- type: `string`
+- description: Do not check for the existence of the dokku/key_file. Setting this to "true", will require you to manually add an SSH key later on.
+
+### dokku_users
+
+- default: `None`
+- type: `list`
+- description: A list of users who should have access to Dokku. This will _not_ grant them generic SSH access, but rather only access as the `dokku` user. Users should be specified in the following format:
+
+```yaml
+- name: Jane Doe
+  username: jane
+  ssh_key: JANES_PUBLIC_SSH_KEY
+- name: Camilla
+  username: camilla
+  ssh_key: CAMILLAS_PUBLIC_SSH_KEY
+```
+
+### dokku_version
+
+- default: `0.21.4`
+- type: `version`
+- description: The version of Dokku to install
+
+### dokku_vhost_enable
+
+- default: `true`
+- type: `string`
+- description: Use vhost-based deployments (e.g., .dokku.me)
+
+### dokku_web_config
+
+- default: `false`
+- type: `string`
+- description: Use web-based config for hostname and keyfile
+
+### herokuish_version
+
+- default: `0.5.18`
+- type: `version`
+- description: The version of herokuish to install
+
+### plugn_version
+
+- default: `0.5.0`
+- type: `version`
+- description: The version of plugn to install
+
+### sshcommand_version
+
+- default: `0.11.0`
+- type: `version`
+- description: The version of sshcommand to install
+
+## Libraries
+
+### dokku_app
+
+Create or destroy dokku apps
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the app|
+
+#### Example
+
+```yaml
+- name: Create a dokku app
+  dokku_app:
+    app: hello-world
+
+- name: Delete that repo
+  dokku_app:
+    app: hello-world
+    state: absent
+```
+
+### dokku_certs
+
+Manages ssl configuration for an app.
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|cert<br /><sup>*required*</sup>||Path to the ssl certificate|
+|key<br /><sup>*required*</sup>||Path to the ssl certificate key|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the ssl configuration|
+
+#### Example
+
+```yaml
+- name: Adds an ssl certificate and key to an app
+  dokku_certs:
+    app: hello-world
+    key: /etc/nginx/ssl/hello-world.key
+    cert: /etc/nginx/ssl/hello-world.crt
+
+- name: Removes an ssl certificate and key from an app
+  dokku_certs:
+    app: hello-world
+    state: absent
+```
+
+### dokku_clone
+
+Deploys a repository to an undeployed application.
+
+#### Requirements
+
+- the `dokku-clone` plugin
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|repository<br /><sup>*required*</sup>||Git repository url|
+
+#### Example
+
+```yaml
+- name: clone a repo
+  dokku_clone:
+    app: hello-world
+    repository: https://github.com/hello-world/hello-world.git
+```
+
+### dokku_config
+
+Manage environment variables for a given dokku application
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|config<br /><sup>*required*</sup>|*Default:* {}|A map of environment variables where key => value|
+|restart|*Default:* True|Whether to restart the application or not. If the task is idempotent then setting restart to true will not perform a restart.|
+
+#### Example
+
+```yaml
+- name: set KEY=VALUE
+  dokku_config:
+    app: hello-world
+    config:
+      KEY: VALUE_1
+      KEY_2: VALUE_2
+
+- name: set KEY=VALUE without restart
+  dokku_config:
+    app: hello-world
+    restart: false
+    config:
+      KEY: VALUE_1
+      KEY_2: VALUE_2
+```
+
+### dokku_consul
+
+Manage the consul configuration for a given dokku application
+
+#### Requirements
+
+- the `dokku-consul` plugin (_commercial_)
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|endpoint|*Default:* /|The consul healthcheck endpoint|
+|interval|*Default:* 60s|The consul healthcheck interval|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the consul integration|
+|timeout<br /><sup>*required*</sup>|*Default:* 60s|The consul healthcheck timeout|
+
+#### Example
+
+```yaml
+- name: consul:enable hello-world
+  dokku_consul:
+    app: hello-world
+
+- name: consul:enable hello-world with args
+  dokku_consul:
+    app: hello-world
+    endpoint: /_status
+
+- name: consul:disable hello-world
+  dokku_consul:
+    app: hello-world
+    state: absent
+```
+
+### dokku_docker_options
+
+Manage docker-options for a given dokku application
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|option<br /><sup>*required*</sup>||A single docker option|
+|phase|*Choices:* <ul><li>build</li><li>deploy</li><li>run</li></ul>|The phase in which to set the options|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the docker options|
+
+#### Example
+
+```yaml
+- name: docker-options:add hello-world deploy
+  dokku_docker_options:
+    app: hello-world
+    phase: deploy
+    option: "-v /var/run/docker.sock:/var/run/docker.sock"
+
+- name: docker-options:remove hello-world deploy
+  dokku_docker_options:
+    app: hello-world
+    phase: deploy
+    option: "-v /var/run/docker.sock:/var/run/docker.sock"
+    state: absent
+```
+
+### dokku_domains
+
+Manages domains for a given application
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app. This is required only if global is set to False.|
+|domains<br /><sup>*required*</sup>||A list of domains|
+|global|*Default:* False|Whether to change the global domains or app-specific domains.|
+|state|*Choices:* <ul><li>enable</li><li>disable</li><li>clear</li><li>**present** (default)</li><li>absent</li></ul>|The state of the application's domains|
+
+#### Example
+
+```yaml
+- name: domains:add hello-world dokku.me
+  dokku_domains:
+    app: hello-world
+    domains:
+      - dokku.me
+
+- name: domains:remove hello-world dokku.me
+  dokku_domains:
+    app: hello-world
+    domains:
+      - dokku.me
+    state: absent
+
+- name: domains:clear hello-world
+  dokku_domains:
+    app: hello-world
+    state: clear
+
+- name: domains:enable hello-world
+  dokku_domains:
+    app: hello-world
+    state: enable
+
+- name: domains:disable hello-world
+  dokku_domains:
+    app: hello-world
+    state: disable
+```
+
+### dokku_ecr
+
+Manage the ecr configuration for a given dokku application
+
+#### Requirements
+
+- the `dokku-ecr` plugin (_commercial_)
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|account-id||The ecr aws account-id|
+|app<br /><sup>*required*</sup>||The name of the app|
+|image-repo||The image name to use when pushing to ecr|
+|region|*Default:* us-east-1|The ecr region|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the ecr integration|
+
+#### Example
+
+```yaml
+- name: ecr:enable hello-world
+  dokku_ecr:
+    app: hello-world
+
+- name: ecr:enable hello-world with args
+  dokku_ecr:
+    app: hello-world
+    image-repo: prod-hello-world
+
+- name: ecr:disable hello-world
+  dokku_ecr:
+    app: hello-world
+    state: absent
+```
+
+### dokku_git_sync
+
+Manages syncing git code from a remote repository for an app
+
+#### Requirements
+
+- the `dokku-git-sync` plugin (_commercial_)
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|remote||The git remote url to use|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the git-sync integration|
+
+#### Example
+
+```yaml
+- name: git-sync:enable hello-world
+  dokku_git_sync:
+    app: hello-world
+    remote: git@github.com:hello-world/hello-world.git
+
+- name: git-sync:disable hello-world
+  dokku_git_sync:
+    app: hello-world
+    state: absent
+```
+
+### dokku_global_cert
+
+Manages global ssl configuration.
+
+#### Requirements
+
+- the `dokku-global-cert` plugin
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|cert<br /><sup>*required*</sup>||Path to the ssl certificate|
+|key<br /><sup>*required*</sup>||Path to the ssl certificate key|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the ssl configuration|
+
+#### Example
+
+```yaml
+- name: Adds an ssl certificate and key
+  dokku_global_cert:
+    key: /etc/nginx/ssl/global-hello-world.key
+    cert: /etc/nginx/ssl/global-hello-world.crt
+
+- name: Removes an ssl certificate and key
+  dokku_global_cert:
+    state: absent
+```
+
+### dokku_ports
+
+Manage ports for a given dokku application
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|mappings<br /><sup>*required*</sup>||A list of port mappings|
+|state|*Choices:* <ul><li>clear</li><li>**present** (default)</li><li>absent</li></ul>|The state of the port mappings|
+
+#### Example
+
+```yaml
+- name: proxy:ports-add hello-world http:80:80
+  dokku_ports:
+    app: hello-world
+    mappings:
+        - http:80:8080
+
+- name: proxy:ports-remove hello-world http:80:80
+  dokku_ports:
+    app: hello-world
+    mappings:
+        - http:80:8080
+    state: absent
+
+- name: proxy:ports-clear hello-world
+  dokku_ports:
+    app: hello-world
+    state: clear
+```
+
+### dokku_proxy
+
+Enable or disable the proxy for a dokku app
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the proxy|
+
+#### Example
+
+```yaml
+- name: Enable the default proxy
+  dokku_proxy:
+    app: hello-world
+
+- name: Disable the default proxy
+  dokku_proxy:
+    app: hello-world
+    state: absent
+```
+
+### dokku_registry
+
+Manage the registry configuration for a given dokku application
+
+#### Requirements
+
+- the `dokku-registry` plugin
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|image||Alternative to app name for image repository name|
+|password||The registry password (required for 'present' state)|
+|server||The registry server hostname (required for 'present' state)|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the registry integration|
+|username||The registry username (required for 'present' state)|
+
+#### Example
+
+```yaml
+- name: registry:enable hello-world
+  dokku_registry:
+    app: hello-world
+    password: password
+    server: localhost:8080
+    username: user
+
+- name: registry:enable hello-world with args
+  dokku_registry:
+    app: hello-world
+    image: other-image
+    password: password
+    server: localhost:8080
+    username: user
+
+- name: registry:disable hello-world
+  dokku_registry:
+    app: hello-world
+    state: absent
+```
+
+### dokku_service_create
+
+Creates a given service
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|name<br /><sup>*required*</sup>||The name of the service|
+|service<br /><sup>*required*</sup>||The type of service to create|
+
+#### Example
+
+```yaml
+- name: redis:create default
+  dokku_service_create:
+    name: default
+    service: redis
+```
+
+### dokku_service_link
+
+Links and unlinks a given service to an application
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app<br /><sup>*required*</sup>||The name of the app|
+|name<br /><sup>*required*</sup>||The name of the service|
+|service<br /><sup>*required*</sup>||The type of service to link|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the service link|
+
+#### Example
+
+```yaml
+- name: redis:link default hello-world
+  dokku_service_link:
+    app: hello-world
+    name: default
+    service: redis
+
+- name: redis:unlink default hello-world
+  dokku_service_link:
+    app: hello-world
+    name: default
+    service: redis
+    state: absent
+```
+
+### dokku_storage
+
+Manage storage for dokku applications
+
+#### Parameters
+
+|Parameter|Choices/Defaults|Comments|
+|---------|----------------|--------|
+|app||The name of the app|
+|create_host_dir|*Default:* False|Whether to create the host directory or not|
+|group|*Default:* 32767|A group or gid that should own the created folder|
+|mounts|*Default:* []|A list of mounts to create, colon (:) delimited, in the format: `host_dir:container_dir`|
+|state|*Choices:* <ul><li>**present** (default)</li><li>absent</li></ul>|The state of the service link|
+|user|*Default:* 32767|A user or uid that should own the created folder|
+
+#### Example
+
+```yaml
+- name: mount a path
+  dokku_storage:
+    app: hello-world
+    mounts:
+      - /var/lib/dokku/data/storage/hello-world:/data
+
+- name: mount a path and create the host_dir directory
+  dokku_storage:
+    app: hello-world
+    mounts:
+      - /var/lib/dokku/data/storage/hello-world:/data
+    create_host_dir: true
+
+- name: unmount a path
+  dokku_storage:
+    app: hello-world
+    mounts:
+      - /var/lib/dokku/data/storage/hello-world:/data
+    state: absent
+
+- name: unmount a path and destroy the host_dir directory (and contents)
+  dokku_storage:
+    app: hello-world
+    mounts:
+      - /var/lib/dokku/data/storage/hello-world:/data
+    destroy_host_dir: true
+    state: absent
+```
+
+## Example Playbooks
+
+### Installing Dokku
+
+```yaml
 ---
-
-[You-Get](https://you-get.org/) is a tiny command-line utility to download media contents (videos, audios, images) from the Web, in case there is no other handy way to do it.
-
-Here's how you use `you-get` to download a video from [YouTube](https://www.youtube.com/watch?v=jNQXAC9IVRw):
-
-```console
-$ you-get 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-site:                YouTube
-title:               Me at the zoo
-stream:
-    - itag:          43
-      container:     webm
-      quality:       medium
-      size:          0.5 MiB (564215 bytes)
-    # download-with: you-get --itag=43 [URL]
-
-Downloading Me at the zoo.webm ...
- 100% (  0.5/  0.5MB) ├██████████████████████████████████┤[1/1]    6 MB/s
-
-Saving Me at the zoo.en.srt ... Done.
+- hosts: all
+  roles:
+    - dokku_bot.ansible_dokku
 ```
 
-And here's why you might want to use it:
+### Installing Plugins
 
-* You enjoyed something on the Internet, and just want to download them for your own pleasure.
-* You watch your favorite videos online from your computer, but you are prohibited from saving them. You feel that you have no control over your own computer. (And it's not how an open Web is supposed to work.)
-* You want to get rid of any closed-source technology or proprietary JavaScript code, and disallow things like Flash running on your computer.
-* You are an adherent of hacker culture and free software.
-
-What `you-get` can do for you:
-
-* Download videos / audios from popular websites such as YouTube, Youku, Niconico, and a bunch more. (See the [full list of supported sites](#supported-sites))
-* Stream an online video in your media player. No web browser, no more ads.
-* Download images (of interest) by scraping a web page.
-* Download arbitrary non-HTML contents, i.e., binary files.
-
-Interested? [Install it](#installation) now and [get started by examples](#getting-started).
-
-Are you a Python programmer? Then check out [the source](https://github.com/soimort/you-get) and fork it!
-
-![](https://i.imgur.com/GfthFAz.png)
-
-## Installation
-
-### Prerequisites
-
-The following dependencies are necessary:
-
-* **[Python](https://www.python.org/downloads/)**  3.2 or above
-* **[FFmpeg](https://www.ffmpeg.org/)** 1.0 or above
-* (Optional) [RTMPDump](https://rtmpdump.mplayerhq.hu/)
-
-### Option 1: Install via pip
-
-The official release of `you-get` is distributed on [PyPI](https://pypi.python.org/pypi/you-get), and can be installed easily from a PyPI mirror via the [pip](https://en.wikipedia.org/wiki/Pip_\(package_manager\)) package manager. Note that you must use the Python 3 version of `pip`:
-
-    $ pip3 install you-get
-
-### Option 2: Install via [Antigen](https://github.com/zsh-users/antigen) (for Zsh users)
-
-Add the following line to your `.zshrc`:
-
-    antigen bundle soimort/you-get
-
-### Option 3: Download from GitHub
-
-You may either download the [stable](https://github.com/soimort/you-get/archive/master.zip) (identical with the latest release on PyPI) or the [develop](https://github.com/soimort/you-get/archive/develop.zip) (more hotfixes, unstable features) branch of `you-get`. Unzip it, and put the directory containing the `you-get` script into your `PATH`.
-
-Alternatively, run
-
-```
-$ [sudo] python3 setup.py install
+```yaml
+---
+- hosts: all
+  roles:
+    - dokku_bot.ansible_dokku
+  vars:
+    dokku_plugins:
+      - name: clone
+        url: https://github.com/crisward/dokku-clone.git
+      - name: postgres
+        url: https://github.com/dokku/dokku-postgres.git
 ```
 
-Or
+### Deploying a simple word inflector
 
-```
-$ python3 setup.py install --user
-```
+```yaml
+---
+- hosts: all
+  roles:
+    - dokku_bot.ansible_dokku
+  tasks:
+    - name: dokku apps:create inflector
+      dokku_app:
+        app: inflector
 
-to install `you-get` to a permanent path.
-
-### Option 4: Git clone
-
-This is the recommended way for all developers, even if you don't often code in Python.
-
-```
-$ git clone git://github.com/soimort/you-get.git
-```
-
-Then put the cloned directory into your `PATH`, or run `./setup.py install` to install `you-get` to a permanent path.
-
-### Option 5: Homebrew (Mac only)
-
-You can install `you-get` easily via:
-
-```
-$ brew install you-get
+    - name: dokku clone inflector
+      dokku_clone:
+        app: inflector
+        repository: https://github.com/cakephp/inflector.cakephp.org
 ```
 
-### Option 6: pkg (FreeBSD only)
+### Setting up a Small VPS with a Dokku App
 
-You can install `you-get` easily via:
-
-```
-# pkg install you-get
-```
-
-### Shell completion
-
-Completion definitions for Bash, Fish and Zsh can be found in [`contrib/completion`](https://github.com/soimort/you-get/tree/develop/contrib/completion). Please consult your shell's manual for how to take advantage of them.
-
-## Upgrading
-
-Based on which option you chose to install `you-get`, you may upgrade it via:
-
-```
-$ pip3 install --upgrade you-get
-```
-
-or download the latest release via:
-
-```
-$ you-get https://github.com/soimort/you-get/archive/master.zip
-```
-
-In order to get the latest ```develop``` branch without messing up the PIP, you can try:
-
-```
-$ pip3 install --upgrade git+https://github.com/soimort/you-get@develop
-```
-
-## Getting Started
-
-### Download a video
-
-When you get a video of interest, you might want to use the `--info`/`-i` option to see all available quality and formats:
-
-```
-$ you-get -i 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-site:                YouTube
-title:               Me at the zoo
-streams:             # Available quality and codecs
-    [ DASH ] ____________________________________
-    - itag:          242
-      container:     webm
-      quality:       320x240
-      size:          0.6 MiB (618358 bytes)
-    # download-with: you-get --itag=242 [URL]
-
-    - itag:          395
-      container:     mp4
-      quality:       320x240
-      size:          0.5 MiB (550743 bytes)
-    # download-with: you-get --itag=395 [URL]
-
-    - itag:          133
-      container:     mp4
-      quality:       320x240
-      size:          0.5 MiB (498558 bytes)
-    # download-with: you-get --itag=133 [URL]
-
-    - itag:          278
-      container:     webm
-      quality:       192x144
-      size:          0.4 MiB (392857 bytes)
-    # download-with: you-get --itag=278 [URL]
-
-    - itag:          160
-      container:     mp4
-      quality:       192x144
-      size:          0.4 MiB (370882 bytes)
-    # download-with: you-get --itag=160 [URL]
-
-    - itag:          394
-      container:     mp4
-      quality:       192x144
-      size:          0.4 MiB (367261 bytes)
-    # download-with: you-get --itag=394 [URL]
-
-    [ DEFAULT ] _________________________________
-    - itag:          43
-      container:     webm
-      quality:       medium
-      size:          0.5 MiB (568748 bytes)
-    # download-with: you-get --itag=43 [URL]
-
-    - itag:          18
-      container:     mp4
-      quality:       small
-    # download-with: you-get --itag=18 [URL]
-
-    - itag:          36
-      container:     3gp
-      quality:       small
-    # download-with: you-get --itag=36 [URL]
-
-    - itag:          17
-      container:     3gp
-      quality:       small
-    # download-with: you-get --itag=17 [URL]
+```yaml
+---
+- hosts: all
+  roles:
+    - dokku_bot.ansible_dokku
+    - geerlingguy.swap
+  vars:
+    # If you are running dokku on a small VPS, you'll most likely
+    # need some swap to ensure you don't run out of RAM during deploys
+    swap_file_size_mb: '2048'
+    dokku_version: 0.19.13
+    dokku_users:
+      - name: yourname
+        username: yourname
+        ssh_key: "{{lookup('file', '~/.ssh/id_rsa.pub')}}"
+    dokku_plugins:
+      - name: clone
+        url: https://github.com/crisward/dokku-clone.git
+      - name: letsencrypt
+        url: https://github.com/dokku/dokku-letsencrypt.git
+  tasks:
+    - name: create app
+      dokku_app:
+        # change this name in your template!
+        app: &appname appname
+    - name: environment configuration
+      dokku_config:
+        app: *appname
+        config:
+          # specify a email for dokku-letsencrypt
+          DOKKU_LETSENCRYPT_EMAIL: email@example.com
+          # specify port so `domains` can setup the port mapping properly
+          PORT: "5000"
+    - name: git clone
+      # note you'll need to add a deployment key to the GH repo if it's private!
+      dokku_clone:
+        app: *appname
+        repository: git@github.com:heroku/python-getting-started.git
+    - name: add domain
+      dokku_domains:
+        app: *appname
+        domains:
+          - example.com
 ```
 
-By default, the one on the top is the one you will get. If that looks cool to you, download it:
+## License
 
-```
-$ you-get 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-site:                YouTube
-title:               Me at the zoo
-stream:
-    - itag:          242
-      container:     webm
-      quality:       320x240
-      size:          0.6 MiB (618358 bytes)
-    # download-with: you-get --itag=242 [URL]
+MIT License
 
-Downloading Me at the zoo.webm ...
- 100% (  0.6/  0.6MB) ├██████████████████████████████████████████████████████████████████████████████┤[2/2]    2 MB/s
-Merging video parts... Merged into Me at the zoo.webm
-
-Saving Me at the zoo.en.srt ... Done.
-```
-
-(If a YouTube video has any closed captions, they will be downloaded together with the video file, in SubRip subtitle format.)
-
-Or, if you prefer another format (mp4), just use whatever the option `you-get` shows to you:
-
-```
-$ you-get --itag=18 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-```
-
-**Note:**
-
-* At this point, format selection has not been generally implemented for most of our supported sites; in that case, the default format to download is the one with the highest quality.
-* `ffmpeg` is a required dependency, for downloading and joining videos streamed in multiple parts (e.g. on some sites like Youku), and for YouTube videos of 1080p or high resolution.
-* If you don't want `you-get` to join video parts after downloading them, use the `--no-merge`/`-n` option.
-
-### Download anything else
-
-If you already have the URL of the exact resource you want, you can download it directly with:
-
-```
-$ you-get https://stallman.org/rms.jpg
-Site:       stallman.org
-Title:      rms
-Type:       JPEG Image (image/jpeg)
-Size:       0.06 MiB (66482 Bytes)
-
-Downloading rms.jpg ...
-100.0% (  0.1/0.1  MB) ├████████████████████████████████████████┤[1/1]  127 kB/s
-```
-
-Otherwise, `you-get` will scrape the web page and try to figure out if there's anything interesting to you:
-
-```
-$ you-get http://kopasas.tumblr.com/post/69361932517
-Site:       Tumblr.com
-Title:      kopasas
-Type:       Unknown type (None)
-Size:       0.51 MiB (536583 Bytes)
-
-Site:       Tumblr.com
-Title:      tumblr_mxhg13jx4n1sftq6do1_1280
-Type:       Portable Network Graphics (image/png)
-Size:       0.51 MiB (536583 Bytes)
-
-Downloading tumblr_mxhg13jx4n1sftq6do1_1280.png ...
-100.0% (  0.5/0.5  MB) ├████████████████████████████████████████┤[1/1]   22 MB/s
-```
-
-**Note:**
-
-* This feature is an experimental one and far from perfect. It works best on scraping large-sized images from popular websites like Tumblr and Blogger, but there is really no universal pattern that can apply to any site on the Internet.
-
-### Search on Google Videos and download
-
-You can pass literally anything to `you-get`. If it isn't a valid URL, `you-get` will do a Google search and download the most relevant video for you. (It might not be exactly the thing you wish to see, but still very likely.)
-
-```
-$ you-get "Richard Stallman eats"
-```
-
-### Pause and resume a download
-
-You may use <kbd>Ctrl</kbd>+<kbd>C</kbd> to interrupt a download.
-
-A temporary `.download` file is kept in the output directory. Next time you run `you-get` with the same arguments, the download progress will resume from the last session. In case the file is completely downloaded (the temporary `.download` extension is gone), `you-get` will just skip the download.
-
-To enforce re-downloading, use the `--force`/`-f` option. (**Warning:** doing so will overwrite any existing file or temporary file with the same name!)
-
-### Set the path and name of downloaded file
-
-Use the `--output-dir`/`-o` option to set the path, and `--output-filename`/`-O` to set the name of the downloaded file:
-
-```
-$ you-get -o ~/Videos -O zoo.webm 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-```
-
-**Tips:**
-
-* These options are helpful if you encounter problems with the default video titles, which may contain special characters that do not play well with your current shell / operating system / filesystem.
-* These options are also helpful if you write a script to batch download files and put them into designated folders with designated names.
-
-### Proxy settings
-
-You may specify an HTTP proxy for `you-get` to use, via the `--http-proxy`/`-x` option:
-
-```
-$ you-get -x 127.0.0.1:8087 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-```
-
-However, the system proxy setting (i.e. the environment variable `http_proxy`) is applied by default. To disable any proxy, use the `--no-proxy` option.
-
-**Tips:**
-
-* If you need to use proxies a lot (in case your network is blocking certain sites), you might want to use `you-get` with [proxychains](https://github.com/rofl0r/proxychains-ng) and set `alias you-get="proxychains -q you-get"` (in Bash).
-* For some websites (e.g. Youku), if you need access to some videos that are only available in mainland China, there is an option of using a specific proxy to extract video information from the site: `--extractor-proxy`/`-y`.
-
-### Watch a video
-
-Use the `--player`/`-p` option to feed the video into your media player of choice, e.g. `mpv` or `vlc`, instead of downloading it:
-
-```
-$ you-get -p vlc 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-```
-
-Or, if you prefer to watch the video in a browser, just without ads or comment section:
-
-```
-$ you-get -p chromium 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
-```
-
-**Tips:**
-
-* It is possible to use the `-p` option to start another download manager, e.g., `you-get -p uget-gtk 'https://www.youtube.com/watch?v=jNQXAC9IVRw'`, though they may not play together very well.
-
-### Load cookies
-
-Not all videos are publicly available to anyone. If you need to log in your account to access something (e.g., a private video), it would be unavoidable to feed the browser cookies to `you-get` via the `--cookies`/`-c` option.
-
-**Note:**
-
-* As of now, we are supporting two formats of browser cookies: Mozilla `cookies.sqlite` and Netscape `cookies.txt`.
-
-### Reuse extracted data
-
-Use `--url`/`-u` to get a list of downloadable resource URLs extracted from the page. Use `--json` to get an abstract of extracted data in the JSON format.
-
-**Warning:**
-
-* For the time being, this feature has **NOT** been stabilized and the JSON schema may have breaking changes in the future.
-
-## Supported Sites
-
-| Site | URL | Videos? | Images? | Audios? |
-| :--: | :-- | :-----: | :-----: | :-----: |
-| **YouTube** | <https://www.youtube.com/>    |✓| | |
-| **Twitter** | <https://twitter.com/>        |✓|✓| |
-| VK          | <http://vk.com/>              |✓|✓| |
-| Vine        | <https://vine.co/>            |✓| | |
-| Vimeo       | <https://vimeo.com/>          |✓| | |
-| Veoh        | <http://www.veoh.com/>        |✓| | |
-| **Tumblr**  | <https://www.tumblr.com/>     |✓|✓|✓|
-| TED         | <http://www.ted.com/>         |✓| | |
-| SoundCloud  | <https://soundcloud.com/>     | | |✓|
-| SHOWROOM    | <https://www.showroom-live.com/> |✓| | |
-| Pinterest   | <https://www.pinterest.com/>  | |✓| |
-| MTV81       | <http://www.mtv81.com/>       |✓| | |
-| Mixcloud    | <https://www.mixcloud.com/>   | | |✓|
-| Metacafe    | <http://www.metacafe.com/>    |✓| | |
-| Magisto     | <http://www.magisto.com/>     |✓| | |
-| Khan Academy | <https://www.khanacademy.org/> |✓| | |
-| Internet Archive | <https://archive.org/>   |✓| | |
-| **Instagram** | <https://instagram.com/>    |✓|✓| |
-| InfoQ       | <http://www.infoq.com/presentations/> |✓| | |
-| Imgur       | <http://imgur.com/>           | |✓| |
-| Heavy Music Archive | <http://www.heavy-music.ru/> | | |✓|
-| Freesound   | <http://www.freesound.org/>   | | |✓|
-| Flickr      | <https://www.flickr.com/>     |✓|✓| |
-| FC2 Video   | <http://video.fc2.com/>       |✓| | |
-| Facebook    | <https://www.facebook.com/>   |✓| | |
-| eHow        | <http://www.ehow.com/>        |✓| | |
-| Dailymotion | <http://www.dailymotion.com/> |✓| | |
-| Coub        | <http://coub.com/>            |✓| | |
-| CBS         | <http://www.cbs.com/>         |✓| | |
-| Bandcamp    | <http://bandcamp.com/>        | | |✓|
-| AliveThai   | <http://alive.in.th/>         |✓| | |
-| interest.me | <http://ch.interest.me/tvn>   |✓| | |
-| **755<br/>ナナゴーゴー** | <http://7gogo.jp/> |✓|✓| |
-| **niconico<br/>ニコニコ動画** | <http://www.nicovideo.jp/> |✓| | |
-| **163<br/>网易视频<br/>网易云音乐** | <http://v.163.com/><br/><http://music.163.com/> |✓| |✓|
-| 56网     | <http://www.56.com/>           |✓| | |
-| **AcFun** | <http://www.acfun.cn/>        |✓| | |
-| **Baidu<br/>百度贴吧** | <http://tieba.baidu.com/> |✓|✓| |
-| 爆米花网 | <http://www.baomihua.com/>     |✓| | |
-| **bilibili<br/>哔哩哔哩** | <http://www.bilibili.com/> |✓|✓|✓|
-| 豆瓣     | <http://www.douban.com/>       |✓| |✓|
-| 斗鱼     | <http://www.douyutv.com/>      |✓| | |
-| 凤凰视频 | <http://v.ifeng.com/>          |✓| | |
-| 风行网   | <http://www.fun.tv/>           |✓| | |
-| iQIYI<br/>爱奇艺 | <http://www.iqiyi.com/> |✓| | |
-| 激动网   | <http://www.joy.cn/>           |✓| | |
-| 酷6网    | <http://www.ku6.com/>          |✓| | |
-| 酷狗音乐 | <http://www.kugou.com/>        | | |✓|
-| 酷我音乐 | <http://www.kuwo.cn/>          | | |✓|
-| 乐视网   | <http://www.le.com/>           |✓| | |
-| 荔枝FM   | <http://www.lizhi.fm/>         | | |✓|
-| 秒拍     | <http://www.miaopai.com/>      |✓| | |
-| MioMio弹幕网 | <http://www.miomio.tv/>    |✓| | |
-| MissEvan<br/>猫耳FM | <http://www.missevan.com/> | | |✓|
-| 痞客邦   | <https://www.pixnet.net/>      |✓| | |
-| PPTV聚力 | <http://www.pptv.com/>         |✓| | |
-| 齐鲁网   | <http://v.iqilu.com/>          |✓| | |
-| QQ<br/>腾讯视频 | <http://v.qq.com/>      |✓| | |
-| 企鹅直播 | <http://live.qq.com/>          |✓| | |
-| Sina<br/>新浪视频<br/>微博秒拍视频 | <http://video.sina.com.cn/><br/><http://video.weibo.com/> |✓| | |
-| Sohu<br/>搜狐视频 | <http://tv.sohu.com/> |✓| | |
-| **Tudou<br/>土豆** | <http://www.tudou.com/> |✓| | |
-| 虾米     | <http://www.xiami.com/>        |✓| |✓|
-| 阳光卫视 | <http://www.isuntv.com/>       |✓| | |
-| **音悦Tai** | <http://www.yinyuetai.com/> |✓| | |
-| **Youku<br/>优酷** | <http://www.youku.com/> |✓| | |
-| 战旗TV   | <http://www.zhanqi.tv/lives>   |✓| | |
-| 央视网   | <http://www.cntv.cn/>          |✓| | |
-| Naver<br/>네이버 | <http://tvcast.naver.com/>     |✓| | |
-| 芒果TV   | <http://www.mgtv.com/>         |✓| | |
-| 火猫TV   | <http://www.huomao.com/>       |✓| | |
-| 阳光宽频网 | <http://www.365yg.com/>      |✓| | |
-| 西瓜视频 | <https://www.ixigua.com/>      |✓| | |
-| 新片场 | <https://www.xinpianchang.com//>      |✓| | |
-| 快手 | <https://www.kuaishou.com/>      |✓|✓| |
-| 抖音 | <https://www.douyin.com/>      |✓| | |
-| TikTok | <https://www.tiktok.com/>      |✓| | |
-| 中国体育(TV) | <http://v.zhibo.tv/> </br><http://video.zhibo.tv/>    |✓| | |
-| 知乎 | <https://www.zhihu.com/>      |✓| | |
-
-For all other sites not on the list, the universal extractor will take care of finding and downloading interesting resources from the page.
-
-### Known bugs
-
-If something is broken and `you-get` can't get you things you want, don't panic. (Yes, this happens all the time!)
-
-Check if it's already a known problem on <https://github.com/soimort/you-get/wiki/Known-Bugs>. If not, follow the guidelines on [how to report an issue](https://github.com/soimort/you-get/blob/develop/CONTRIBUTING.md).
-
-## Getting Involved
-
-You can reach us on the Gitter channel [#soimort/you-get](https://gitter.im/soimort/you-get) (here's how you [set up your IRC client](http://irc.gitter.im) for Gitter). If you have a quick question regarding `you-get`, ask it there.
-
-If you are seeking to report an issue or contribute, please make sure to read [the guidelines](https://github.com/soimort/you-get/blob/develop/CONTRIBUTING.md) first.
-
-## Legal Issues
-
-This software is distributed under the [MIT license](https://raw.github.com/soimort/you-get/master/LICENSE.txt).
-
-In particular, please be aware that
-
-> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-Translated to human words:
-
-*In case your use of the software forms the basis of copyright infringement, or you use the software for any other illegal purposes, the authors cannot take any responsibility for you.*
-
-We only ship the code here, and how you are going to use it is left to your own discretion.
-
-## Authors
-
-Made by [@soimort](https://github.com/soimort), who is in turn powered by :coffee:, :beer: and :ramen:.
-
-You can find the [list of all contributors](https://github.com/soimort/you-get/graphs/contributors) here.
+See LICENSE.md for further details.

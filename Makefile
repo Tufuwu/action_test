@@ -1,47 +1,22 @@
-SETUP = python3 setup.py
-
-.PHONY: default i test clean all html rst build sdist bdist bdist_egg bdist_wheel install release
-
-default: i
-
-i:
-	@(cd src/; python3 -i -c 'import you_get; print("You-Get %s\n>>> import you_get" % you_get.version.__version__)')
-
-test:
-	$(SETUP) test
-
+.PHONY: clean
 clean:
-	zenity --question
-	rm -fr build/ dist/ src/*.egg-info/
-	find . | grep __pycache__ | xargs rm -fr
-	find . | grep .pyc | xargs rm -f
+	rm -f README.md defaults/main.yml ../dokku.tar.gz
 
-all: build sdist bdist bdist_egg bdist_wheel
+.PHONY: release
+release: generate
+	cd .. && tar -zcvf dokku-$(shell cat meta/main.yml | grep version | head -n 1 | cut -d':' -f2 | xargs).tar.gz dokku
 
-html:
-	pandoc README.md > README.html
+.PHONY: generate
+generate: clean README.md defaults/main.yml ansible-role-requirements.yml
 
-rst:
-	pandoc -s -t rst README.md > README.rst
+.PHONY: README.md
+README.md:
+	bin/generate
 
-build:
-	$(SETUP) build
+.PHONY: defaults/main.yml
+defaults/main.yml:
+	bin/generate
 
-sdist:
-	$(SETUP) sdist
-
-bdist:
-	$(SETUP) bdist
-
-bdist_egg:
-	$(SETUP) bdist_egg
-
-bdist_wheel:
-	$(SETUP) bdist_wheel
-
-install:
-	$(SETUP) install --user --prefix=
-
-release:
-	zenity --question
-	$(SETUP) sdist bdist_wheel upload --sign
+.PHONY: ansible-role-requirements.yml
+ansible-role-requirements.yml:
+	bin/generate
