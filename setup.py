@@ -1,65 +1,55 @@
-# Copyright (C) 2016-2017 Łukasz Langa
+from setuptools import setup, find_packages
 
-import ast
-import os
-import re
-from setuptools import setup
-import sys
-
-
-assert sys.version_info >= (3, 6, 0), "bugbear requires Python 3.6+"
-
-
-current_dir = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(current_dir, "README.rst"), encoding="utf8") as ld_file:
-    long_description = ld_file.read()
-
-
-_version_re = re.compile(r"__version__\s+=\s+(?P<version>.*)")
-
-
-with open(os.path.join(current_dir, "bugbear.py"), "r") as f:
-    version = _version_re.search(f.read()).group("version")
-    version = str(ast.literal_eval(version))
-
+with open('README.md', 'r') as fh:
+    long_description = fh.read()
 
 setup(
-    name="flake8-bugbear",
-    version=version,
-    description=(
-        "A plugin for flake8 finding likely bugs and design problems "
-        "in your program. Contains warnings that don't belong in "
-        "pyflakes and pycodestyle."
-    ),
+    name='scanpy-scripts',
+    version='0.3.1',
+    author='nh3',
+    author_email='nh3@users.noreply.github.com',
+    description='Scripts for using scanpy from the command line',
     long_description=long_description,
-    keywords="flake8 bugbear bugs pyflakes pylint linter qa",
-    author="Łukasz Langa",
-    author_email="lukasz@langa.pl",
-    url="https://github.com/PyCQA/flake8-bugbear",
-    license="MIT",
-    py_modules=["bugbear"],
-    zip_safe=False,
-    python_requires=">=3.6",
-    install_requires=["flake8 >= 3.0.0", "attrs>=19.2.0"],
-    test_suite="tests.test_bugbear",
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
-        "Framework :: Flake8",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3 :: Only",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Software Development :: Quality Assurance",
+    long_description_content_type='text/markdown',
+    url='https://github.com/ebi-gene-expression-group/scanpy-scripts',
+    packages=find_packages(),
+    scripts=[
+        'scanpy-scripts-tests.bats',
     ],
-    entry_points={"flake8.extension": ["B = bugbear:BugBearChecker"]},
-    extras_require={"dev": ["coverage", "black", "hypothesis", "hypothesmith"]},
-    project_urls={"Change Log": "https://github.com/PyCQA/flake8-bugbear#change-log"},
+    entry_points=dict(
+        console_scripts=[
+            'scanpy-cli=scanpy_scripts.cli:cli',
+            'scanpy-read-10x=scanpy_scripts.cmds:READ_CMD',
+            'scanpy-filter-cells=scanpy_scripts.cmds:FILTER_CMD',
+            'scanpy-filter-genes=scanpy_scripts.cmds:FILTER_CMD',
+            'scanpy-normalise-data=scanpy_scripts.cmds:NORM_CMD',
+            'scanpy-find-variable-genes=scanpy_scripts.cmds:HVG_CMD',
+            'scanpy-scale-data=scanpy_scripts.cmds:SCALE_CMD',
+            'scanpy-regress=scanpy_scripts.cmds:REGRESS_CMD',
+            'scanpy-run-pca=scanpy_scripts.cmds:PCA_CMD',
+            'scanpy-neighbors=scanpy_scripts.cmds:NEIGHBOR_CMD',
+            'scanpy-run-tsne=scanpy_scripts.cmds:TSNE_CMD',
+            'scanpy-run-umap=scanpy_scripts.cmds:UMAP_CMD',
+            'scanpy-find-cluster=scanpy_scripts.cli:cluster',
+            'scanpy-find-markers=scanpy_scripts.cmds:DIFFEXP_CMD',
+        ]
+    ),
+    install_requires=[
+        'packaging',
+        'anndata',
+        'scipy',
+        'matplotlib',
+        'pandas',
+        'h5py<3.0.0',
+        'scanpy>=1.6.0',
+        'louvain',
+        'leidenalg',
+        'loompy>=2.0.0,<3.0.0',
+        'MulticoreTSNE',
+        'Click',
+        'umap-learn<0.4.0',
+        'harmonypy>=0.0.5',
+        'bbknn>=1.3.12',
+        'mnnpy>=0.1.9.5'
+    ],
 )
