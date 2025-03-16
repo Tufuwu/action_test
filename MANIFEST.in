@@ -1,1 +1,3 @@
-include README.rst LICENSE.txt VERSION
+include versioneer.py
+include removestar/_version.py
+include LICENSE
