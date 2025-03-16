@@ -1,65 +1,46 @@
-#! /usr/bin/env python
+import os
 
-import imp
+from setuptools import find_packages, setup
 
-from setuptools import setup
+NAME = "georss_ingv_centro_nazionale_terremoti_client"
+AUTHOR = "Malte Franken"
+AUTHOR_EMAIL = "coding@subspace.de"
+DESCRIPTION = "A GeoRSS client library for the INGV Centro Nazionale Terremoti (Earthquakes) feed."
+URL = (
+    "https://github.com/exxamalte/python-georss-ingv-centro-nazionale-terremoti-client"
+)
 
-
-def get_version():
-    ver_file = None
-    try:
-        ver_file, pathname, description = imp.find_module(
-            '__version__', ['cmakelint'])
-        vermod = imp.load_module(
-            '__version__', ver_file, pathname, description)
-        version = vermod.VERSION
-        return version
-    finally:
-        if ver_file is not None:
-            ver_file.close()
+REQUIRES = [
+    "georss_client>=0.14",
+]
 
 
-def read_without_comments(filename):
-    """some pip versions bark on comments (e.g. on travis)"""
-    with open(filename) as f:
-        return [line for line in f.read().splitlines() if not len(line) == 0 and not line.startswith('#')]
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+VERSION = {}
+with open(os.path.join(HERE, NAME, "__version__.py")) as f:
+    exec(f.read(), VERSION)  # pylint: disable=exec-used
 
-test_required = read_without_comments('test-requirements')
-
-setup(name='cmakelint',
-      version=get_version(),
-      packages=['cmakelint'],
-      scripts=['bin/cmakelint'],
-      entry_points={
-          'console_scripts': [
-              'cmakelint = cmakelint.main:main'
-          ]
-      },
-      install_requires=[],
-      setup_requires=[
-          "pytest-runner"
-      ],
-      tests_require=test_required,
-      # extras_require allow pip install .[dev]
-      extras_require={
-          'test': test_required,
-          'dev': read_without_comments('dev-requirements') + test_required
-      },
-      author="Richard Quirk",
-      author_email="richard.quirk@gmail.com",
-      url="https://github.com/cmake-lint/cmake-lint",
-      download_url="https://github.com/cmake-lint/cmake-lint",
-      keywords=["cmake", "lint"],
-      classifiers=[
-        "Topic :: Software Development",
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
-        "Programming Language :: Other",
-        "Programming Language :: Python",
-        "License :: OSI Approved :: Apache Software License"],
-      description="Static code checker for CMake files",
-      long_description=open('README.md').read(),
-      long_description_content_type="text/markdown",
-      license="Apache 2.0"
-      )
+setup(
+    name=NAME,
+    version=VERSION["__version__"],
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    description=DESCRIPTION,
+    license="Apache-2.0",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url=URL,
+    packages=find_packages(exclude=("tests*",)),
+    classifiers=[
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
+    ],
+    install_requires=REQUIRES,
+)

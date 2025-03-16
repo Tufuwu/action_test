@@ -1,47 +1,22 @@
 # Changes
 
-## 1.4.2
+## 0.5 (08/06/2021)
+* Add license tag (thanks @fabaff).
+* Using version 0.14 of upstream [python-georss-client](https://github.com/exxamalte/python-georss-client) library.
+* General code improvements.
 
-- add ability to override settings in $PWD/.cmakelintrc, ideally placing it in the project root folder.
+## 0.4 (20/04/2021)
+* Fixed image URLs by supporting new pattern (thanks @caiosweet).
+* Using version 0.13 of upstream [python-georss-client](https://github.com/exxamalte/python-georss-client) library.
+* Python 3.9 support.
 
-## 1.4.1
+## 0.3 (20/10/2020)
+* Excluded tests from package.
 
-- Add missing error package/stdargs category
-- NOBUG: code linted
+## 0.2 (25/06/2020)
+* Added event id and image url (thanks @caiosweet).
+* Code restructure and clean-up
+* Using version 0.10 of upstream [python-georss-client](https://github.com/exxamalte/python-georss-client) library.
 
-## 1.4
-
-- Add --quiet flag to suppress "Total Errors: 0"
-- Add --linelength=N flag to allow longer default lines (default remains 80)
-
-## 1.3.4
-
-- fix false positives in indented blocks
-
-## 1.3.3
-
-- fix crash on invalid `# lint_cmake: pragma` line
-- fix deprecation warning with Python 3.4
-- fix false positive warnings related to non-CMake quoted chunks (Issue #2)
-
-## 1.3.2
-
-- return error code 0, 1, 32 on error
-
-## 1.3.1
-
-- fix version number
-
-## 1.3
-
-- individual CMake files can control filters with `# lint_cmake: pragma` comment
-- improved `SetFilters` function to allow spaces around the commas
-- use `${XDG_CONFIG_HOME}` for the cmakelintrc file, with backwards compatible check for `~/.cmakelintrc`
-
-## 1.2.01
-
-- Published on pypi
-
-## 1.2
-
-- Moved to github
+## 0.1 (28/03/2019)
+* Migration from [python-georss-client](https://github.com/exxamalte/python-georss-client).
