@@ -1,65 +1,63 @@
-# PySDL2
+mlinspect
+================================
 
-[![Tests](https://github.com/marcusva/py-sdl2/actions/workflows/run_tests.yml/badge.svg)](https://github.com/marcusva/py-sdl2/actions/workflows/run_tests.yml)
-[![Build Status](https://ci.appveyor.com/api/projects/status/i0k6eou3fj2646ov?svg=true)](https://ci.appveyor.com/project/marcusva/py-sdl2)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pysdl2)
-[![PyPI Version](https://img.shields.io/pypi/v/PySDL2.svg)](https://pypi.python.org/pypi/PySDL2)
+[![mlinspect](https://img.shields.io/badge/🔎-mlinspect-green)](https://github.com/stefan-grafberger/mlinspect)
+[![GitHub license](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://github.com/stefan-grafberger/mlinspect/blob/master/LICENSE)
+[![Build Status](https://github.com/stefan-grafberger/mlinspect/actions/workflows/build.yml/badge.svg)](https://github.com/stefan-grafberger/mlinspect/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/stefan-grafberger/mlinspect/branch/master/graph/badge.svg?token=KTMNPBV1ZZ)](https://codecov.io/gh/stefan-grafberger/mlinspect)
 
-PySDL2 is a pure Python wrapper around the SDL2, SDL2\_mixer, SDL2\_image,
-SDL2\_ttf, and SDL2\_gfx libraries.
-Instead of relying on C code, it uses the built-in ctypes module to interface
-with SDL2, and provides simple Python classes and wrappers for common
-SDL2 functionality.
+Inspect ML Pipelines in Python in the form of a DAG
 
-## Installation
+## Run mlinspect locally
 
-PySDL2 is easy to install and integrate within your own projects.
-To install or update to the latest version, simply run one of the
-following commands in a terminal:
+Prerequisite: Python 3.9
 
-```bash
-# Install latest stable version from PyPI
-pip install -U pysdl2
+1. Clone this repository
+2. Set up the environment
 
-# Install latest development verion from GitHub
-pip install -U git+https://github.com/marcusva/py-sdl2.git
+	`cd mlinspect` <br>
+	`python -m venv venv` <br>
+	`source venv/bin/activate` <br>
+
+3. If you want to use the visualisation functions we provide, install graphviz which can not be installed via pip
+
+    `Linux: ` `apt-get install graphviz` <br>
+    `MAC OS: ` `brew install graphviz` <br>
+	
+4. Install pip dependencies 
+
+    `pip install -e .[dev]` <br>
+
+5. To ensure everything works, you can run the tests (without graphviz, the visualisation test will fail)
+
+    `python setup.py test` <br>
+    
+## Vision
+Make it easy to analyze your pipeline and automatically check for common issues.
+```python
+from mlinspect import PipelineInspector
+from mlinspect.inspections import MaterializeFirstOutputRows
+from mlinspect.checks import NoBiasIntroducedFor
+
+IPYNB_PATH = ...
+
+inspector_result = PipelineInspector\
+        .on_pipeline_from_ipynb_file(IPYNB_PATH)\
+        .add_required_inspection(MaterializeFirstOutputRows(5))\
+        .add_check(NoBiasIntroducedFor(['race']))\
+        .execute()
+
+extracted_dag = inspector_result.dag
+inspection_to_annotations = inspector_result.inspection_to_annotations
+check_to_check_results = inspector_result.check_to_check_results
 ```
 
-**Note**: If installing on Python 3 on a computer where both Python 2 and 3
-are installed, replace `pip` with `pip3` in the above commands.
-
-## Requirements
-
-In order for PySDL2 to work, the binaries for SDL2 (and any SDL2 addon modules
-you wish to use, e.g. SDL2\_mixer) need to be installed on your system. On
-macOS and Windows, the recommended way to install the SDL2 binaries is via the `pysdl2-dll` package using pip:
-
-```bash
-pip install pysdl2-dll
-```
-
-This will install pre-built binaries for all supported SDL2 libraries as
-a Python package, which PySDL2 will automatically load if available.
-On Linux and other Unix-like OSes, you can install the SDL2 binaries using
-your system's package manager (which may be out of date), or alternatively
-build and install the latest versions yourself from source.
-
-The current minimum supported versions for each library are listed below:
-
-* **SDL2** >= 2.0.5
-* **SDL2_mixer** >= 2.0.1 (for the `sdl2.sdlmixer` module)
-* **SDL2_ttf** >= 2.0.14 (for the `sdl2.sdlttf` module)
-* **SDL2_image** >= 2.0.1 (for the `sdl2.sdlimage` module)
-* **SDL2_gfx** >= 1.0.3 (for the `sdl2.sdlgfx` module)
-
-## Documentation
-
-If you just started with SDL and PySDL2, it is strongly recommended
-that you read through the tutorial of the documentation to learn the
-basics. You can find the documentation at `doc/html` or online at
-<http://pysdl2.readthedocs.org>.
+## Detailed Example
+We prepared a [demo notebook](demo/feature_overview/feature_overview.ipynb) to showcase mlinspect and its features.
+    
+## Notes
+* For debugging in PyCharm, set the pytest flag `--no-cov` ([Link](https://stackoverflow.com/questions/34870962/how-to-debug-py-test-in-pycharm-when-coverage-is-enabled))
+* This is a research project, so comprehensive coverage of all possible ML APIs will not be possible in the current initial step. We will try to tell you if we encounter APIs we can not handle yet.
 
 ## License
-
-This library is given to the public domain. There are no licensing
-restrictions. Please see `doc/copying.rst` for further details.
+This library is licensed under the Apache 2.0 License.
