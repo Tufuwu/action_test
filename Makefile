@@ -1,43 +1,59 @@
-test: clean-pyc
-	pytest
+# simple makefile to simplify repetetive build env management tasks under posix
+# Ideas borrowed from scikit-learn's and PyMVPA Makefiles  -- thanks!
 
-coverage: clean-pyc
-	coverage run --source unityparser -m pytest
-	coverage report
+PYTHON ?= python
+NOSETESTS ?= nosetests
 
-cov: coverage
+MODULE ?= datalad
 
-clean-pyc:
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
+all: clean test
 
-clean-dist:
-	find dist -name '*.tar.gz' -exec rm -f {} + || true
-	find dist -name '*.whl' -exec rm -f {} + || true
+clean:
+	$(PYTHON) setup.py clean
+	rm -rf dist build bin docs/build docs/source/generated *.egg-info
+	-find . -name '*.pyc' -delete
+	-find . -name '__pycache__' -type d -delete
 
-checkout:
-	git checkout main
+bin:
+	mkdir -p $@
+	PYTHONPATH=bin:$(PYTHONPATH) python setup.py develop --install-dir $@
 
-deploy-loc:
-	python setup.py build
-	python setup.py install
+test-code: bin
+	PATH=bin:$(PATH) PYTHONPATH=bin:$(PYTHONPATH) $(NOSETESTS) -s -v $(MODULE)
 
-lint:
-	git fetch
-	npx commitlint --from 'main'
+test-coverage:
+	rm -rf coverage .coverage
+	$(NOSETESTS) -s -v --with-coverage $(MODULE)
 
-check-gh-env:
-ifndef GH_TOKEN
-	$(error GH_TOKEN is undefined)
-endif
+test: test-code
 
-check-pypi-env:
-ifndef REPOSITORY_PASSWORD
-	$(error REPOSITORY_PASSWORD, the API Token used to publish to Pypi, is undefined)
-endif
 
-release: REPOSITORY_USER := __token__
-release: check-gh-env check-pypi-env clean-dist checkout lint
+trailing-spaces:
+	find $(MODULE) -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
+
+code-analysis:
+	flake8 $(MODULE) | grep -v __init__ | grep -v external
+	pylint -E -i y $(MODULE)/ # -d E1103,E0611,E1101
+
+update-changelog:
+	@echo ".. This file is auto-converted from CHANGELOG.md (make update-changelog) -- do not edit\n\nChange log\n**********" > docs/source/changelog.rst
+	pandoc -t rst CHANGELOG.md >> docs/source/changelog.rst
+
+release-pypi: update-changelog
+# better safe than sorry / avoid upload of stale builds
+	test ! -e dist
 	python setup.py sdist bdist_wheel
-	semantic-release publish
+	twine upload dist/*
+
+render-casts: docs/source/usecases/simple_provenance_tracking.rst.in
+
+docs/source/usecases/reproducible_analysis.rst.in: build/casts/reproducible_analysis.json
+	tools/cast2rst $^ > $@
+
+update-buildsupport:
+	git subtree pull \
+		-m "Update DataLad build helper" \
+		--squash \
+		--prefix _datalad_buildsupport \
+		https://github.com/datalad/datalad-buildsupport.git \
+		master
