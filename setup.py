@@ -1,38 +1,49 @@
-from setuptools import setup
+import os
+from distutils.core import setup
 
-from nbval._version import __version__
-
-with open('README.md') as f:
-    readme = f.read()
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name="nbval",
-    version=__version__,
-    author="Laslett, Cortes, Fauske, Kluyver, Pepper, Fangohr",
-    description='A py.test plugin to validate Jupyter notebooks',
-    long_description=readme,
-    long_description_content_type="text/markdown",
-    packages = ['nbval'],
-    url='https://github.com/computationalmodelling/nbval',
-    # the following makes a plugin available to pytest
-    entry_points = {
-        'pytest11': [
-            'nbval = nbval.plugin',
+    name='django-linkcheck',
+    version='1.8.1',
+    description="A Django app that will analyze and report on links in any "
+                "model that you register with it.",
+    long_description=read('README.rst'),
+    author='Andy Baker',
+    author_email='andy@andybak.net',
+    license='BSD',
+    url='https://github.com/DjangoAdminHackers/django-linkcheck',
+    packages=[
+        'linkcheck',
+        'linkcheck.management',
+        'linkcheck.management.commands',
+        'linkcheck.migrations',
+        'linkcheck.tests',
+        'linkcheck.tests.sampleapp',
+    ],
+    package_data={
+        'linkcheck': [
+            'templates/linkcheck/*.html',
+            'templates/linkcheck/*.xhtml',
+            'tests/media/*',
         ]
     },
-    install_requires = [
-        'pytest >= 2.8',
-        'jupyter_client',
-        'nbformat',
-        'ipykernel',
-        'coverage',
-    ],
-    python_requires='>=3.6, <4',
-    classifiers = [
-        'Framework :: IPython',
-        'Framework :: Pytest',
+    install_requires=['requests'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Topic :: Software Development :: Testing',
-    ]
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Framework :: Django',
+    ],
 )
