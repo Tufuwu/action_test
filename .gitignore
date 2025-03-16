@@ -1,15 +1,12 @@
-*~
+# Compiled python modules.
 *.pyc
-*.pyo
-*.pyt
-*.pytc
-*.egg-info
-.*.swp
-.DS_Store
-/venv*
-.cache/
-build/
-.idea/
-.coverage
-.mypy_cache
-*.vscode
+
+# vim tmp files
+*.swp
+
+# Setuptools distribution folder.
+/dist/
+/build/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info

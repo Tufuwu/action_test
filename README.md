@@ -1,85 +1,198 @@
-![Cartography](docs/images/logo-horizontal.png)
+# pybsn
+pybsn is a python interface to [Big Switch Network](http://bigswitch.com) products
 
-Cartography is a Python tool that consolidates infrastructure assets and the relationships between them in an intuitive graph view powered by a [Neo4j](https://www.neo4j.com) database.
+[![Build Status](https://travis-ci.org/bigswitch/pybsn.svg)](https://travis-ci.org/bigswitch/pybsn)
+[![PyPI version](https://badge.fury.io/py/pybsn.svg)](https://pypi.python.org/pypi/pybsn/)
 
-![Visualization of RDS nodes and AWS nodes](docs/images/accountsandrds.png)
+## Installation
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+```bash
+pip install pybsn
+# ... or ...
+pip3 install pybsn
+```
+pybsn is compatible with python 2.7+ and python 3.
 
-- [Why Cartography?](#why-cartography)
-- [Install and configure](#install-and-configure)
-- [Supported platforms](#supported-platforms)
-- [Usage](#usage)
-- [Contact](#contact)
-- [Community Meeting](#community-meeting)
-- [Contributing](#contributing)
-  - [Code of conduct](#code-of-conduct)
-  - [Developing Cartography](#developing-cartography)
-    - [Sign the Contributor License Agreement (CLA)](#sign-the-contributor-license-agreement-cla)
-- [Who uses Cartography?](#who-uses-cartography)
+---
+## PyBSN Repl - Interactive Shell
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+`pybsn-repl` is a powerful, interactive shell for the REST API. It is based on and requires python3 and ipython 7.0. (**Note**: The pybsn library works with python 2.7 and python 3, the repl program requires python 3!)
 
-## Why Cartography?
-Cartography aims to enable a broad set of exploration and automation scenarios.  It is particularly good at exposing otherwise hidden dependency relationships between your service's assets so that you may validate assumptions about security risks.
+### Installing Python3 on Mac
 
-Service owners can generate asset reports, Red Teamers can discover attack paths, and Blue Teamers can identify areas for security improvement.   All can benefit from using the graph for manual exploration through a web frontend interface, or in an automated fashion by calling the APIs.
+[Homebrew](https://brew.sh/) is a recommended option to install python3 on mac
 
-Cartography is not the only [security](https://github.com/dowjones/hammer) [graph](https://github.com/BloodHoundAD/BloodHound) [tool](https://github.com/Netflix/security_monkey) [out](https://github.com/vysecurity/ANGRYPUPPY) [there](https://github.com/duo-labs/cloudmapper), but it differentiates itself by being fully-featured yet generic and [extensible](docs/dev/writing-analysis-jobs.md) enough to help make anyone better understand their risk exposure, regardless of what platforms they use.  Rather than being focused on one core scenario or attack vector like the other linked tools, Cartography focuses on flexibility and exploration.
+After you install homebrew, install python3 with
 
-You can learn more about the story behind Cartography in our [presentation at BSidesSF 2019](https://www.youtube.com/watch?v=ZukUmZSKSek).
+```
+brew install python
+```
 
-## Install and configure
-Start [here](docs/setup/install.md).
+### Installing IPython 7
+```bash
+pip3 install ipython
+```
+* Note: make sure you use the `pip` module associated with `python3`. Often, it is available as `pip3`; otherwise you may want to try `python3 -m pip install ...` instead.
 
-## Supported platforms
-- [Amazon Web Services](docs/setup/config/aws.md) -  EC2, Elasticsearch, Elastic Kubernetes Service, DynamoDB, IAM, Lambda, RDS, Redshift, Route53, S3, STS, Tags
-- [Google Cloud Platform](docs/setup/config/gcp.md) - Cloud Resource Manager, Compute, DNS, Storage, Google Kubernetes Engine
-- [Google GSuite](docs/setup/config/gsuite.md) - users, groups
-- [Duo CRXcavator](docs/setup/config/crxcavator.md) - Chrome extensions, GSuite users
-- [Okta](docs/setup/config/okta.md) - users, groups, organizations, roles, applications, factors, trusted origins, reply URIs
-- [Github](docs/setup/config/github.md) - repos, branches, users
+### Running pybsn-repl
+```bash
+./bin/pybsn-repl -H <controller_host> -u <user> -p <passwd>
+```
+**Note:** `pybsn-repl` requires `pybsn` to be available; you can either install it from `pip` (see above); or use it directly from the source by prefixing the
+command with `PYTHONPATH=<dir>`, e.g.,
 
-## Usage
-Start with our [tutorial](docs/usage/tutorial.md). Our [data schema](docs/schema) is a helpful reference when you get stuck.
+```bash
+~/dev/pybsn $ PYTHONPATH=. ./bin/pybsn-repl -H <controller_host> -u <user> -p <passwd>
+```
 
-## Contact
+### Using pybsn-repl
 
-- Join us on `#cartography` on the [Lyft OSS Slack](https://join.slack.com/t/lyftoss/shared_invite/enQtOTYzODg5OTQwNDE2LTFiYjgwZWM3NTNhMTFkZjc4Y2IxOTI4NTdiNTdhNjQ4M2Q5NTIzMjVjOWI4NmVlNjRiZmU2YzA5NTc3MmFjYTQ).
+PyBSN-reply presents an IPython shell to interact with the REST API.
 
-## Community Meeting
+It accepts any python expressions, and exposes the following variables as primary
+entry points:
+* `ctrl`: BigDbClient instance
+* `root`: ctrl.root - a reference to the root node.
 
-Talk to us and see what we're working on at our [monthly community meeting](https://calendar.google.com/calendar/embed?src=lyft.com_p10o6ceuiieq9sqcn1ef61v1io%40group.calendar.google.com&ctz=America%2FLos_Angeles).
-- Meeting minutes are [here](https://docs.google.com/document/d/1VyRKmB0dpX185I15BmNJZpfAJ_Ooobwz0U1WIhjDxvw).
-- Recorded videos are posted [here](https://www.youtube.com/playlist?list=PLMga2YJvAGzidUWJB_fnG7EHI4wsDDsE1).
-- Our current project road map is [here](https://docs.google.com/document/d/18MOsGI-isFvag1fGk718Aht7wQPueWd4SqOI9KapBa8/edit#heading=h.15nsmgmjaaml).
+#### Node Hierarchy
 
+You can explore the DB Rest API anchored on `root`. Child nodes in the rest API are
+dynamically exposed as child objects / properties of `root`. Hyphens (`-`) in the REST API
+are converted to `_` for python.
+
+E.g.,
+* `root.core.switch` references the node `controller/core/switch`
+* `root.core.switch_config` references the node `controller/core/switch-config`
+
+Nodes that cannot be represented as properties because their name is a python keyword (e.g., `global`), can be accessed by dictionary style access, e.g.
+```python
+root.os.config["global"]
+```
+
+#### Operations on nodes:
+* add a `#` at the end of the line to show the *Schema* at the given node.
+```python
+In [12]: root.core.switch_config#
+controller/core/switch-config (list)
+  # List of switches that are configured in the controller. Switch
+  # configuration is keyed by a logical switch name and is bound to a
+  # specific physical switch by its dpid
+  banner : string (config)
+    # The switch banner, which is displayed on login.
+  description : string (config)
+    # A description of this configured switch.
+[...]
+```
+
+* invoke the node as a functon `<node>()` to perform a `GET` request against the node:
+```python
+In [8]: root.core.switch_config()
+Out[8]:
+[{'mac-address': '52:54:00:21:4c:56',
+  'name': 'sn1',
+  'role': 'service',
+  'shutdown': False},
+ {'mac-address': '52:54:00:c1:40:1e',
+  'name': 'swl1',
+  'role': 'bigtap',
+  'shutdown': False}]
+```
+* call `match(<property>=<value>)` to add an exact-match predicate to the query:
+```python
+In [11]: root.core.switch_config.match(name='sn1')()
+Out[11]:
+[{'mac-address': '52:54:00:21:4c:56',
+  'name': 'sn1',
+  'role': 'service',
+  'shutdown': False}]
+```
+
+* call HTTP methods on the node to mutate data:
+   * `node.post(data)` - inserts data at the node
+   * `node.put(data)` - replaces the node entirely with the new data
+   * `node.patch(data)` - selectively updates the node with the given data, leaving unspecified values untouched
+   * `node.delete()` - delete the node
+
+In these examples, `data` is a JSON serializable object, often a dictionary. Node that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
+
+* call `node.rpc(input_data)` to make an RPC call to the RPC specified in the node.
+
+`input_data` is a JSON serializable object, often a dictionary. Node that the dictionary keys must be in schema format at present (i.e., with hyphens, `some-long-property` not `some_long_property`).
+
+The output/result of the RPC returned as a dictionary.
+
+
+#### More Examples:
+
+```python
+# Show the schema for controller.core.switch
+root.core.switch#
+
+# Get info for all switches
+root.core.switch()
+
+# Get info for a specific switch
+root.core.switch.match(name="leaf0a").get()
+```
+
+
+---
+## Example Programmatic Usage
+
+```python
+import pybsn
+
+# recommended: use with an access token, generated for the user with
+# conf t
+# user admin
+#    access-token my-api-token
+# >>> access-token : <token>
+client = pybsn.connect(host=args.host, token="<token>", verify_tls=True|False)
+
+# alternatively, can use user-name password
+client = pybsn.connect(host=args.host, username="<user>", password="<password>", verify_tls=True|False)
+
+# can use client directly to make requests:
+## get all switch configs
+switch_configs = client.get("core/switch-config")
+## get config of a particular switch
+particular_config = client.get('core/switch-config[name="leaf-1a"]')
+## insert a new switch config
+client.post("core/switch-config", data={ "name": "leaf-1a", "mac-address": "01:02:03:04:05:06" } )
+## disconnect a switch (RPC)
+client.rpc('core/switch[name="leaf-1a"]/disconnect')
+
+# Or, can use the node abstraction layer for more convenient access:
+
+root = client.root
+
+## get all switch configs
+switch_configs = root.core.switch_config()
+## get config of a particular switch
+particular_config = root.core.switch_config.match(name="leaf-1a")
+## insert a new switch config
+root.core.switch_config.post({ "name": "leaf-1a", "mac-address": "01:02:03:04:05:06" })
+## disconnect a switch (RPC)
+root.core.switch.match(name="leaf-1a").disconnect.rpc()
+```
+
+---
 ## Contributing
-Thank you for considering contributing to Cartography!
 
-### Code of conduct
-Legal stuff: This project is governed by [Lyft's code of conduct](https://github.com/lyft/code-of-conduct).
-All contributors and participants agree to abide by its terms.
+If you'd like to contribute a feature or bugfix: Thanks! To make sure your
+fix/feature has a high chance of being included, please read the following
+guidelines:
 
-### Developing Cartography
+1. Post a [pull request](https://github.com/floodlight/pybsn/compare/).
+2. Make sure there are tests! We will not accept any patch that is not tested.
+   It's a rare time when explicit tests aren't needed. If you have questions
+   about writing tests for pybsn, please open a
+   [GitHub issue](https://github.com/floodlight/pybsn/issues/new).
 
-Get started with our [developer documentation](docs/dev/developer-guide.md).
+Please see `CONTRIBUTING.md` for more details on contributing and running test.
 
+---
 
-#### Sign the Contributor License Agreement (CLA)
+## License
 
-We require a CLA for code contributions, so before we can accept a pull request
-we need to have a signed CLA. Please [visit our CLA service](https://oss.lyft.com/cla)
-and follow the instructions to sign the CLA.
-
-## Who uses Cartography?
-
-1. [Lyft](https://www.lyft.com)
-1. [Thought Machine](https://thoughtmachine.net/)
-1. [MessageBird](https://messagebird.com)
-1. [Cloudanix](https://www.cloudanix.com/)
-1. {Your company here} :-)
-
-If your organization uses Cartography, please file a PR and update this list. Say hi on Slack too!
+Please see LICENSE at the top level of the repository.
