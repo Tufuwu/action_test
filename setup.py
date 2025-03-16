@@ -1,58 +1,105 @@
-# -*- coding: utf-8 -*-
-#
-# This software may be modified and distributed under the terms
-# of the MIT license.  See the LICENSE file for details.
+"""Setup script for Pympler.
 
-from os import path
-from setuptools import setup
-from shutil import rmtree
+To build, install and test Pympler and to try Pympler
+before building and installing it.
+
+The HTML documentation is in the doc/ directory.  Point
+your browser to the ./doc/html/index.html file.
+
+"""
 import sys
 
-NAME = 'python-logstash-async'
-VERSION = '2.3.0'
 
-here = path.abspath(path.dirname(__file__))
-with open(path.join(here, 'README.rst'), 'rb') as f:
-    LONG_DESCRIPTION = f.read().decode('utf-8')
+def _not_supported(why):
+    print('NotImplementedError: ' + why + '.')
+    sys.exit(1)
 
 
-if 'bdist_wheel' in sys.argv:
-    # Remove previous build dir when creating a wheel build, since if files have been removed
-    # from the project, they'll still be cached in the build dir and end up as part of the
-    # build, which is really neat!
-    for directory in ('build', 'dist', 'python_logstash_async.egg-info'):
-        rmtree(directory, ignore_errors=True)
+if sys.hexversion < 0x3050000:
+    _not_supported('Pympler requires Python 3.5 or newer')
+
+import os
+from setuptools import Command
+from setuptools import setup
+from setuptools import Distribution
+from subprocess import run
 
 
-setup(
-    name=NAME,
-    packages=['logstash_async'],
-    version=VERSION,
-    description='Asynchronous Python logging handler for Logstash.',
-    long_description=LONG_DESCRIPTION,
-    long_description_content_type='text/x-rst',
-    license='MIT',
-    author='Enrico Tröger',
-    author_email='enrico.troeger@uvena.de',
-    url='https://github.com/eht16/python-logstash-async',
-    project_urls={
-        'Travis CI': 'https://travis-ci.org/eht16/python-logstash-async/',
-        'Source code': 'https://github.com/eht16/python-logstash-async/',
-        'Documentation': 'https://python-logstash-async.readthedocs.io/en/stable/',
-    },
-    keywords='logging logstash asynchronous',
-    install_requires=['limits', 'pylogbeat', 'requests'],
-    python_requires='>3.5',
-    include_package_data=True,
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Topic :: Internet :: WWW/HTTP',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: System :: Logging',
-    ]
-)
+class BaseTestCommand(Command):
+    """Base class for the pre and the post installation commands. """
+    user_options = []
+
+    def initialize_options(self):
+        self.param = None
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        args = [sys.executable,  # this Python binary
+                os.path.join('test', 'runtest.py'),
+                self.param, '-verbose', '3']
+        args.extend(sys.argv[2:])
+        sys.exit(run(args).returncode)
+
+
+class PreinstallTestCommand(BaseTestCommand):
+    description = "run pre-installation tests"
+
+    def initialize_options(self):
+        self.param = '-pre-install'
+
+
+class PostinstallTestCommand(BaseTestCommand):
+    description = "run post-installation tests"
+
+    def initialize_options(self):
+        self.param = '-post-install'
+
+
+def run_setup(include_tests=0):
+    tests = []
+    if include_tests:
+        tests = ['test', 'test.asizeof', 'test.tracker', 'test.muppy',
+                 'test.gui']
+
+    setup(packages=['pympler', 'pympler.util'] + tests,
+          package_data={'pympler': ['templates/*.html',
+                                    'templates/*.tpl',
+                                    'templates/*.js',
+                                    'templates/*.css',
+                                    'static/*.js']},
+          platforms=['any'],
+          classifiers=['Development Status :: 4 - Beta',
+                       'Environment :: Console',
+                       'Intended Audience :: Developers',
+                       'License :: OSI Approved :: Apache Software License',
+                       'Operating System :: OS Independent',
+                       'Programming Language :: Python',
+                       'Programming Language :: Python :: 3',
+                       'Programming Language :: Python :: 3.5',
+                       'Programming Language :: Python :: 3.6',
+                       'Programming Language :: Python :: 3.7',
+                       'Programming Language :: Python :: 3.8',
+                       'Programming Language :: Python :: 3.9',
+                       'Programming Language :: Python :: 3.10',
+                       'Topic :: Software Development :: Bug Tracking',
+                       ],
+          cmdclass={'try': PreinstallTestCommand,
+                    'test': PostinstallTestCommand,
+                    }
+          )
+
+
+try:  # hack Pympler commands into setup.py help output
+    Distribution.common_usage += """
+Pympler commands
+  setup.py try     try Pympler before installation
+  setup.py test    test Pympler after installation
+"""
+except AttributeError:
+    pass
+
+# Only include tests if creating a distribution package
+# (i.e. do not install the tests).
+run_setup('sdist' in sys.argv)
