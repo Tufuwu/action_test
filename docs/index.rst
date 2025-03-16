@@ -1,40 +1,52 @@
-.. Connexion documentation master file, created by
-   sphinx-quickstart on Wed Jun 17 12:09:55 2015.
+.. dask-geomodeling documentation master file, created by
+   sphinx-quickstart on Thu Sep  5 10:36:42 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Connexion's documentation!
-=====================================
+Welcome to dask-geomodeling's documentation!
+============================================
 
-Connexion is a framework on top of Flask_ that automagically handles
-HTTP requests defined using `OpenAPI`_ (formerly known
-as Swagger), supporting both `v2.0`_ and `v3.0`_ of the specification. 
+Dask-geomodeling is a collection of classes that are to be stacked together to
+create configurations for on-the-fly operations on geographical maps. By
+generating `Dask <https://dask.pydata.org/>`_ compute graphs, these operation
+may be parallelized and (intermediate) results may be cached.
 
-Connexion allows you to write these specifications, then maps the
-endpoints to your Python functions. This is what makes it unique from
-other tools that generate the specification based on your Python
-code. You are free to describe your REST API with as much detail as
-you want and then Connexion guarantees that it will work as
-you specified. We built Connexion this way in order to:
+Multiple Block instances together make a view. Each Block has the ``get_data``
+method that fetches the data in one go, as well as a ``get_compute_graph``
+method that creates a graph to compute the data later.
 
-- Simplify the development process
-- Reduce misinterpretation about what an API is going to look like
+Blocks are used for the on-the-fly modification of raster- and vectordata,
+respectively through the baseclasses :meth:`~dask_geomodeling.raster.base.RasterBlock` and
+:meth:`~dask_geomodeling.geometry.base.GeometryBlock`. Derived classes support
+operations such has grouping
+basic math, shifting time, smoothing, reclassification, geometry operations,
+zonal statistics, and property field operations.
 
-Contents:
+About
+-----
+
+This package was developed by Nelen & Schuurmans and is used commercially
+under the name Geoblocks. Please consult the `Lizard <https://www.lizard.net/>`_
+website for more information about this product.
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
+   installation
    quickstart
-   cli
-   routing
-   request
-   response
-   security
-   cookbook
-   exceptions
+   views
+   blocks
+   raster
+   geometry
 
-.. _Flask: http://flask.pocoo.org/
-.. _OpenAPI: https://openapis.org/
-.. _v2.0: https://spec.openapis.org/oas/v2.0.html
-.. _v3.0: https://spec.openapis.org/oas/v3.0.1.html
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
