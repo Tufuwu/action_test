@@ -1,81 +1,69 @@
-from setuptools import setup, find_packages
-from codecs import open
-from os import path
 import os
-import re
-import io
+from setuptools import setup, Command
+
+with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
+    README = readme.read()
+
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
-def read(*names, **kwargs):
-    with io.open(
-        os.path.join(os.path.dirname(__file__), *names),
-        encoding=kwargs.get("encoding", "utf8")
-    ) as fp:
-        return fp.read()
+class PyTest(Command):
+    user_options = []
 
+    def initialize_options(self):
+        pass
 
-def find_version(*file_paths):
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+    def finalize_options(self):
+        pass
 
+    def run(self):
+        import subprocess
+        import sys
 
-here = path.abspath(path.dirname(__file__))
+        errno = subprocess.call([sys.executable, 'runtests.py'])
+        raise SystemExit(errno)
 
-
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
 
 setup(
-    name='pyseer',
-    version=find_version("pyseer/__init__.py"),
-    description='Sequence Elements Enrichment Analysis (SEER), python implementation',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/mgalardini/pyseer',
-    author='Marco Galardini and John Lees',
-    author_email='marco@ebi.ac.uk',
-    license='Apache Software License',
+    name='django-q',
+    version='1.3.4',
+    author='Ilan Steemers',
+    author_email='koed00@gmail.com',
+    keywords='django multiprocessing worker scheduler queue',
+    packages=['django_q'],
+    include_package_data=True,
+    url='https://django-q.readthedocs.org',
+    license='MIT',
+    description='A multiprocessing distributed task queue for Django',
+    long_description=README,
+    install_requires=['django>=2.2', 'django-picklefield', 'blessed', 'arrow'],
+    test_requires=['pytest', 'pytest-django', ],
+    cmdclass={'test': PyTest},
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Bio-Informatics',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX',
+        'Operating System :: MacOS',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: System :: Distributed Computing',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    keywords='gwas bacteria k-mer',
-    packages=['pyseer',
-              'pyseer.fastlmm',
-              'pyseer.kmer_mapping'],
     entry_points={
-        "console_scripts": [
-            'pyseer = pyseer.__main__:main',
-            'square_mash = pyseer.mash:main',
-            'similarity_pyseer = pyseer.similarity:main',
-            'scree_plot_pyseer = pyseer.scree_plot:main',
-            'phandango_mapper = pyseer.kmer_mapping.phandango_plot:main',
-            'annotate_hits_pyseer = pyseer.kmer_mapping.annotate_hits:main',
-            'enet_predict_pyseer = pyseer.enet_predict:main'
-            ]
+        'djangoq.errorreporters': [
+            'rollbar = django_q_rollbar:Rollbar',
+            'sentry = django_q_sentry:Sentry',
+        ]
     },
-    install_requires=['numpy',
-                      'scipy',
-                      'pandas',
-                      'statsmodels>=0.10.0',
-                      'scikit-learn',
-                      'pysam',
-                      'DendroPy',
-                      'matplotlib',
-                      'pybedtools',
-                      'tqdm',
-                      'glmnet_python@https://github.com/johnlees/glmnet_python/archive/v1.0.2.zip'],
-    dependency_links = ['https://github.com/johnlees/glmnet_python/tarball/v1.0.2#egg=glmnet_python-v1.0.2'],
-    test_suite="tests",
+    extras_require={
+        'rollbar': ["django-q-rollbar>=0.1"],
+        'sentry': ["django-q-sentry>=0.1"],
+    }
 )
