@@ -1,135 +1,115 @@
-import datetime
+# coding: utf-8
 
-from django.conf import settings
-from django.core.exceptions import SuspiciousFileOperation
-from django.test import TestCase
+import pickle
 
-from storages import utils
-from storages.utils import get_available_overwrite_name as gaon
+from datetime import datetime, date
+from enum import Enum
 
-
-class SettingTest(TestCase):
-    def test_get_setting(self):
-        value = utils.setting('SECRET_KEY')
-        self.assertEqual(settings.SECRET_KEY, value)
-
-
-class CleanNameTests(TestCase):
-    def test_clean_name(self):
-        """
-        Test the base case of clean_name
-        """
-        path = utils.clean_name("path/to/somewhere")
-        self.assertEqual(path, "path/to/somewhere")
-
-    def test_clean_name_normalize(self):
-        """
-        Test the normalization of clean_name
-        """
-        path = utils.clean_name("path/to/../somewhere")
-        self.assertEqual(path, "path/somewhere")
-
-    def test_clean_name_trailing_slash(self):
-        """
-        Test the clean_name when the path has a trailing slash
-        """
-        path = utils.clean_name("path/to/somewhere/")
-        self.assertEqual(path, "path/to/somewhere/")
-
-    def test_clean_name_windows(self):
-        """
-        Test the clean_name when the path has a trailing slash
-        """
-        path = utils.clean_name("path\\to\\somewhere")
-        self.assertEqual(path, "path/to/somewhere")
+from olo.compat import PY2, Decimal, unicode
+from olo.utils import (
+    type_checker, transform_type, Missing, ThreadedObject,
+    friendly_repr,
+)
+from .base import TestCase
 
 
-class SafeJoinTest(TestCase):
-    def test_normal(self):
-        path = utils.safe_join("", "path/to/somewhere", "other", "path/to/somewhere")
-        self.assertEqual(path, "path/to/somewhere/other/path/to/somewhere")
-
-    def test_with_dot(self):
-        path = utils.safe_join("", "path/./somewhere/../other", "..",
-                               ".", "to/./somewhere")
-        self.assertEqual(path, "path/to/somewhere")
-
-    def test_with_only_dot(self):
-        path = utils.safe_join("", ".")
-        self.assertEqual(path, "")
-
-    def test_base_url(self):
-        path = utils.safe_join("base_url", "path/to/somewhere")
-        self.assertEqual(path, "base_url/path/to/somewhere")
-
-    def test_base_url_with_slash(self):
-        path = utils.safe_join("base_url/", "path/to/somewhere")
-        self.assertEqual(path, "base_url/path/to/somewhere")
-
-    def test_suspicious_operation(self):
-        with self.assertRaises(ValueError):
-            utils.safe_join("base", "../../../../../../../etc/passwd")
-        with self.assertRaises(ValueError):
-            utils.safe_join("base", "/etc/passwd")
-
-    def test_trailing_slash(self):
-        """
-        Test safe_join with paths that end with a trailing slash.
-        """
-        path = utils.safe_join("base_url/", "path/to/somewhere/")
-        self.assertEqual(path, "base_url/path/to/somewhere/")
-
-    def test_trailing_slash_multi(self):
-        """
-        Test safe_join with multiple paths that end with a trailing slash.
-        """
-        path = utils.safe_join("base_url/", "path/to/", "somewhere/")
-        self.assertEqual(path, "base_url/path/to/somewhere/")
-
-    def test_datetime_isoformat(self):
-        dt = datetime.datetime(2017, 5, 19, 14, 45, 37, 123456)
-        path = utils.safe_join('base_url', dt.isoformat())
-        self.assertEqual(path, 'base_url/2017-05-19T14:45:37.123456')
-
-    def test_join_empty_string(self):
-        path = utils.safe_join('base_url', '')
-        self.assertEqual(path, 'base_url/')
-
-    def test_with_base_url_and_dot(self):
-        path = utils.safe_join('base_url', '.')
-        self.assertEqual(path, 'base_url/')
-
-    def test_with_base_url_and_dot_and_path_and_slash(self):
-        path = utils.safe_join('base_url', '.', 'path/to/', '.')
-        self.assertEqual(path, 'base_url/path/to/')
-
-    def test_join_nothing(self):
-        path = utils.safe_join('')
-        self.assertEqual(path, '')
-
-    def test_with_base_url_join_nothing(self):
-        path = utils.safe_join('base_url')
-        self.assertEqual(path, 'base_url/')
+class A(object):
+    name = 'A'
 
 
-class TestGetAvailableOverwriteName(TestCase):
-    def test_maxlength_is_none(self):
-        name = 'superlong/file/with/path.txt'
-        self.assertEqual(gaon(name, None), name)
+class AEnum(Enum):
+    A = 0
+    B = 1
+    C = 2
 
-    def test_maxlength_equals_name(self):
-        name = 'parent/child.txt'
-        self.assertEqual(gaon(name, len(name)), name)
 
-    def test_maxlength_is_greater_than_name(self):
-        name = 'parent/child.txt'
-        self.assertEqual(gaon(name, len(name) + 1), name)
+class TestUtils(TestCase):
+    def test_type_checker(self):
+        self.assertTrue(type_checker(int, 1))
+        self.assertTrue(type_checker(str, '1'))
+        self.assertTrue(type_checker(list, ['a']))
+        self.assertTrue(type_checker(dict, {'a': 1}))
+        self.assertTrue(type_checker({}, {'a': 1}))
+        self.assertTrue(type_checker(datetime, datetime.now()))
+        self.assertFalse(type_checker(int, '1'))
+        self.assertFalse(type_checker(str, 1))
+        self.assertFalse(type_checker(list, {'a': 1}))
+        self.assertFalse(type_checker(dict, [1]))
+        self.assertFalse(type_checker(datetime, 1))
+        self.assertTrue(type_checker([], [1, 2, 3]))
+        self.assertTrue(type_checker([int], [1, 2, 3]))
+        self.assertTrue(type_checker({int: str}, {1: '1', 2: '2', 3: '3'}))
+        self.assertTrue(type_checker({int: [int]}, {1: [1, 2, 3], 2: [3, 4, 5],
+                                                    3: [5, 6, 7, 8, 9]}))
+        self.assertFalse(type_checker([int], [1, 2, 3, '4']))
+        self.assertFalse(type_checker({int: str}, {1: '1', 2: '2', 3: 3}))
+        self.assertFalse(type_checker({int: [int]}, {1: [1, 2, 3],
+                                                     2: [3, 4, 5],
+                                                     3: [5, 6, 7, 8, '9']}))
+        self.assertFalse(type_checker({str: int}, {'a': 1, 'b': '2'}))
+        self.assertTrue(type_checker((int,), (1,)))
+        self.assertFalse(type_checker((int,), (1, 2)))
+        self.assertTrue(type_checker((int, str), (1, "a")))
+        self.assertTrue(type_checker((int, (str,)), (1, ("a",))))
+        self.assertFalse(type_checker((int, (str,)), (1, ("a", "b"))))
+        # Just make coverage happing!!!
+        self.assertFalse(type_checker({int}, {1}))
 
-    def test_maxlength_less_than_name(self):
-        name = 'parent/child.txt'
-        self.assertEqual(gaon(name, len(name) - 1), 'parent/chil.txt')
+    def test_transform_type(self):
+        self.assertEqual(transform_type('管', unicode), u'管')
+        self.assertEqual(transform_type(u'管', str), '管')
+        self.assertEqual(transform_type(u'1', str), '1')
+        self.assertEqual(transform_type([1], str), '[1]')
+        self.assertEqual(transform_type({1: 2}, str), '{"1": 2}')
+        self.assertEqual(transform_type({'1': '1', u'3': '管'}, {int: unicode}),
+                         {1: u'1', 3: u'管'})
+        self.assertEqual(transform_type('[1,2,3,"4"]', [int]), [1, 2, 3, 4])
+        self.assertEqual(transform_type('[1,2,3,"4"]', [float]), [1, 2, 3, 4])
+        self.assertEqual(transform_type('[1,2,3,"4"]', list), [1, 2, 3, "4"])
+        self.assertEqual(transform_type('{"a": [1,2,3]}', dict),
+                         {'a': [1, 2, 3]})
+        self.assertEqual(transform_type(1.23, Decimal), Decimal('1.23'))
+        self.assertEqual(transform_type('1.23', Decimal), Decimal('1.23'))
+        self.assertEqual(transform_type('{"a": ["管"]}', {str: [unicode]}),
+                         {'a': [u'管']})
+        self.assertEqual(transform_type('[["2015-12-12 08:23:01"]]',
+                                        [[datetime]]),
+                         [[datetime(2015, 12, 12, 8, 23, 1)]])
+        self.assertEqual(transform_type(0, bool), False)
+        self.assertEqual(transform_type(1, bool), True)
+        self.assertEqual(transform_type(3.14, Decimal), Decimal('3.14'))
+        self.assertEqual(transform_type('8.88', Decimal), Decimal('8.88'))
+        self.assertEqual(transform_type([u'123', '456'], [str]),
+                         ['123', '456'])
+        self.assertEqual(transform_type('(1, 2, 3)', tuple), (1, 2, 3))
+        self.assertEqual(transform_type((1, 2, 3), str), '(1, 2, 3)')
+        self.assertEqual(transform_type(1, unicode), u'1')
+        self.assertEqual(transform_type([('a', 1)], dict), {'a': 1})
+        self.assertEqual(transform_type('2017-05-27', date),
+                         datetime(2017, 5, 27).date())
+        self.assertEqual(transform_type([1, 2], tuple), (1, 2))
+        with self.assertRaises(TypeError):
+            transform_type('[1]', {})
+        self.assertEqual(transform_type("1", "string"), "1")
+        self.assertEqual(transform_type('A', AEnum), AEnum.A)
+        self.assertEqual(transform_type(AEnum.B, str), 'B')
 
-    def test_truncates_away_filename_raises(self):
-        name = 'parent/child.txt'
-        with self.assertRaises(SuspiciousFileOperation):
-            gaon(name, len(name) - 5)
+    def test_missing(self):
+        self.assertTrue(Missing() == Missing())
+        self.assertFalse(Missing() != Missing())
+        self.assertFalse(bool(Missing()))
+
+    def test_treaded_object(self):
+        a = ThreadedObject(A)
+        self.assertEqual(a.name, 'A')
+        v = pickle.dumps(a)
+        _a = pickle.loads(v)
+        self.assertEqual(_a.name, 'A')
+
+    def test_friendly_repr(self):
+        self.assertEqual(friendly_repr(1), '1')
+        if PY2:
+            self.assertEqual(friendly_repr('aaa'), "b'aaa'")
+            self.assertEqual(friendly_repr(u'aaa'), "u'aaa'")
+        else:
+            self.assertEqual(friendly_repr('aaa'), "'aaa'")
